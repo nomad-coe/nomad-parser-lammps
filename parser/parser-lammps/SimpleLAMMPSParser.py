@@ -39,7 +39,7 @@ def test_adhoc(parser):
 	for i in range(3):
 		ln = parser.fIn.readline()
 		print ln
-		#parser.fIn.pushbackLine(ln)
+		#  parser.fIn.pushbackLine(ln)
 	#print len(parser.backend.openSections)
 
 
