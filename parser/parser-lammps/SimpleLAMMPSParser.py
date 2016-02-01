@@ -16,7 +16,7 @@ class LAMMPSParserContext(object):
 
 	def startedParsing(self, path, parser):
     		self.parser = parser
-		return
+	    	return
 
 	def onClose_section_run(self, backend, gIndex, section):
 		print "<onClose_section_run>"
