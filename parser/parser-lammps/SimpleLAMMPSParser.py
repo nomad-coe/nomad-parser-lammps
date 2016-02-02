@@ -4,7 +4,8 @@ import math
 from nomadcore.simple_parser import mainFunction
 from nomadcore.simple_parser import SimpleMatcher as SM
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
-from nomadcore.caching_backend import CachingLevel
+from nomadcore.caching_backend import CachingLevel, ActiveBackend
+from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
 
 
@@ -35,8 +36,8 @@ class LAMMPSParserContext(object):
 		return
 
 def test_adhoc(parser):
-	#return None
-	for i in range(3):
+
+	for i in range(10):
 		ln = parser.fIn.readline()
 		print ln
 		#  parser.fIn.pushbackLine(ln)
@@ -80,5 +81,5 @@ if __name__ == "__main__":
     	superContext = LAMMPSParserContext(),
     	cachingLevelForMetaName = cachingLevelForMetaName, 
     	onClose = {},
-		defaultSectionCachingLevel = False)
+		defaultSectionCachingLevel = True)
 
