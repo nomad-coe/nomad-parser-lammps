@@ -14,8 +14,11 @@ def open_section(p, name):
 	p.closeSection(name, gid)
 
 
+
+
+
 parser_info = {"name": "parser-lammps", "version": "1.0"}
-metaInfoPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../nomad-meta-info/meta_info/nomad_meta_info/lammps.nomadmetainfo.json"))
+metaInfoPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../nomad-meta-info/meta_info/nomad_meta_info/forcefield.nomadmetainfo.json"))
 
 metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
                                   dependencyLoader=None,
@@ -26,8 +29,7 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 
 def parse(filename):
 	p = JsonParseEventsWriterBackend(metaInfoEnv)
-	o = open_section
-	#r = Reader(filename)
+	o  = open_section
 	p.startedParsingSession(filename, parser_info)
 
 	lines = open(filename).readlines()
@@ -40,18 +42,35 @@ def parse(filename):
 			pass
 			store_input.append(line)
 
+	var_name  = []
+	var_value = []
+	for line in store_input:
+		if "variable" and "equal" in line:
+			name = '$'+line[1]
+			try:
+				numb = float(line[3])
+			except ValueError:
+				continue
+
+		else:
+			continue
+
+		var_name.append(name)
+		var_value.append(numb)
+
+	for i in range(0, len(var_name)):
+		store_input = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in store_input]
+
+	lines = map(' '.join, store_input)
+
+
 	with o(p, 'section_run'):
 		p.addValue('program_name', 'LAMMPS')
 
+		with o(p, 'section_sampling'):
+			pass
 
-		for line in store_input:
-			if 'variable' and 'dt' in line:
-				dt_list = str(line).split()
-				dt = dt_list.pop()
-
-		p.addValue('program_version', dt)
-
-	#print lines
+	print store_input
 
 
 	p.finishedParsingSession("ParseSuccess", None)
