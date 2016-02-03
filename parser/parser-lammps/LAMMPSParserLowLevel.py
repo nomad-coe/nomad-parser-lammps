@@ -68,7 +68,18 @@ def parse(filename):
 		p.addValue('program_name', 'LAMMPS')
 
 		with o(p, 'section_sampling'):
+
+			for line in lines:
+				if 'fix' and 'npt' in line:
+					print "oki doki"
+
 			pass
+
+
+
+
+
+
 
 	print store_input
 
