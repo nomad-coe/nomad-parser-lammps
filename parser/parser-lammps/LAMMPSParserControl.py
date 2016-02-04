@@ -1,9 +1,10 @@
 import setup_paths
 import numpy as np
 import math
+import operator
 from contextlib import contextmanager
 from LAMMPSParserInput import readEnsemble, readPairCoeff
-from LAMMPSParserData import readMass
+from LAMMPSParserData import readMass, readCharge
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
@@ -38,12 +39,29 @@ def parse(filename):
         p.addValue('program_name', 'LAMMPS')
 
         with o(p, 'section_topology'):
+            mass_dict, mass_list, mass_xyz, at_types  = readMass()
+            charge_dict, charge_list        = readCharge()
+            mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
+            charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
             pass
 
-            with o(p, 'section_atom_type'):
-                mass_dict, mass_list, mass_xyz  = readMass()
-                p.addValue('atom_type_name', mass_list)
-                pass
+            for i in range(at_types):
+
+                with o(p, 'section_atom_type'):
+                    p.addValue('atom_type_name', mass_xyz[i]) # Here I use the atomic number
+                    p.addValue('atom_type_mass', mass_dict[i][1])
+                    p.addValue('atom_type_charge', charge_dict[i][1])
+                    pass
+
+
+            #with o(p, 'section_atom_type'):
+            #    mass_dict, mass_list, mass_xyz  = readMass()
+            #    charge_dict, charge_list        = readCharge()
+            #    p.addValue('number_of_topology_atoms', len(mass_list))
+            #    p.addValue('atom_type_name', mass_xyz)
+            #    p.addValue('atom_type_mass', sorted(mass_dict.items(), key=operator.itemgetter(0)))
+            #    p.addValue('atom_type_charge', sorted(charge_dict.items(), key=operator.itemgetter(0)))
+            #    pass
 
 
         with o(p, 'section_sampling_method'):

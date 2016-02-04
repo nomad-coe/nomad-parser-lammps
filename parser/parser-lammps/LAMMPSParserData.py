@@ -29,6 +29,21 @@ for line in data:
             at_types = int(line[0])  # NUMBER OF ATOM TYPES
 
 
+for line in data:
+    if "atoms" in line:
+        if len(line)==2:
+            at_count = int(line[0])  # NUMBER OF ATOMS
+
+
+topo_list = []    #  LIST STORING ATOMIC CHARGES AND COORDINATES
+for i in range(0, len(data)):
+    if "Atoms" in data[i]:
+
+        for j in range(0, at_count):
+            topo = data[i+j+1]
+            topo_list.append(topo)
+
+
 def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDERING
 
     mass_dict = {}
@@ -39,7 +54,7 @@ def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDER
 
             for j in range(0, at_types):
                 mass = data[i+j+1]
-                index = mass[0]
+                index = int(mass[0])
                 val   = float(mass[1])
                 val1  = int(val/2)
 
@@ -57,6 +72,23 @@ def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDER
         if mass_xyz[i] == 0:
             mass_xyz[i] = 1
 
-    mass_dict = { "Atomic masses" : mass_dict}
-    return (mass_dict, mass_list, mass_xyz)
+    #mass_dict = { "Atomic masses" : mass_dict}
+    return (mass_dict, mass_list, mass_xyz, at_types)
 
+
+def readCharge():  # READ ATOMIC CHARGES
+
+    charge_dict = {}
+    charge_list = []
+    for line in topo_list:
+        index = int(line[2])
+        charge = float(line[3])
+        seen = [index, charge]
+        store = { index : charge }
+
+        if seen not in charge_list:
+            charge_list.append(seen)
+            charge_dict.update(store)
+
+    #charge_dict = { "Atomic charges" : charge_dict}
+    return(charge_dict, charge_list)
