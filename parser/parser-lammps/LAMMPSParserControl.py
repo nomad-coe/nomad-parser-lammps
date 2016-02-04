@@ -2,7 +2,8 @@ import setup_paths
 import numpy as np
 import math
 from contextlib import contextmanager
-from LAMMPSParserInput import readEnsemble
+from LAMMPSParserInput import readEnsemble, readPairCoeff
+from LAMMPSParserData import readMass
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
@@ -13,7 +14,6 @@ def open_section(p, name):
 	gid = p.openSection(name)
 	yield
 	p.closeSection(name, gid)
-
 
 
 
@@ -29,23 +29,33 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 
 
 def parse(filename):
-	p = JsonParseEventsWriterBackend(metaInfoEnv)
-	o  = open_section
-	p.startedParsingSession(filename, parser_info)
 
-	with o(p, 'section_run'):
-		p.addValue('program_name', 'LAMMPS')
+    p = JsonParseEventsWriterBackend(metaInfoEnv)
+    o  = open_section
+    p.startedParsingSession(filename, parser_info)
 
-		with o(p, 'section_sampling_method'):
+    with o(p, 'section_run'):
+        p.addValue('program_name', 'LAMMPS')
 
-			ensemble, sampling = readEnsemble()
-			p.addValue('sampling_method', sampling)
-			p.addValue('ensemble_type', ensemble)
-			pass
+        with o(p, 'section_topology'):
+            pass
+
+            with o(p, 'section_atom_type'):
+                mass_dict, mass_list, mass_xyz  = readMass()
+                p.addValue('atom_type_name', mass_list)
+                pass
+
+
+        with o(p, 'section_sampling_method'):
+
+            ensemble, sampling = readEnsemble()
+            p.addValue('sampling_method', sampling)
+            p.addValue('ensemble_type', ensemble)
+            pass
 
 
 
-	p.finishedParsingSession("ParseSuccess", None)
+    p.finishedParsingSession("ParseSuccess", None)
 
 
 
