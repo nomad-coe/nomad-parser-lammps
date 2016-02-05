@@ -3,17 +3,19 @@ import os
 import numpy as np
 
 examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples"))
-
+########################################################################################################################
 # FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
+########################################################################################################################
 for file in os.listdir(examplesPath):
     if fnmatch.fnmatch(file, '*input*'):
        n = file
 
 lines = open(examplesPath + '/' + n).readlines()
 
+########################################################################################################################
 # HERE I FIND USER DEFINED VARIABLES AND SUBSTITUTE THEIR NUMERIC VALUE THROUGHOUT
 # example: variable tempe equal 300.0
-
+########################################################################################################################
 storeInput = []
 for line in lines:
     line = line.strip('\n' + '').split(' ')
@@ -42,7 +44,6 @@ for line in storeInput:
     var_value.append(numb)
 
 # print var_name, var_value
-
 
 for i in range(0, len(var_name)):
     storeInput = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in storeInput]
@@ -129,33 +130,6 @@ def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
 
     bond_filt = filter(lambda x: x.startswith("bond_coeff"), lines)
 
-    bonds_dict={}
-    for line in bond_filt:
-        line_split = line.split()
-        index1 = int(line_split[1])
-        index2 = float(line_split[2])
-        index3 = float(line_split[3])
-
-    # creat a list
-        bond_coeff = [index1, index2, index3]
-
-    # create a dictionary
-
-    #index1 = 'Bond ' + str(index1)
-
-        bond_dict = {index1 : [index2, index3] }
-        bonds_dict.update(bond_dict)
-    #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
-
-    return bonds_dict
-
-
-################################################################################################################################
-
-def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
-
-    bond_filt = filter(lambda x: x.startswith("bond_coeff"), lines)
-
     list_of_bonds={}
     for line in bond_filt:
         line_split = line.split()
@@ -170,8 +144,36 @@ def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
 
     #index1 = 'Bond ' + str(index1)
 
-        bond_dict = {index1 : [index2, index3] }
+        bond = {'Force Constant' : index2, 'Equilibrium Length' : index3}
+        bond_dict = {index1 : bond }
         list_of_bonds.update(bond_dict)
     #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
 
     return list_of_bonds
+
+
+########################################################################################################################
+
+def readAngles():
+
+    angle_filt = filter(lambda x: x.startswith("angle_coeff"), lines)
+
+    list_of_angles={}
+    for line in angle_filt:
+        line_split = line.split()
+        index1 = int(line_split[1])
+        index2 = float(line_split[2])
+        index3 = float(line_split[3])
+
+    # creat a list
+        angle_coeff = [index1, index2, index3]
+
+    # create a dictionary
+
+    #index1 = 'Angle ' + str(index1)
+
+        angle = {'Force Constant' : index2, 'Equilibrium Angle' : index3}
+        angle_dict = {index1 : angle }
+        list_of_angles.update(angle_dict)
+    #list_of_angles = { "Bond angles [Force constant, Rest angle]" : list_of_angles }
+    return list_of_angles

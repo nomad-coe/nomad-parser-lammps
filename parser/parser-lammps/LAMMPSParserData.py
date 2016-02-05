@@ -46,6 +46,11 @@ for line in data:
         if len(line)==2:
             bd_count = int(line[0])  # NUMBER OF BONDS
 
+for line in data:
+    if "angles" in line:
+        if len(line)==2:
+            ag_count = int(line[0])  # NUMBER OF ANGLES
+
 
 ########################################################################################################################
 topo_list = []    #  LIST STORING ATOMIC CHARGES AND COORDINATES
@@ -64,6 +69,14 @@ for i in range(0, len(data)):
         for j in range(0, bd_count):
             bd = data[i+j+1]
             bond_list.append(bd)
+
+angle_list = []    #  LIST STORING ALL ANGLES
+for i in range(0, len(data)):
+    if "Angles" in data[i]:
+
+        for j in range(0, ag_count):
+            ag = data[i+j+1]
+            angle_list.append(ag)
 
 ########################################################################################################################
 def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDERING
@@ -95,7 +108,7 @@ def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDER
             mass_xyz[i] = 1
 
     #mass_dict = { "Atomic masses" : mass_dict}
-    return (mass_dict, mass_list, mass_xyz, at_types)
+    return (mass_dict, mass_list, mass_xyz)
 
 
 ########################################################################################################################
@@ -117,8 +130,7 @@ def readCharge():  # READ ATOMIC CHARGES
     return(charge_dict, charge_list)
 
 
-################################################################################################################################
-
+########################################################################################################################
 def assignBonds():  # ASSIGN COVALENT BOND TO ITS ATOM PAIR
     bond_ass_d = {}
     bond_ass = []
@@ -147,9 +159,47 @@ def assignBonds():  # ASSIGN COVALENT BOND TO ITS ATOM PAIR
 
         a = topo_list[at1-1][2]
         b = topo_list[at2-1][2]
-        bd = { ind : [a, b] }
+        bd = { ind : [int(a), int(b)] }
         bond_dict.update(bd)
     #bond_dict = { "Bond assignement (index, at_type1, at_type1)" : bond_dict }
 
     return bond_dict
 
+
+########################################################################################################################
+def assignAngles():  # ASSIGN ANGLE TO ITS ATOM TRIPLET
+    angle_ass_d = {}
+    angle_ass = []
+    for line in angle_list:
+        nr    = line[0]
+        index = line[1]
+        at1   = line[2]
+        at2   = line[3]
+        at3   = line[4]
+
+        store = { nr : [index, at1, at2, at3] }
+
+        if index not in angle_ass:
+            angle_ass.append(index)
+            angle_ass_d.update(store)
+
+    angle_triplets = []
+    for key, value in angle_ass_d.iteritems():
+        temp = value
+        angle_triplets.append(temp)
+
+    angle_dict = {}
+    for line in angle_triplets:
+        ind = int(line[0])
+        at1 = int(line[1])
+        at2 = int(line[2])
+        at3 = int(line[3])
+
+        a = topo_list[at1-1][2]
+        b = topo_list[at2-1][2]
+        c = topo_list[at3-1][2]
+        ag = { ind : [int(a), int(b), int(c)] }
+        angle_dict.update(ag)
+    #angle_dict = { "Angle assignement (index, at_type1, at_type1, at_type3)" : angle_dict }
+
+    return angle_dict
