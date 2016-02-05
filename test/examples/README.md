@@ -12,3 +12,6 @@
 
     Example of a LAMMPS log file. Here the output of the MD is recorded.
     
+## generated_from_data.xyz
+
+    .xyz file generated from the LAMMPS data file
