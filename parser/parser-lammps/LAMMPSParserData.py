@@ -6,7 +6,7 @@ examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__f
 
 # FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 for file in os.listdir(examplesPath):
-    if fnmatch.fnmatch(file, '*data*'):
+    if fnmatch.fnmatch(file, '*data.*'):
        n = file
 
 lines = open(examplesPath + '/' + n).readlines()
@@ -264,14 +264,15 @@ def assignDihedrals():  # ASSIGN DIHEDRAL TO ITS ATOM QUARTET
 
 
 
+
+
 xyz_file = []     # PREPARE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
 xyz_file.append([at_count])
 xyz_file.append([' '])
-
 for line in topo_list:
     index = int(line[2])
     xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
     xyz_file.append(xyz_line)
 
-with open('../../test/examples/generated_from_data.xyz', 'w') as xyz:
+with open('../../test/examples/generated_from_data_file.xyz', 'w') as xyz:
     xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
