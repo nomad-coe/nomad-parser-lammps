@@ -16,3 +16,13 @@ The simplest way to have this is to check out nomad-lab-base recursively:
     git clone --recursive git@gitlab.mpcdf.mpg.de:nomad-lab/nomad-lab-base.git
 
 then this will be in parsers/lammps.
+
+# Running and Testing the Parser
+
+## Usage
+LAMMPS input/output files can be parsed with:
+
+    python LAMMPSParserControl.py ../../test/examples/input.1_methyl_naphthalene
+
+## Test Files
+Example input/output files of LAMMPS can be found in the directory test/examples.
