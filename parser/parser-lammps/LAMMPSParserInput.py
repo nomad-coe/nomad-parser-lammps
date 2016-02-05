@@ -121,3 +121,57 @@ def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
         list_of_ljs.update(lj_dict)
     list_of_ljs = { "Pair coefficients" : list_of_ljs}
     return (list_of_ljs, at_types)
+
+
+########################################################################################################################
+
+def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
+
+    bond_filt = filter(lambda x: x.startswith("bond_coeff"), lines)
+
+    bonds_dict={}
+    for line in bond_filt:
+        line_split = line.split()
+        index1 = int(line_split[1])
+        index2 = float(line_split[2])
+        index3 = float(line_split[3])
+
+    # creat a list
+        bond_coeff = [index1, index2, index3]
+
+    # create a dictionary
+
+    #index1 = 'Bond ' + str(index1)
+
+        bond_dict = {index1 : [index2, index3] }
+        bonds_dict.update(bond_dict)
+    #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
+
+    return bonds_dict
+
+
+################################################################################################################################
+
+def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
+
+    bond_filt = filter(lambda x: x.startswith("bond_coeff"), lines)
+
+    list_of_bonds={}
+    for line in bond_filt:
+        line_split = line.split()
+        index1 = int(line_split[1])
+        index2 = float(line_split[2])
+        index3 = float(line_split[3])
+
+    # creat a list
+        bond_coeff = [index1, index2, index3]
+
+    # create a dictionary
+
+    #index1 = 'Bond ' + str(index1)
+
+        bond_dict = {index1 : [index2, index3] }
+        list_of_bonds.update(bond_dict)
+    #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
+
+    return list_of_bonds

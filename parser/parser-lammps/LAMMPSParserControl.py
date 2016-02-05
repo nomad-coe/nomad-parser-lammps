@@ -3,8 +3,8 @@ import numpy as np
 import math
 import operator
 from contextlib import contextmanager
-from LAMMPSParserInput import readEnsemble, readPairCoeff
-from LAMMPSParserData import readMass, readCharge
+from LAMMPSParserInput import readEnsemble, readPairCoeff, readBonds
+from LAMMPSParserData import readMass, readCharge, assignBonds
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
@@ -43,12 +43,21 @@ def parse(filename):
             charge_dict, charge_list        = readCharge()
             mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
+            bond_dict  = assignBonds()
+            bond_dict = sorted(bond_dict.items(), key=operator.itemgetter(0))
+            bd_types = len(bond_dict)
+            list_of_bonds = readBonds()
+            list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
+
+
+
+            p.addValue('number_of_topology_atoms', len(mass_dict))
             pass
 
             for i in range(at_types):
 
                 with o(p, 'section_atom_type'):
-                    p.addValue('atom_type_name', mass_xyz[i]) # Here I use the atomic number
+                    p.addValue('atom_type_name', mass_xyz[i])           # Here I use the atomic number
                     p.addValue('atom_type_mass', mass_dict[i][1])
                     p.addValue('atom_type_charge', charge_dict[i][1])
                     pass
@@ -63,6 +72,14 @@ def parse(filename):
             #    p.addValue('atom_type_charge', sorted(charge_dict.items(), key=operator.itemgetter(0)))
             #    pass
 
+
+
+            for i in range(bd_types):
+
+                with o(p, 'section_interaction'):
+                    p.addValue('interaction_atoms', bond_dict[i][1])
+                    p.addValue('interaction_parameters', list_of_bonds[i])
+                    pass
 
         with o(p, 'section_sampling_method'):
 
