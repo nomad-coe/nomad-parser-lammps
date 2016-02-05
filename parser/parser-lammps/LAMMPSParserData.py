@@ -51,6 +51,11 @@ for line in data:
         if len(line)==2:
             ag_count = int(line[0])  # NUMBER OF ANGLES
 
+for line in data:
+    if "dihedrals" in line:
+        if len(line)==2:
+            dh_count = int(line[0])  # NUMBER OF DIHEDRALS
+
 
 ########################################################################################################################
 topo_list = []    #  LIST STORING ATOMIC CHARGES AND COORDINATES
@@ -77,6 +82,15 @@ for i in range(0, len(data)):
         for j in range(0, ag_count):
             ag = data[i+j+1]
             angle_list.append(ag)
+
+dihedral_list = []    #  LIST STORING ALL DIHEDRALS
+for i in range(0, len(data)):
+    if "Dihedrals" in data[i]:
+
+        for j in range(0, dh_count):
+            dh = data[i+j+1]
+            dihedral_list.append(dh)
+            
 
 ########################################################################################################################
 def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDERING
@@ -109,6 +123,8 @@ def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDER
 
     #mass_dict = { "Atomic masses" : mass_dict}
     return (mass_dict, mass_list, mass_xyz)
+
+mass_dict, mass_list, mass_xyz     = readMass()
 
 
 ########################################################################################################################
@@ -203,3 +219,59 @@ def assignAngles():  # ASSIGN ANGLE TO ITS ATOM TRIPLET
     #angle_dict = { "Angle assignement (index, at_type1, at_type1, at_type3)" : angle_dict }
 
     return angle_dict
+
+
+########################################################################################################################
+def assignDihedrals():  # ASSIGN DIHEDRAL TO ITS ATOM QUARTET
+    dihedral_ass_d = {}
+    dihedral_ass = []
+    for line in dihedral_list:
+        nr    = line[0]
+        index = line[1]
+        at1   = line[2]
+        at2   = line[3]
+        at3   = line[4]
+        at4   = line[5]
+
+        store = { nr : [index, at1, at2, at3, at4] }
+    
+        if index not in dihedral_ass:
+            dihedral_ass.append(index)
+            dihedral_ass_d.update(store)
+
+    dihedral_quartets = []
+    for key, value in dihedral_ass_d.iteritems():
+        temp = value
+        dihedral_quartets.append(temp)
+
+    dihedral_dict = {}
+    for line in dihedral_quartets:
+        ind = int(line[0])
+        at1 = int(line[1])
+        at2 = int(line[2])
+        at3 = int(line[3])
+        at4 = int(line[4])
+    
+        a = topo_list[at1-1][2]
+        b = topo_list[at2-1][2]
+        c = topo_list[at3-1][2]
+        d = topo_list[at4-1][2]
+        dh = { ind : [int(a), int(b), int(c), int(d)] }
+        dihedral_dict.update(dh)
+    #dihedral_dict = { "Dihedral assignement (index, at_type1, at_type1, at_type3, at_type4)" : dihedral_dict }
+
+    return dihedral_dict
+
+
+
+xyz_file = []     # PREPARE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+xyz_file.append([at_count])
+xyz_file.append([' '])
+
+for line in topo_list:
+    index = int(line[2])
+    xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
+    xyz_file.append(xyz_line)
+
+with open('../../test/examples/generated_from_data.xyz', 'w') as xyz:
+    xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES

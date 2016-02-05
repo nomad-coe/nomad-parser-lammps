@@ -3,8 +3,8 @@ import numpy as np
 import math
 import operator
 from contextlib import contextmanager
-from LAMMPSParserInput import readEnsemble, readPairCoeff, readBonds, readAngles
-from LAMMPSParserData import readMass, readCharge, assignBonds, assignAngles
+from LAMMPSParserInput import readEnsemble, readPairCoeff, readBonds, readAngles, readDihedrals
+from LAMMPSParserData import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
@@ -66,6 +66,13 @@ def parse(filename):
             list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
             ag_types = len(angle_dict)
 
+            # collecting dihedral angles definitions
+            dihedral_dict  = assignDihedrals()
+            dihedral_dict = sorted(dihedral_dict.items(), key=operator.itemgetter(0))
+            list_of_dihedrals = readDihedrals()
+            list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
+            dh_types = len(dihedral_dict)
+
             p.addValue('number_of_topology_atoms', at_types)
             pass
 
@@ -81,25 +88,80 @@ def parse(filename):
 
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
-            for i in range(bd_types):
+            with o(p, 'section_interaction'):
+                p.addValue('number_of_interactions', bd_types)
+                p.addValue('number_of_atoms_per_interaction', len(bond_dict[0][1]))
 
-                with o(p, 'section_interaction'):
-                    p.addValue('number_of_interactions', bd_types)
-                    p.addValue('number_of_atoms_per_interaction', len(bond_dict[i][1]))
-                    p.addValue('interaction_atoms', bond_dict[i][1])
-                    p.addValue('interaction_parameters', list_of_bonds[i][1])
-                    pass
+                int_index_store = []
+                int_param_store = []
+
+                for i in range(bd_types):
+                    int_index_store.append(bond_dict[i][1])
+                    int_param_store.append(list_of_bonds[i][1])
+
+                p.addValue('interaction_atoms', int_index_store)
+                p.addValue('interaction_parameters', int_param_store)
+                pass
+
+
+            #for i in range(bd_types):
+
+            #    with o(p, 'section_interaction'):
+            #        p.addValue('number_of_interactions', bd_types)
+            #        p.addValue('number_of_atoms_per_interaction', len(bond_dict[i][1]))
+            #        p.addValue('interaction_atoms', bond_dict[i][1])
+            #        p.addValue('interaction_parameters', list_of_bonds[i][1])
+            #        pass
 
 
             # opening section_interaction for bond angles (number_of_atoms_per_interaction = 3)
-            for i in range(ag_types):
+            with o(p, 'section_interaction'):
+                p.addValue('number_of_interactions', ag_types)
+                p.addValue('number_of_atoms_per_interaction', len(angle_dict[0][1]))
 
-                with o(p, 'section_interaction'):
-                    p.addValue('number_of_interactions', ag_types)
-                    p.addValue('number_of_atoms_per_interaction', len(angle_dict[i][1]))
-                    p.addValue('interaction_atoms', angle_dict[i][1])
-                    p.addValue('interaction_parameters', list_of_angles[i][1])
-                    pass
+                int_index_store = []
+                int_param_store = []
+
+                for i in range(ag_types):
+                    int_index_store.append(angle_dict[i][1])
+                    int_param_store.append(list_of_angles[i][1])
+
+                p.addValue('interaction_atoms', int_index_store)
+                p.addValue('interaction_parameters', int_param_store)
+                pass
+
+
+            #for i in range(ag_types):
+
+            #    with o(p, 'section_interaction'):
+            #        p.addValue('number_of_interactions', ag_types)
+            #        p.addValue('number_of_atoms_per_interaction', len(angle_dict[i][1]))
+            #        p.addValue('interaction_atoms', angle_dict[i][1])
+            #        p.addValue('interaction_parameters', list_of_angles[i][1])
+            #        pass
+
+
+            # opening section_interaction for dihedral angles (number_of_atoms_per_interaction = 4)
+            with o(p, 'section_interaction'):
+                p.addValue('number_of_interactions', dh_types)
+                p.addValue('number_of_atoms_per_interaction', len(dihedral_dict[0][1]))
+
+                int_index_store = []
+                int_param_store = []
+
+                for i in range(dh_types):
+                    int_index_store.append(dihedral_dict[i][1])
+                    int_param_store.append(list_of_dihedrals[i][1])
+
+                p.addValue('interaction_atoms', int_index_store)
+                p.addValue('interaction_parameters', int_param_store)
+                pass
+
+
+
+
+
+
 
         # opening section_sampling_method
         with o(p, 'section_sampling_method'):
