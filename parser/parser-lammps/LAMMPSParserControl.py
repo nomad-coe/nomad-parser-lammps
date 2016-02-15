@@ -3,7 +3,8 @@ import numpy as np
 import math
 import operator
 from contextlib import contextmanager
-from LAMMPSParserInput import readEnsemble, readPairCoeff, readBonds, readAngles, readDihedrals
+from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, \
+                              readTPSettings, readIntegratorSettings
 from LAMMPSParserData import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -163,15 +164,26 @@ def parse(filename):
 
 
 
-
-
-
-
         # opening section_sampling_method
         with o(p, 'section_sampling_method'):
             ensemble, sampling = readEnsemble()
+            target_t, thermo_tau, target_p, baro_tau = readTPSettings()
+            int_type, tstep, steps = readIntegratorSettings()
+
+            p.addValue('integrator_type', int_type)
+            p.addValue('integrator_dt', tstep)
+            p.addValue('number_of_steps_requested', steps)
+
             p.addValue('sampling_method', sampling)
             p.addValue('ensemble_type', ensemble)
+
+            if target_t:
+                p.addValue('thermostat_target_temperature', target_t)
+                p.addValue('thermostat_tau', thermo_tau)
+
+            if target_p:
+                p.addValue('barostat_target_temperature', target_p)
+                p.addValue('barostat_tau', baro_tau)
             pass
 
 

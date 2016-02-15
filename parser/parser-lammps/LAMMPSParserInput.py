@@ -82,6 +82,63 @@ def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT
 	return (ensemble, sampling)
 
 
+def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES ARE READ
+
+    target_t = 0
+    target_p = 0
+    thermo_tau = 0
+    baro_tau = 0
+
+    ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), lines)
+
+    for line in ensemble_filter:
+        line_split = line.split()
+
+        if line_split[3] == "nvt":
+            target_t = float(line_split[6])
+            thermo_tau = float(line_split[7])
+
+        if line_split[3] == "npt":
+            target_t = float(line_split[6])
+            thermo_tau = float(line_split[7])
+            target_p = float(line_split[10])
+            baro_tau = float(line_split[11])
+
+    return (target_t, thermo_tau, target_p, baro_tau)
+
+
+
+################################################################################################################################
+
+def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STEP, NUMBER OF STEPS, ...)
+
+    int_filter = filter(lambda x: fnmatch.fnmatch(x, 'run_style*'), lines)
+
+    if int_filter:
+        for line in int_filter:
+            line_split = line.split()
+            int_type = line_split[1]
+    else:
+        int_type = "verlet"  # if no run_style command, the integrator is standard Verlet
+
+
+    run_filt = filter(lambda x: x.startswith("run"), lines)  # OK FOR A SINGLE RUN INPUT SCRIPT
+
+    for line in run_filt:
+        line_split = line.split()
+        steps = float(line_split[1])
+
+
+    ts_filter = filter(lambda x: fnmatch.fnmatch(x, 'timestep*'), lines)
+
+    for line in ts_filter:
+        line_split = line.split()
+
+        tstep = float(line_split[1])
+
+    return (int_type, tstep, steps)
+
+
 ################################################################################################################################
 
 def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
