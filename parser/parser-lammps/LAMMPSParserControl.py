@@ -88,20 +88,21 @@ def parse(filename):
 
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
-            with o(p, 'section_interaction'):
-                p.addValue('number_of_interactions', bd_types)
-                p.addValue('number_of_atoms_per_interaction', len(bond_dict[0][1]))
+            if bd_types:
+                with o(p, 'section_interaction'):
+                    p.addValue('number_of_interactions', bd_types)
+                    p.addValue('number_of_atoms_per_interaction', len(bond_dict[0][1]))
 
-                int_index_store = []
-                int_param_store = []
+                    int_index_store = []
+                    int_param_store = []
 
-                for i in range(bd_types):
-                    int_index_store.append(bond_dict[i][1])
-                    int_param_store.append(list_of_bonds[i][1])
+                    for i in range(bd_types):
+                        int_index_store.append(bond_dict[i][1])
+                        int_param_store.append(list_of_bonds[i][1])
 
-                p.addValue('interaction_atoms', int_index_store)
-                p.addValue('interaction_parameters', int_param_store)
-                pass
+                    p.addValue('interaction_atoms', int_index_store)
+                    p.addValue('interaction_parameters', int_param_store)
+                    pass
 
 
             #for i in range(bd_types):
@@ -115,20 +116,21 @@ def parse(filename):
 
 
             # opening section_interaction for bond angles (number_of_atoms_per_interaction = 3)
-            with o(p, 'section_interaction'):
-                p.addValue('number_of_interactions', ag_types)
-                p.addValue('number_of_atoms_per_interaction', len(angle_dict[0][1]))
+            if ag_types:
+                with o(p, 'section_interaction'):
+                    p.addValue('number_of_interactions', ag_types)
+                    p.addValue('number_of_atoms_per_interaction', len(angle_dict[0][1]))
 
-                int_index_store = []
-                int_param_store = []
+                    int_index_store = []
+                    int_param_store = []
 
-                for i in range(ag_types):
-                    int_index_store.append(angle_dict[i][1])
-                    int_param_store.append(list_of_angles[i][1])
+                    for i in range(ag_types):
+                        int_index_store.append(angle_dict[i][1])
+                        int_param_store.append(list_of_angles[i][1])
 
-                p.addValue('interaction_atoms', int_index_store)
-                p.addValue('interaction_parameters', int_param_store)
-                pass
+                    p.addValue('interaction_atoms', int_index_store)
+                    p.addValue('interaction_parameters', int_param_store)
+                    pass
 
 
             #for i in range(ag_types):
@@ -142,20 +144,22 @@ def parse(filename):
 
 
             # opening section_interaction for dihedral angles (number_of_atoms_per_interaction = 4)
-            with o(p, 'section_interaction'):
-                p.addValue('number_of_interactions', dh_types)
-                p.addValue('number_of_atoms_per_interaction', len(dihedral_dict[0][1]))
+            if dh_types:
+                with o(p, 'section_interaction'):
 
-                int_index_store = []
-                int_param_store = []
+                    p.addValue('number_of_interactions', dh_types)
+                    p.addValue('number_of_atoms_per_interaction', len(dihedral_dict[0][1]))
 
-                for i in range(dh_types):
-                    int_index_store.append(dihedral_dict[i][1])
-                    int_param_store.append(list_of_dihedrals[i][1])
+                    int_index_store = []
+                    int_param_store = []
 
-                p.addValue('interaction_atoms', int_index_store)
-                p.addValue('interaction_parameters', int_param_store)
-                pass
+                    for i in range(dh_types):
+                        int_index_store.append(dihedral_dict[i][1])
+                        int_param_store.append(list_of_dihedrals[i][1])
+
+                    p.addValue('interaction_atoms', int_index_store)
+                    p.addValue('interaction_parameters', int_param_store)
+                    pass
 
 
 
