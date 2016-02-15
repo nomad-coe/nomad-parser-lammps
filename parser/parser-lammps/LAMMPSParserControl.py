@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, \
                               readTPSettings, readIntegratorSettings
 from LAMMPSParserData import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
+from LAMMPSParserLog import readFrames, readPotEnergy, readKinEnergy
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
@@ -185,6 +186,25 @@ def parse(filename):
                 p.addValue('barostat_target_temperature', target_p)
                 p.addValue('barostat_tau', baro_tau)
             pass
+
+
+
+
+        # opening section_frame_sequence
+        with o(p, 'section_frame_sequence'):
+            frames_count = readFrames()
+            poten = readPotEnergy()
+            kinen, temp = readKinEnergy()
+
+
+            p.addValue('number_of_frames_in_sequence', frames_count)
+            p.addValue('frame_sequence_potential_energy_stats', [poten.mean(), poten.std()])
+            p.addValue('frame_sequence_kinetic_energy_stats', [kinen.mean(), kinen.std()])
+            p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+
+
+
+
 
 
 
