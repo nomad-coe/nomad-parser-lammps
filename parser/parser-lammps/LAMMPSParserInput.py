@@ -1,16 +1,14 @@
 import fnmatch
-import os
+import os, sys
 import numpy as np
 
 examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 ########################################################################################################################
-# FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
+# FIRST I OPEN THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 ########################################################################################################################
-for file in os.listdir(examplesPath):
-    if fnmatch.fnmatch(file, '*input*'):
-       n = file
 
-lines = open(examplesPath + '/' + n).readlines()
+n = sys.argv[1]
+lines = open(n).readlines()
 
 ########################################################################################################################
 # HERE I FIND USER DEFINED VARIABLES AND SUBSTITUTE THEIR NUMERIC VALUE THROUGHOUT
@@ -263,3 +261,29 @@ def readDihedrals():
         list_of_dihedrals.update(dihedral_dict)
     #list_of_dihedrals = { "Dihedral parameters" : list_of_dihedrals }
     return list_of_dihedrals
+
+
+################################################################################################################################
+
+def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT ARE LOGGED (excludind user-defined ones)
+
+    logvars_filter = filter(lambda x: fnmatch.fnmatch(x, 'thermo_style*'), lines)
+
+    var = []
+    for line in logvars_filter:
+        line_split = line.split()
+
+        if line_split[1] == "one" or logvars_filter:
+            var = ['step', 'temp', 'epair', 'emol', 'etotal', 'press']
+            thermo_style = 'one'
+
+        if line_split[1] == "custom":
+            var = line_split[2:]
+            thermo_style = 'custom'
+
+        if line_split[1] == "multi":
+            thermo_style = 'multi'
+
+    var = [i for i in var if not i.startswith('f_') and not i.startswith('v_') and not i.startswith('c_')]
+
+    return (var, thermo_style)
