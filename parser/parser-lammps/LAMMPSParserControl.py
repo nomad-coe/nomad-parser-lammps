@@ -9,8 +9,7 @@ from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals
 
 from LAMMPSParserData  import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
 
-from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume, \
-                              logFileStatus
+from LAMMPSParserLog import logFileOpen
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -38,14 +37,14 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 
 def parse(filename):
 
-    p = JsonParseEventsWriterBackend(metaInfoEnv)
+    p  = JsonParseEventsWriterBackend(metaInfoEnv)
     o  = open_section
     p.startedParsingSession(filename, parser_info)
 
 
     # opening section_run
     with o(p, 'section_run'):
-        p.addValue('program_name', 'LAMMPS')
+        p.addValue('program_name', 'LAM\\MPS')
 
 
         # opening section_topology
@@ -188,33 +187,82 @@ def parse(filename):
                 p.addValue('thermostat_tau', thermo_tau)
 
             if target_p:
-                p.addValue('barostat_target_temperature', target_p)
+                p.addValue('barostat_target_pressure', target_p)
                 p.addValue('barostat_tau', baro_tau)
             pass
 
 
 
-
         # opening section_frame_sequence
-        n, skip = logFileStatus()
+        skip = logFileOpen()
         var, thermo_style = readLoggedThermoOutput()
 
-
-        print thermo_style
+########################################################################################################################
+# THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
 
         if thermo_style == 'multi' and skip == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
 
             with o(p, 'section_frame_sequence'):
                 frames_count = readFrames()
-                poten = readPotEnergy()
-                kinen, temp = readKinEnergy()
+                pe = readPotEnergy()
+                ke, temp = readKinEnergy()
                 press = readPressure()
                 vol = readVolume()
 
 
                 p.addValue('number_of_frames_in_sequence', frames_count)
-                p.addValue('frame_sequence_potential_energy_stats', [poten.mean(), poten.std()])
-                p.addValue('frame_sequence_kinetic_energy_stats', [kinen.mean(), kinen.std()])
+                p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
+                p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
+                p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+                p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+
+        else:
+            pass
+
+########################################################################################################################
+# THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
+
+        if thermo_style == 'custom' and skip == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog import pickNOMADVarsCustom
+
+
+            with o(p, 'section_frame_sequence'):
+
+                ke, pe, press, temp = pickNOMADVarsCustom()
+
+                if pe:
+                    pe = np.asarray(pe)
+                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
+
+                if ke:
+                    ke = np.asarray(ke)
+                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
+
+                if temp:
+                    temp = np.asarray(temp)
+                    p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+
+                if press:
+                    press = np.asarray(press)
+                    p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+
+        else:
+            pass
+
+########################################################################################################################
+# THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
+
+        if thermo_style == 'one' and skip == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog import pickNOMADVarsOne
+
+
+            with o(p, 'section_frame_sequence'):
+
+                press, temp = pickNOMADVarsOne()
+                temp = np.asarray(temp)
+                press = np.asarray(press)
+
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
 
@@ -226,9 +274,7 @@ def parse(filename):
 
 
 
-
-
-    p.finishedParsingSession("ParseSuccess", None)
+    p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED
 
 
 

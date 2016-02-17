@@ -5,39 +5,39 @@ from LAMMPSParserInput import readLoggedThermoOutput
 
 examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
-# FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
-def logFileStatus():
+# FIRST I FIND THE LAMMPS OUTPUT LOG FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 
-    n    = str
-    skip = bool
-    extFile = str
+n    = str
+extFile = str
 
-    if sys.argv[1].endswith("multi"):
-        extFile = "-thermo_style_multi"
+if sys.argv[1].endswith("1_methyl_naphthalene"):
+    extFile = "naph_298_396_20ns"
 
-    if sys.argv[1].endswith("one"):
-        extFile = "-thermo_style_one"
+if sys.argv[1].endswith("multi"):
+    extFile = "-thermo_style_multi"
 
-    if sys.argv[1].endswith("custom"):
-        extFile = "-thermo_style_custom"
+if sys.argv[1].endswith("one"):
+    extFile = "-thermo_style_one"
 
-    for file in os.listdir(examplesPath):
+if sys.argv[1].endswith("custom"):
+    extFile = "-thermo_style_custom"
 
-        if file.endswith(extFile):
-            n = file
-            skip = False
+lines = []
+for file in os.listdir(examplesPath):
+    if file.endswith(extFile):
+        n = file
+        lines = open(examplesPath + '/' + n).readlines()
 
-    return (n, skip)
+def logFileOpen():
+    skip = True
+    if lines:
+        skip = False
 
+    return skip
 
-n, skip = logFileStatus()
+skip = logFileOpen()
 
-
-if skip == False:
-    lines = open(examplesPath + '/' + n).readlines()
-
-
-
+#print skip
 var, thermo_style = readLoggedThermoOutput()
 
 
@@ -45,7 +45,7 @@ var, thermo_style = readLoggedThermoOutput()
 ########################################################################################################################
 # READING THERMO OUTPUTS FOR thermo_style = multi
 
-if thermo_style:
+if thermo_style == 'multi' and skip == False:
 
     def readFrames():
 
@@ -134,6 +134,133 @@ else:
 
 ########################################################################################################################
 ########################################################################################################################
+# READING THERMO OUTPUTS FOR thermo_style = multi
+
+if thermo_style == 'custom' and skip == False:
+
+    # SPLIT AND CLEAN THE LOG FILE LINES
+    data = []
+    for line in lines:
+        line = line.strip('\n' + '').split(' ')
+        line = filter(None, line)
+
+        # If line is just empty
+        if line != []:
+            pass
+            data.append(line)
+
+    #print data
+
+    # PICK AND STORE LINES STARTING BY FLOAT (DATA LINES)
+    logged_tmp = []
+    for i in range(0, len(data)):
+        x = data[i]
+        try:
+            float(x[0])
+            logged_tmp.append(x)
+        except ValueError:
+            continue
+
+    logged = []
+    for i in range(len(logged_tmp)):
+        x = logged_tmp[i]
+        try:
+            float(x[1])
+            logged.append(x)
+        except ValueError:
+            continue
+
+
+    for i in range(0, len(logged)):
+        logged[i] = map(float, logged[i])
+
+    logged = np.array(logged)
+
+    n_vars = len(var)
+
+    logged_vars = {}
+    for i in range(0, n_vars):
+        if var[i] != 'step':
+            logged_var = { var[i] : [row[i] for row in logged] }  # MATCH VARIABLE NAMES AND VALUES IN A DICT
+            logged_vars.update(logged_var)
+
+
+    def pickNOMADVarsCustom():
+
+        ke    = logged_vars.get('ke')
+        pe    = logged_vars.get('pe')
+        press = logged_vars.get('press')
+        temp  = logged_vars.get('temp')
+
+        return (ke, pe, press, temp)
+
+
+    ke, pe, press, temp = pickNOMADVarsCustom()
+
+
+########################################################################################################################
+########################################################################################################################
+# READING THERMO OUTPUTS FOR thermo_style = one
+
+if thermo_style == 'one' and skip == False:
+
+    # SPLIT AND CLEAN THE LOG FILE LINES
+    data = []
+    for line in lines:
+        line = line.strip('\n' + '').split(' ')
+        line = filter(None, line)
+
+        # If line is just empty
+        if line != []:
+            pass
+            data.append(line)
+
+    #print data
+
+    # PICK AND STORE LINES STARTING BY FLOAT (DATA LINES)
+    logged_tmp = []
+    for i in range(0, len(data)):
+        x = data[i]
+        try:
+            float(x[0])
+            logged_tmp.append(x)
+        except ValueError:
+            continue
+
+    logged = []
+    for i in range(len(logged_tmp)):
+        x = logged_tmp[i]
+        try:
+            float(x[1])
+            logged.append(x)
+        except ValueError:
+            continue
+
+
+    for i in range(0, len(logged)):
+        logged[i] = map(float, logged[i])
+
+    logged = np.array(logged)
+
+    n_vars = len(var)
+
+    logged_vars = {}
+    for i in range(0, n_vars):
+        if var[i] != 'step':
+            logged_var = { var[i] : [row[i] for row in logged] }  # MATCH VARIABLE NAMES AND VALUES IN A DICT
+            logged_vars.update(logged_var)
+
+
+    def pickNOMADVarsOne():
+
+        press = logged_vars.get('press')
+        temp  = logged_vars.get('temp')
+
+        return (press, temp)
+
+
+    press, temp = pickNOMADVarsOne()
+
 
 
 
