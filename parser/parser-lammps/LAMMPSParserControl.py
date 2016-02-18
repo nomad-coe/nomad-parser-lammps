@@ -5,7 +5,8 @@ import operator
 from contextlib import contextmanager
 
 from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, \
-                              readTPSettings, readIntegratorSettings, readLoggedThermoOutput
+                              readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
+                              simulationTime
 
 from LAMMPSParserData  import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
 
@@ -44,7 +45,7 @@ def parse(filename):
 
     # opening section_run
     with o(p, 'section_run'):
-        p.addValue('program_name', 'LAM\\MPS')
+        p.addValue('program_name', 'LAMMPS')
 
 
         # opening section_topology
@@ -196,6 +197,7 @@ def parse(filename):
         # opening section_frame_sequence
         skip = logFileOpen()
         var, thermo_style = readLoggedThermoOutput()
+        frame_length, simulation_length = simulationTime()
 
 ########################################################################################################################
 # THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
@@ -210,8 +212,9 @@ def parse(filename):
                 press = readPressure()
                 vol = readVolume()
 
-
-                p.addValue('number_of_frames_in_sequence', frames_count)
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length, simulation_length])
+                #p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
@@ -230,6 +233,9 @@ def parse(filename):
             with o(p, 'section_frame_sequence'):
 
                 ke, pe, press, temp = pickNOMADVarsCustom()
+
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length, simulation_length])
 
                 if pe:
                     pe = np.asarray(pe)
@@ -263,6 +269,9 @@ def parse(filename):
                 temp = np.asarray(temp)
                 press = np.asarray(press)
 
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length, simulation_length])
+
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
 
@@ -271,8 +280,7 @@ def parse(filename):
 
 
 
-
-
+########################################################################################################################
 
     p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED
 

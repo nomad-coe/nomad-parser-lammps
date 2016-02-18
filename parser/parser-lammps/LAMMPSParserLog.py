@@ -1,7 +1,7 @@
 import fnmatch
 import os, sys
 import numpy as np
-from LAMMPSParserInput import readLoggedThermoOutput
+from LAMMPSParserInput import readLoggedThermoOutput, readLogFileName
 
 examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
@@ -9,8 +9,16 @@ examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__f
 ########################################################################################################################
 # FIRST I FIND THE LAMMPS OUTPUT LOG FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 
-n       = str
-extFile = str
+logFileName = readLogFileName()
+
+print logFileName
+n            = str
+extFile      = str
+storedOutput = []
+
+if logFileName:
+    n = logFileName
+    storedOutput = open(examplesPath + '/' + n).readlines()
 
 if sys.argv[1].endswith("1_methyl_naphthalene"):
     extFile = "naph_298_396_20ns"
@@ -28,7 +36,6 @@ if sys.argv[1].endswith("custom"):
 ########################################################################################################################
 # HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
 
-storedOutput = []
 for file in os.listdir(examplesPath):
     if file.endswith(extFile):
         n = file

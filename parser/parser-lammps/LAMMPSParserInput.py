@@ -60,6 +60,35 @@ storeInput = [line for line in storeInput if not line.startswith('#')]  # EXCLUD
 
 ################################################################################################################################
 
+def readLogFileName():
+
+    log_filter = filter(lambda x: x.startswith("log "), storeInput)
+
+    if not log_filter:
+        logFileName = 'log.lammps'  # thermo output is put in the log.lammps file with input echo if a name is not given from the input
+
+    for line in log_filter:
+        line_split = line.split()
+
+        logFileName = line_split[1]
+
+    return logFileName
+
+
+def readDumpFileName():
+
+    dump_filter = filter(lambda x: x.startswith("dump "), storeInput)
+
+    for line in dump_filter:
+        line_split = line.split()
+
+        dumpFileName = line_split[5]
+
+    return dumpFileName
+
+
+################################################################################################################################
+
 def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT ALGORITHM
 
 	ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
@@ -86,10 +115,10 @@ def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT
 
 def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES ARE READ
 
-    target_t = 0
-    target_p = 0
+    target_t   = 0
+    target_p   = 0
     thermo_tau = 0
-    baro_tau = 0
+    baro_tau   = 0
 
     ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
 
@@ -128,7 +157,7 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
 
     for line in run_filt:
         line_split = line.split()
-        steps = float(line_split[1])
+        steps = int(line_split[1])
 
 
     ts_filter = filter(lambda x: fnmatch.fnmatch(x, 'timestep*'), storeInput)
@@ -139,6 +168,9 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
         tstep = float(line_split[1])
 
     return (int_type, tstep, steps)
+
+
+int_type, tstep, steps = readIntegratorSettings()
 
 
 ################################################################################################################################
@@ -292,3 +324,51 @@ def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT A
     var = [i for i in var if not i.startswith('f_') and not i.startswith('v_') and not i.startswith('c_')]
 
     return (var, thermo_style)
+
+
+################################################################################################################################
+
+def readUnits():  # HERE I READ THE UNITS STYLE
+
+    units_filter = filter(lambda x: fnmatch.fnmatch(x, '*units*'), storeInput)
+
+    units = []
+    for line in units_filter:
+            line_split = line.split()
+            unitsKey  = line_split[0]
+            unitsType = line_split[1]
+
+    units = [unitsKey, unitsType]
+
+    unitsDict = { unitsKey : unitsType }
+
+    return (unitsDict, unitsType)
+
+unitsDict, unitsType = readUnits()
+
+
+################################################################################################################################
+
+def simulationTime():
+
+    run_filt   = filter(lambda x: x.startswith("run"), storeInput)
+    frame_filt = filter(lambda  x: x.startswith("thermo "), storeInput)
+
+    for line in run_filt:
+        line_split = line.split()
+        steps = float(line_split[1])
+
+        if unitsType == "real":
+            time_length = steps * tstep
+            #time_length = str(time_length) + " ns"
+            #time_length = { "Simulation time" : time_length }
+
+    for line in frame_filt:
+        line_split = line.split()
+        frame = int(line_split[1])
+        frame_length = frame * tstep
+
+
+    return (frame_length, time_length)
+
+

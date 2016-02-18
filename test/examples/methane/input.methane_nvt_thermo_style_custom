@@ -40,7 +40,7 @@ dump 1 all custom 400 64xmethane-nvt.lammpstrj id type x y z ix iy iz
 #dump_modify 1 unwrap no
 
 # output log
-log log.64xmethane-nvt
+log log.64xmethane-nvt-thermo_style_custom
 
 # 10.0ps
 run 40000
