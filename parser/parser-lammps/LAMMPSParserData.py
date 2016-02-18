@@ -93,7 +93,7 @@ for i in range(0, len(data)):
             
 
 ########################################################################################################################
-def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDERING
+def readMass():  # READING ATOMIC MASSES AND CALCULATING ATOMIC NUMBER FOR XYZ RENDERING
 
     mass_dict = {}
     mass_list = []
@@ -105,7 +105,7 @@ def readMass():  # READ ATOMIC MASSES AND CALCULATE ATOMIC NUMBER FOR XYZ RENDER
                 mass = data[i+j+1]
                 index = int(mass[0])
                 val   = float(mass[1])
-                val1  = int(val/2)
+                val1  = int(val/2)     # REQUIRES DOUBLE CHECK
 
 
                 # create list
@@ -128,7 +128,7 @@ mass_dict, mass_list, mass_xyz     = readMass()
 
 
 ########################################################################################################################
-def readCharge():  # READ ATOMIC CHARGES
+def readCharge():  # READING ATOMIC CHARGES
 
     charge_dict = {}
     charge_list = []
@@ -147,7 +147,7 @@ def readCharge():  # READ ATOMIC CHARGES
 
 
 ########################################################################################################################
-def assignBonds():  # ASSIGN COVALENT BOND TO ITS ATOM PAIR
+def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
     bond_ass_d = {}
     bond_ass = []
     for line in bond_list:
@@ -183,7 +183,7 @@ def assignBonds():  # ASSIGN COVALENT BOND TO ITS ATOM PAIR
 
 
 ########################################################################################################################
-def assignAngles():  # ASSIGN ANGLE TO ITS ATOM TRIPLET
+def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
     angle_ass_d = {}
     angle_ass = []
     for line in angle_list:
@@ -222,7 +222,7 @@ def assignAngles():  # ASSIGN ANGLE TO ITS ATOM TRIPLET
 
 
 ########################################################################################################################
-def assignDihedrals():  # ASSIGN DIHEDRAL TO ITS ATOM QUARTET
+def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
     dihedral_ass_d = {}
     dihedral_ass = []
     for line in dihedral_list:
@@ -264,8 +264,7 @@ def assignDihedrals():  # ASSIGN DIHEDRAL TO ITS ATOM QUARTET
 
 
 
-
-
+########################################################################################################################
 xyz_file = []     # PREPARE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
 xyz_file.append([at_count])
 xyz_file.append([' '])

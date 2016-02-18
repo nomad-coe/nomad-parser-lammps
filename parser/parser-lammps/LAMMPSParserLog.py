@@ -5,9 +5,11 @@ from LAMMPSParserInput import readLoggedThermoOutput
 
 examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
+########################################################################################################################
+########################################################################################################################
 # FIRST I FIND THE LAMMPS OUTPUT LOG FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 
-n    = str
+n       = str
 extFile = str
 
 if sys.argv[1].endswith("1_methyl_naphthalene"):
@@ -22,24 +24,49 @@ if sys.argv[1].endswith("one"):
 if sys.argv[1].endswith("custom"):
     extFile = "-thermo_style_custom"
 
-lines = []
+########################################################################################################################
+########################################################################################################################
+# HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
+
+storedOutput = []
 for file in os.listdir(examplesPath):
     if file.endswith(extFile):
         n = file
-        lines = open(examplesPath + '/' + n).readlines()
+        storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
 
-def logFileOpen():
+def logFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skip = True
-    if lines:
+    if storedOutput:
         skip = False
 
     return skip
 
 skip = logFileOpen()
 
-#print skip
-var, thermo_style = readLoggedThermoOutput()
+var, thermo_style = readLoggedThermoOutput()   # var = list of output varibles defined when thermo_style = custom
+                                               # thermo_style =  output style read in the lammps input file
 
+########################################################################################################################
+########################################################################################################################
+# NAME CONVENTION (AS IN LAMMPS)
+
+# ke    = Kinetic Energy    (defined in section_frame_sequence)
+# pe    = Potential Energy  (defined in section_frame_sequence)
+# temp  = Temperature       (defined in section_frame_sequence)
+# press = Pressure          (defined in section_frame_sequence)
+
+# LAMMPS thermo_style SETTINGS
+
+# thermo_style = multi   --> multiple-line listing of thermodynamic info that is the equivalent of
+#                           'thermo_style custom etotal ke temp pe ebond eangle edihed eimp evdwl ecoul elong press'.
+#                            The listing contains numeric values and a string ID for each quantity.
+
+# thermo_style = one     --> one-line summary of thermodynamic info that is the equivalent of
+#                            'thermo_style custom step temp epair emol etotal press'. The line contains only numeric values.
+
+# thermo_style = custom  --> Style custom is the most general setting and allows you to specify which of
+#                            the keywords listed above you want printed on each thermodynamic timestep.
+#
 
 ########################################################################################################################
 ########################################################################################################################
@@ -47,9 +74,9 @@ var, thermo_style = readLoggedThermoOutput()
 
 if thermo_style == 'multi' and skip == False:
 
-    def readFrames():
+    def readFrames():   # reading frames' time step
 
-        frame_filter = filter(lambda x: fnmatch.fnmatch(x, '---------------- Step*'), lines)
+        frame_filter = filter(lambda x: fnmatch.fnmatch(x, '---------------- Step*'), storedOutput)
 
         frames = []
         for line in frame_filter:
@@ -63,43 +90,43 @@ if thermo_style == 'multi' and skip == False:
         return frames_count
 
 
-    def readPotEnergy():
+    def readPotEnergy():    # reading frames' potential energy
 
-        poten_filter = filter(lambda x: fnmatch.fnmatch(x, 'PotEng*'), lines)
+        pe_filter = filter(lambda x: fnmatch.fnmatch(x, 'PotEng*'), storedOutput)
 
-        poten = []
-        for line in poten_filter:
+        pe = []
+        for line in pe_filter:
             line_split = line.split()
 
-            poten_fr = float(line_split[2])
-            poten.append(poten_fr)
-        poten = np.asarray(poten)
+            pe_fr = float(line_split[2])
+            pe.append(pe_fr)
+        pe = np.asarray(pe)
 
-        return poten
+        return pe
 
 
-    def readKinEnergy():
+    def readKinEnergy():    # reading frames' kinetic energy
 
-        kinen_filter = filter(lambda x: fnmatch.fnmatch(x, 'TotEng*'), lines)
+        ke_filter = filter(lambda x: fnmatch.fnmatch(x, 'TotEng*'), storedOutput)
 
-        kinen = []
+        ke = []
         temp  = []
-        for line in kinen_filter:
+        for line in ke_filter:
             line_split = line.split()
 
-            kinen_fr = float(line_split[5])
+            ke_fr = float(line_split[5])
             temp_fr  = float(line_split[8])
-            kinen.append(kinen_fr)
+            ke.append(ke_fr)
             temp.append(temp_fr)
-        kinen = np.asarray(kinen)
+        ke = np.asarray(ke)
         temp = np.asarray(temp)
 
-        return (kinen, temp)
+        return (ke, temp)
 
 
-    def readPressure():
+    def readPressure():     # reading frames' pressure
 
-        press_filter = filter(lambda x: fnmatch.fnmatch(x, 'E_coul*'), lines)
+        press_filter = filter(lambda x: fnmatch.fnmatch(x, 'E_coul*'), storedOutput)
 
         press = []
         for line in press_filter:
@@ -112,9 +139,9 @@ if thermo_style == 'multi' and skip == False:
         return press
 
 
-    def readVolume():
+    def readVolume():       # reading frames' simulation box volume
 
-        vol_filter = filter(lambda x: fnmatch.fnmatch(x, 'Volume*'), lines)
+        vol_filter = filter(lambda x: fnmatch.fnmatch(x, 'Volume*'), storedOutput)
 
         if vol_filter:
 
@@ -140,7 +167,7 @@ if thermo_style == 'custom' and skip == False:
 
     # SPLIT AND CLEAN THE LOG FILE LINES
     data = []
-    for line in lines:
+    for line in storedOutput:
         line = line.strip('\n' + '').split(' ')
         line = filter(None, line)
 
@@ -151,7 +178,7 @@ if thermo_style == 'custom' and skip == False:
 
     #print data
 
-    # PICK AND STORE LINES STARTING BY FLOAT (DATA LINES)
+    # PICK AND STORE LINES STARTING BY FLOAT (THERMO OUTPUT LINES)
     logged_tmp = []
     for i in range(0, len(data)):
         x = data[i]
@@ -178,6 +205,7 @@ if thermo_style == 'custom' and skip == False:
 
     n_vars = len(var)
 
+    # A DICTIONARY IS CREATED WHERE ALL LOGGED VARIABLES ARE STORED (KEYS ARE LAMMPS STANDARD VARIABLE'S NAMES)
     logged_vars = {}
     for i in range(0, n_vars):
         if var[i] != 'step':
@@ -185,6 +213,7 @@ if thermo_style == 'custom' and skip == False:
             logged_vars.update(logged_var)
 
 
+    # FUNCTION RETURNING THE LISTS STORING THE VARIABLES DEFINED IN section_frame_sequence (NOT THE USER DEFINED ONES)
     def pickNOMADVarsCustom():
 
         ke    = logged_vars.get('ke')
@@ -206,7 +235,7 @@ if thermo_style == 'one' and skip == False:
 
     # SPLIT AND CLEAN THE LOG FILE LINES
     data = []
-    for line in lines:
+    for line in storedOutput:
         line = line.strip('\n' + '').split(' ')
         line = filter(None, line)
 
@@ -217,7 +246,7 @@ if thermo_style == 'one' and skip == False:
 
     #print data
 
-    # PICK AND STORE LINES STARTING BY FLOAT (DATA LINES)
+    # PICK AND STORE LINES STARTING BY FLOAT (THERMO OUTPUT LINES)
     logged_tmp = []
     for i in range(0, len(data)):
         x = data[i]
@@ -244,6 +273,7 @@ if thermo_style == 'one' and skip == False:
 
     n_vars = len(var)
 
+    # A DICTIONARY IS CREATED WHERE ALL LOGGED VARIABLES ARE STORED (KEYS ARE LAMMPS STANDARD VARIABLE'S NAMES)
     logged_vars = {}
     for i in range(0, n_vars):
         if var[i] != 'step':
@@ -251,6 +281,7 @@ if thermo_style == 'one' and skip == False:
             logged_vars.update(logged_var)
 
 
+    # FUNCTION RETURNING THE LISTS STORING THE VARIABLES DEFINED IN section_frame_sequence (NOT THE USER DEFINED ONES)
     def pickNOMADVarsOne():
 
         press = logged_vars.get('press')

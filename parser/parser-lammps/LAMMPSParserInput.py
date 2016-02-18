@@ -24,6 +24,7 @@ for line in lines:
         pass
         storeInput.append(line)
 
+
 var_name  = []
 var_value = []
 
@@ -46,7 +47,10 @@ for line in storeInput:
 for i in range(0, len(var_name)):
     storeInput = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in storeInput]
 
-lines = map(' '.join, storeInput)
+storeInput = map(' '.join, storeInput)
+storeInput = [line for line in storeInput if not line.startswith('#')]  # EXCLUDING COMMENT LINES
+
+#print storeInput
 
 ################################################################################################################################
 
@@ -58,7 +62,7 @@ lines = map(' '.join, storeInput)
 
 def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT ALGORITHM
 
-	ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), lines)
+	ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
 
 	for line in ensemble_filter:
 		line_split = line.split()
@@ -87,7 +91,7 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
     thermo_tau = 0
     baro_tau = 0
 
-    ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), lines)
+    ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
 
     for line in ensemble_filter:
         line_split = line.split()
@@ -110,7 +114,7 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
 
 def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STEP, NUMBER OF STEPS, ...)
 
-    int_filter = filter(lambda x: fnmatch.fnmatch(x, 'run_style*'), lines)
+    int_filter = filter(lambda x: fnmatch.fnmatch(x, 'run_style*'), storeInput)
 
     if int_filter:
         for line in int_filter:
@@ -120,14 +124,14 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
         int_type = "verlet"  # if no run_style command, the integrator is standard Verlet
 
 
-    run_filt = filter(lambda x: x.startswith("run"), lines)  # OK FOR A SINGLE RUN INPUT SCRIPT
+    run_filt = filter(lambda x: x.startswith("run"), storeInput)  # OK FOR A SINGLE RUN INPUT SCRIPT
 
     for line in run_filt:
         line_split = line.split()
         steps = float(line_split[1])
 
 
-    ts_filter = filter(lambda x: fnmatch.fnmatch(x, 'timestep*'), lines)
+    ts_filter = filter(lambda x: fnmatch.fnmatch(x, 'timestep*'), storeInput)
 
     for line in ts_filter:
         line_split = line.split()
@@ -141,7 +145,7 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
 
 def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
-    lj_filt = filter(lambda x: x.startswith("pair_coeff"), lines)
+    lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
 
     list_of_ljs = {}
     at_types = []
@@ -183,7 +187,7 @@ def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
 def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
 
-    bond_filt = filter(lambda x: x.startswith("bond_coeff"), lines)
+    bond_filt = filter(lambda x: x.startswith("bond_coeff"), storeInput)
 
     list_of_bonds={}
     for line in bond_filt:
@@ -211,7 +215,7 @@ def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
 
 def readAngles():
 
-    angle_filt = filter(lambda x: x.startswith("angle_coeff"), lines)
+    angle_filt = filter(lambda x: x.startswith("angle_coeff"), storeInput)
 
     list_of_angles={}
     for line in angle_filt:
@@ -238,7 +242,7 @@ def readAngles():
 
 def readDihedrals():
 
-    dihedral_filt = filter(lambda x: x.startswith("dihedral_coeff"), lines)
+    dihedral_filt = filter(lambda x: x.startswith("dihedral_coeff"), storeInput)
 
     list_of_dihedrals={}
     for line in dihedral_filt:
@@ -267,9 +271,10 @@ def readDihedrals():
 
 def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT ARE LOGGED (excludind user-defined ones)
 
-    logvars_filter = filter(lambda x: fnmatch.fnmatch(x, 'thermo_style*'), lines)
+    logvars_filter = filter(lambda x: fnmatch.fnmatch(x, 'thermo_style*'), storeInput)
 
-    var = []
+    var          = []
+    thermo_style = str
     for line in logvars_filter:
         line_split = line.split()
 
