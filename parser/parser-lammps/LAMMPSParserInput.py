@@ -2,13 +2,15 @@ import fnmatch
 import os, sys
 import numpy as np
 
-examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
+#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 ########################################################################################################################
 # FIRST I OPEN THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 ########################################################################################################################
 
 n = sys.argv[1]
-lines = open(n).readlines()
+examplesPath = os.path.dirname(os.path.abspath(n))
+
+lines = open(n).readlines()  # read LAMMPS input file
 
 ########################################################################################################################
 # HERE I FIND USER DEFINED VARIABLES AND SUBSTITUTE THEIR NUMERIC VALUE THROUGHOUT

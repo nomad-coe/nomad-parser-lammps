@@ -1,8 +1,9 @@
 import fnmatch
-import os
+import os, sys
 import numpy as np
 
-examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
+examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
+#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
 # FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 for file in os.listdir(examplesPath):
@@ -265,7 +266,7 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
 
 ########################################################################################################################
-xyz_file = []     # PREPARE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
 xyz_file.append([at_count])
 xyz_file.append([' '])
 for line in topo_list:
@@ -273,5 +274,5 @@ for line in topo_list:
     xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
     xyz_file.append(xyz_line)
 
-with open('../../test/examples//methane/generated_from_data_file.xyz', 'w') as xyz:
+with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
     xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES

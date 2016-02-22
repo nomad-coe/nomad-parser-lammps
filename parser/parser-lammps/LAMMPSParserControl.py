@@ -36,11 +36,11 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 
 
 
-def parse(filename):
+def parse(fName):
 
     p  = JsonParseEventsWriterBackend(metaInfoEnv)
     o  = open_section
-    p.startedParsingSession(filename, parser_info)
+    p.startedParsingSession(fName, parser_info)
 
 
     # opening section_run
@@ -289,5 +289,5 @@ def parse(filename):
 
 if __name__ == '__main__':
     import sys
-    filename = sys.argv[1]
-    parse(filename)
+    fName = sys.argv[1]
+    parse(fName)

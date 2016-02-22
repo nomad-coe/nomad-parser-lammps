@@ -3,22 +3,26 @@ import os, sys
 import numpy as np
 from LAMMPSParserInput import readLoggedThermoOutput, readLogFileName
 
-examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
+examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
+#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
 ########################################################################################################################
 ########################################################################################################################
 # FIRST I FIND THE LAMMPS OUTPUT LOG FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 
-logFileName = readLogFileName()
+logFileName = readLogFileName()  # get the output log file name defined in the input file
 
-print logFileName
 n            = str
 extFile      = str
 storedOutput = []
 
-if logFileName:
+if logFileName:  # if the output log file name is defined within the input file, open that file
     n = logFileName
-    storedOutput = open(examplesPath + '/' + n).readlines()
+    try:
+        storedOutput = open(examplesPath + '/' + n).readlines()
+    except IOError:
+        pass
+
 
 if sys.argv[1].endswith("1_methyl_naphthalene"):
     extFile = "naph_298_396_20ns"
