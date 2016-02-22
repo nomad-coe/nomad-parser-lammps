@@ -4,7 +4,7 @@ import math
 import operator
 from contextlib import contextmanager
 
-from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, \
+from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, readStyles, \
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
                               simulationTime
 
@@ -59,6 +59,13 @@ def parse(fName):
             charge_dict, charge_list        = readCharge()
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
 
+            # collection list of force field functional styles
+            list_of_styles = readStyles()
+            pairFunctional = list_of_styles.get('pair_style')
+            bondFunctional = list_of_styles.get('bond_style')
+            angleFunctional = list_of_styles.get('angle_style')
+            dihedralFunctional = list_of_styles.get('dihedral_style')
+
             # collecting covalent bond definitions
             bond_dict  = assignBonds()
             bond_dict = sorted(bond_dict.items(), key=operator.itemgetter(0))
@@ -108,6 +115,9 @@ def parse(fName):
                     p.addValue('number_of_interactions', bd_types)
                     p.addValue('number_of_atoms_per_interaction', len(bond_dict[0][1]))
 
+                    if bondFunctional:
+                        p.addValue('interaction_kind', bondFunctional)
+
                     int_index_store = []
                     int_param_store = []
 
@@ -135,6 +145,9 @@ def parse(fName):
                 with o(p, 'section_interaction'):
                     p.addValue('number_of_interactions', ag_types)
                     p.addValue('number_of_atoms_per_interaction', len(angle_dict[0][1]))
+
+                    if angleFunctional:
+                        p.addValue('interaction_kind', angleFunctional)
 
                     int_index_store = []
                     int_param_store = []
@@ -165,6 +178,9 @@ def parse(fName):
                     p.addValue('number_of_interactions', dh_types)
                     p.addValue('number_of_atoms_per_interaction', len(dihedral_dict[0][1]))
 
+                    if dihedralFunctional:
+                        p.addValue('interaction_kind', dihedralFunctional)
+
                     int_index_store = []
                     int_param_store = []
 
@@ -183,6 +199,9 @@ def parse(fName):
 
                     p.addValue('number_of_interactions', lj_types)
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))
+
+                    if pairFunctional:
+                        p.addValue('interaction_kind', pairFunctional)
 
                     int_index_store = []
                     int_param_store = []
@@ -247,9 +266,13 @@ def parse(fName):
                 p.addValue('frame_sequence_time', [frame_length, simulation_length])
                 #p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
+                p.addArrayValues('frame_sequence_potential_energy', pe)
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
+                p.addArrayValues('frame_sequence_kinetic_energy', ke)
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+                p.addArrayValues('frame_sequence_temperature', temp)
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+                p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -271,18 +294,22 @@ def parse(fName):
                 if pe:
                     pe = np.asarray(pe)
                     p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
+                    p.addArrayValues('frame_sequence_potential_energy', pe)
 
                 if ke:
                     ke = np.asarray(ke)
                     p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
+                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
 
                 if temp:
                     temp = np.asarray(temp)
                     p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+                    p.addArrayValues('frame_sequence_temperature', temp)
 
                 if press:
                     press = np.asarray(press)
                     p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+                    p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -305,6 +332,8 @@ def parse(fName):
 
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+                p.addArrayValues('frame_sequence_temperature', temp)
+                p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass

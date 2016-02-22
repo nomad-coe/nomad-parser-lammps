@@ -148,11 +148,9 @@ def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, D
 
     list_of_styles.update(modify_dict)
     list_of_styles.update(special_dict)
-    list_of_styles = { "Calc_Styles": list_of_styles }
 
     return list_of_styles
 
-    print list_of_styles
 
 ################################################################################################################################
 
