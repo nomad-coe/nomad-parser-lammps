@@ -149,6 +149,7 @@ def readCharge():  # READING ATOMIC CHARGES
 
 ########################################################################################################################
 def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
+
     bond_ass_d = {}
     bond_ass = []
     for line in bond_list:
@@ -185,6 +186,7 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
 
 ########################################################################################################################
 def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
+
     angle_ass_d = {}
     angle_ass = []
     for line in angle_list:
@@ -224,6 +226,7 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
 
 ########################################################################################################################
 def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
+
     dihedral_ass_d = {}
     dihedral_ass = []
     for line in dihedral_list:

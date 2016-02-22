@@ -4,7 +4,7 @@ import math
 import operator
 from contextlib import contextmanager
 
-from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, \
+from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, \
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
                               simulationTime
 
@@ -79,6 +79,14 @@ def parse(fName):
             list_of_dihedrals = readDihedrals()
             list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
             dh_types = len(dihedral_dict)
+
+            # collecting dispersion interactions ff terms
+            list_of_ljs, ljs_dict  = readPairCoeff()
+            ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
+            list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
+            lj_types = len(ljs_dict)
+
+
 
             p.addValue('number_of_topology_atoms', at_types)
             pass
@@ -169,11 +177,30 @@ def parse(fName):
                     pass
 
 
+            # opening section_interaction for dispersive interactions
+            if lj_types:
+                with o(p, 'section_interaction'):
+
+                    p.addValue('number_of_interactions', lj_types)
+                    p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))
+
+                    int_index_store = []
+                    int_param_store = []
+
+                    for i in range(lj_types):
+                        int_index_store.append(ljs_dict[i][1])
+                        int_param_store.append(list_of_ljs[i][1])
+
+                    p.addValue('interaction_atoms', int_index_store)
+                    p.addValue('interaction_parameters', int_param_store)
+                    pass
+
+
 
         # opening section_sampling_method
         with o(p, 'section_sampling_method'):
             ensemble, sampling = readEnsemble()
-            target_t, thermo_tau, target_p, baro_tau = readTPSettings()
+            target_t, thermo_tau, langevin_gamma, target_p, baro_tau = readTPSettings()
             int_type, tstep, steps = readIntegratorSettings()
 
             p.addValue('integrator_type', int_type)
@@ -190,6 +217,10 @@ def parse(fName):
             if target_p:
                 p.addValue('barostat_target_pressure', target_p)
                 p.addValue('barostat_tau', baro_tau)
+
+            if langevin_gamma:
+                p.addValue('thermostat_target_temperature', target_t)
+                p.addValue('langevin_gamma', langevin_gamma)
             pass
 
 

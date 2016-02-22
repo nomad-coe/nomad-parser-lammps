@@ -50,7 +50,7 @@ for i in range(0, len(var_name)):
     storeInput = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in storeInput]
 
 storeInput = map(' '.join, storeInput)
-storeInput = [line for line in storeInput if not line.startswith('#')]  # EXCLUDING COMMENT LINES
+storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR COMMENT LINES
 
 #print storeInput
 
@@ -67,7 +67,8 @@ def readLogFileName():
     log_filter = filter(lambda x: x.startswith("log "), storeInput)
 
     if not log_filter:
-        logFileName = 'log.lammps'  # thermo output is put in the log.lammps file with input echo if a name is not given from the input
+        logFileName = 'log.lammps'  # thermo output is put in the log.lammps file
+                                    # with input echo if a file name is not given from the input
 
     for line in log_filter:
         line_split = line.split()
@@ -88,6 +89,70 @@ def readDumpFileName():
 
     return dumpFileName
 
+################################################################################################################################
+
+def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, DIHEDRALS, ELECTROSTATICS, PAIR STYLES)
+
+    specs_filter = filter(lambda x: fnmatch.fnmatch(x, '*_style*'), lines)
+    pm_filter    = filter(lambda x: x.startswith("pair_modify"), lines)
+    sb_filter    = filter(lambda x: x.startswith("special_bonds"), lines)
+
+    list_of_styles = {}
+    styles_dict    = {}
+    for line in specs_filter:
+        line_split = line.split()
+        if len(line_split)==2:   # the first 2 terms are strings
+
+            index1 = str(line_split[0])
+            index2 = str(line_split[1])
+
+    # creat a list
+            styles = [index1, index2]
+
+    # create a dictionary
+            styles_dict = { index1 : index2 }
+
+        elif len(line_split)>2 and line_split[0] != "thermo_style":  # this reads lj/cut, lj/class2, lj/charmm, lj/gromacs, etc. with cutoff
+
+            index1 = str(line_split[0])
+            index2 = str(line_split[1])
+
+            cut = []
+            for i in range(2, len(line_split)):
+                if "#" in line_split[i]:
+                        break
+
+                try:
+                    index = float(line_split[i])
+                    cut.append(index)
+                except ValueError:
+                    index = line_split[i]
+                    cut.append(index)
+
+            # creat a list
+            styles = [index1, index2, cut]
+
+        # create a dictionary
+            styles_dict = { index1 : [index2, cut] }
+        list_of_styles.update(styles_dict)
+
+    for line in pm_filter:       # reading pair_modify specs
+        line_split = line.split()
+
+        modify_dict = { line_split[0] : [ line_split[1:] ] }
+
+    for line in sb_filter:       # reading special_bonds specs
+        line_split = line.split()
+
+        special_dict = { line_split[0] : [ line_split[1:] ] }
+
+    list_of_styles.update(modify_dict)
+    list_of_styles.update(special_dict)
+    list_of_styles = { "Calc_Styles": list_of_styles }
+
+    return list_of_styles
+
+    print list_of_styles
 
 ################################################################################################################################
 
@@ -98,29 +163,35 @@ def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT
 	for line in ensemble_filter:
 		line_split = line.split()
 
-		if line_split[3] == "nve":
-			ensemble = "NVE"
-
 		if line_split[3] == "langevin":
 			sampling = "langevin_dynamics"
 
-		if line_split[3] == "nvt":
-			sampling = "molecular_dynamics"
-			ensemble = "NVT"
+        if line_split[3] == "nve":
+            sampling = "molecular_dynamics"
+            ensemble = "NVE"
 
-		if line_split[3] == "npt":
-			sampling = "molecular_dynamics"
-			ensemble = "NPT"
+        if line_split[3] == "nvt":
+            sampling = "molecular_dynamics"
+            ensemble = "NVT"
+
+        if line_split[3] == "npt":
+            sampling = "molecular_dynamics"
+            ensemble = "NPT"
+
+        if line_split[3] == "nph":
+            sampling = "molecular_dynamics"
+            ensemble = "NPH"
 
 	return (ensemble, sampling)
 
 
 def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES ARE READ
 
-    target_t   = 0
-    target_p   = 0
-    thermo_tau = 0
-    baro_tau   = 0
+    target_t       = 0
+    target_p       = 0
+    thermo_tau     = 0
+    baro_tau       = 0
+    langevin_gamma = 0
 
     ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
 
@@ -137,7 +208,15 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
             target_p = float(line_split[10])
             baro_tau = float(line_split[11])
 
-    return (target_t, thermo_tau, target_p, baro_tau)
+        if line_split[3] == "nph":
+            target_p = float(line_split[6])
+            baro_tau = float(line_split[7])
+
+        if line_split[3] == "langevin":
+            target_t = float(line_split[5])
+            langevin_gamma = float(line_split[6])
+
+    return (target_t, thermo_tau, langevin_gamma, target_p, baro_tau)
 
 
 
@@ -182,11 +261,15 @@ def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
     lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
 
     list_of_ljs = {}
-    at_types = []
+    ljs_dict     = {}
+    at_types    = []
+    index       = 0
     for line in lj_filt:
         line_split = line.split()
-        index1 = line_split[1]
-        index2 = line_split[2]
+
+        index += 1
+        atom1 = int(line_split[1])
+        atom2 = int(line_split[2])
 
         coeff = []
         for i in range(3, len(line_split)):  # this reads several pair styles coeffs with explicit cutoff (not for ReaxFF)
@@ -194,27 +277,28 @@ def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
                         break
 
             try:
-                index = float(line_split[i])
-                coeff.append(index)
+                param = float(line_split[i])
+                coeff.append(param)
             except ValueError:
-                    index = line_split[i]
-                    coeff.append(index)
+                    param = line_split[i]
+                    coeff.append(param)
 
         #index3 = float(line_split[3])
         #index4 = float(line_split[4])
 
     # creat a list
-        lj_coeff = [index1, index2, coeff]
+        lj_coeff = [atom1, atom2, coeff]
         at_types.append(lj_coeff)
 
-    # create a dictionary
+    # create dictionaries
+        lj_pair = { index : [atom1, atom2] }
+        ljs_dict.update(lj_pair)
 
-        index1 = index1 + " <=> " + index2
+        lj_param = {index : coeff}
+        list_of_ljs.update(lj_param)
 
-        lj_dict = { index1 : coeff }
-        list_of_ljs.update(lj_dict)
-    list_of_ljs = { "Pair coefficients" : list_of_ljs}
-    return (list_of_ljs, at_types)
+    #list_of_ljs = { "Pair coefficients" : list_of_ljs}
+    return (list_of_ljs, ljs_dict)
 
 
 ########################################################################################################################
