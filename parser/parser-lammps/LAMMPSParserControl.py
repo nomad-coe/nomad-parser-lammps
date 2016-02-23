@@ -17,17 +17,18 @@ from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
 
 
-@contextmanager
+########################################################################################################################
+########################################################################################################################
+@contextmanager # SECTIONS ARE CLOSED AUTOMATICALLY
 def open_section(p, name):
 	gid = p.openSection(name)
 	yield
 	p.closeSection(name, gid)
 
-
-
-
+########################################################################################################################
 parser_info = {"name": "parser-lammps", "version": "1.0"}
-metaInfoPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../nomad-meta-info/meta_info/nomad_meta_info/forcefield.nomadmetainfo.json"))
+metaInfoPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+               "../../../../nomad-meta-info/meta_info/nomad_meta_info/forcefield.nomadmetainfo.json"))
 
 metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
                                   dependencyLoader=None,
@@ -36,6 +37,11 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 
 
 
+########################################################################################################################
+########################################################################################################################
+####### PARSED VALUES ARE ORDERED IN SECTIONS
+########################################################################################################################
+########################################################################################################################
 def parse(fName):
 
     p  = JsonParseEventsWriterBackend(metaInfoEnv)
@@ -92,8 +98,6 @@ def parse(fName):
             ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
             list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
-
-
 
             p.addValue('number_of_topology_atoms', at_types)
             pass
@@ -266,13 +270,13 @@ def parse(fName):
                 p.addValue('frame_sequence_time', [frame_length, simulation_length])
                 #p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                p.addArrayValues('frame_sequence_potential_energy', pe)
+                #p.addArrayValues('frame_sequence_potential_energy', pe)
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                #p.addArrayValues('frame_sequence_kinetic_energy', ke)
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
+                #p.addArrayValues('frame_sequence_temperature', temp)
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_pressure', press)
+                #p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -294,22 +298,22 @@ def parse(fName):
                 if pe:
                     pe = np.asarray(pe)
                     p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                    p.addArrayValues('frame_sequence_potential_energy', pe)
+                    #p.addArrayValues('frame_sequence_potential_energy', pe)
 
                 if ke:
                     ke = np.asarray(ke)
                     p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                    #p.addArrayValues('frame_sequence_kinetic_energy', ke)
 
                 if temp:
                     temp = np.asarray(temp)
                     p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                    p.addArrayValues('frame_sequence_temperature', temp)
+                    #p.addArrayValues('frame_sequence_temperature', temp)
 
                 if press:
                     press = np.asarray(press)
                     p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                    p.addArrayValues('frame_sequence_pressure', press)
+                    #p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -332,21 +336,20 @@ def parse(fName):
 
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
-                p.addArrayValues('frame_sequence_pressure', press)
+                #p.addArrayValues('frame_sequence_temperature', temp)
+                #p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
 
 
-
 ########################################################################################################################
-
     p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED
 
 
 
-
+########################################################################################################################
+# POIT TO A FILE TO PARSE FROM COMMAND LINE
 if __name__ == '__main__':
     import sys
     fName = sys.argv[1]

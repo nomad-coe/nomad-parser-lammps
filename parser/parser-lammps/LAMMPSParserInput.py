@@ -319,7 +319,8 @@ def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
 
     #index1 = 'Bond ' + str(index1)
 
-        bond = { 'Force Constant' : index2, 'Equilibrium Length' : index3 }
+        #bond = { 'Force Constant' : index2, 'Equilibrium Length' : index3 }
+        bond = [ index2, index3 ]
         bond_dict = {index1 : bond }
         list_of_bonds.update(bond_dict)
     #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
@@ -347,7 +348,8 @@ def readAngles():
 
     #index1 = 'Angle ' + str(index1)
 
-        angle = { 'Force Constant' : index2, 'Equilibrium Angle' : index3 }
+        #angle = { 'Force Constant' : index2, 'Equilibrium Angle' : index3 }
+        angle = [ index2, index3 ]
         angle_dict = {index1 : angle }
         list_of_angles.update(angle_dict)
     #list_of_angles = { "Bond angles [Force constant, Rest angle]" : list_of_angles }
@@ -376,7 +378,8 @@ def readDihedrals():
 
     #index1 = 'Dihedral ' + str(index1)
 
-        dihedral = { 'Fourier Coefficients' : [ index2, index3, index4, index5 ] }
+        #dihedral = { 'Fourier Coefficients' : [ index2, index3, index4, index5 ] }
+        dihedral = [ index2, index3, index4, index5 ]
         dihedral_dict = {index1 : dihedral }
         list_of_dihedrals.update(dihedral_dict)
     #list_of_dihedrals = { "Dihedral parameters" : list_of_dihedrals }

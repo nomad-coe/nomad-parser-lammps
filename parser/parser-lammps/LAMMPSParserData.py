@@ -267,6 +267,39 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
     return dihedral_dict
 
 
+########################################################################################################################
+def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
+
+    moleculeId = 0
+    store = []
+    for i in range(len(bond_list)):
+        at1   = int(bond_list[i][2])  # atom 1 index
+        at2   = int(bond_list[i][3])  # atom 2 index
+
+        store.append([at1, at2])
+
+    moleculeAtoms = []
+    for i in range(0,len(store)-1):
+        moleculeAtoms.append(store[i][0])
+        moleculeAtoms.append(store[i][1])
+
+        if store[i+1][0] not in moleculeAtoms and store[i+1][1] not in moleculeAtoms:
+            break
+
+    moleculeAtoms = list(set(moleculeAtoms))  # clear doubles and return the list of atoms in the molecule
+
+    mixtureFlag = divmod(at_count, len(moleculeAtoms))[1]
+
+
+
+
+
+
+    return moleculeAtoms
+
+moleculeAtoms = assignMolecules()
+print moleculeAtoms
+
 
 ########################################################################################################################
 xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
