@@ -275,30 +275,33 @@ def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
     for i in range(len(bond_list)):
         at1   = int(bond_list[i][2])  # atom 1 index
         at2   = int(bond_list[i][3])  # atom 2 index
-
         store.append([at1, at2])
 
-    moleculeAtoms = []
+    atomIndexInMolecule = []
     for i in range(0,len(store)-1):
-        moleculeAtoms.append(store[i][0])
-        moleculeAtoms.append(store[i][1])
+        atomIndexInMolecule.append(store[i][0])
+        atomIndexInMolecule.append(store[i][1])
 
-        if store[i+1][0] not in moleculeAtoms and store[i+1][1] not in moleculeAtoms:
+        if store[i+1][0] not in atomIndexInMolecule and store[i+1][1] not in atomIndexInMolecule:
             break
 
-    moleculeAtoms = list(set(moleculeAtoms))  # clear doubles and return the list of atoms in the molecule
+    atomIndexInMolecule = list(set(atomIndexInMolecule))  # clear doubles and return the list of atoms in the molecule
 
-    mixtureFlag = divmod(at_count, len(moleculeAtoms))[1]
+    atomTypeInMolecule = []
+    for i in atomIndexInMolecule:
+        temp = int(topo_list[i-1][2])
+        atomTypeInMolecule.append(temp)
+
+    numberOfAtomsInMolecule = len(atomIndexInMolecule)
+    numberOfMolecules  = divmod(at_count, len(atomIndexInMolecule))[0]
+    mixtureFlag        = divmod(at_count, len(atomIndexInMolecule))[1]
+
+    return (atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules)
 
 
 
-
-
-
-    return moleculeAtoms
-
-moleculeAtoms = assignMolecules()
-print moleculeAtoms
+atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
+print atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules
 
 
 ########################################################################################################################

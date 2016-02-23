@@ -8,7 +8,7 @@ from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
                               simulationTime
 
-from LAMMPSParserData  import readMass, readCharge, assignBonds, assignAngles, assignDihedrals
+from LAMMPSParserData  import readMass, readCharge, assignBonds, assignAngles, assignDihedrals, assignMolecules
 
 from LAMMPSParserLog import logFileOpen
 
@@ -28,7 +28,7 @@ def open_section(p, name):
 ########################################################################################################################
 parser_info = {"name": "parser-lammps", "version": "1.0"}
 metaInfoPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-               "../../../../nomad-meta-info/meta_info/nomad_meta_info/forcefield.nomadmetainfo.json"))
+               "../../../../nomad-meta-info/meta_info/nomad_meta_info/lammps.nomadmetainfo.json"))
 
 metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
                                   dependencyLoader=None,
@@ -105,12 +105,27 @@ def parse(fName):
 
             # opening section_atom_types
             for i in range(at_types):
+                #gid = p.openSection('section_atom_type')
+                #p.closeSection('section_atom_type', gid)
+                #print gid
 
                 with o(p, 'section_atom_type'):
                     p.addValue('atom_type_name', [mass_xyz[i], i+1]) # Here atom_type_name is atomic number plus a integer index
                     p.addValue('atom_type_mass', mass_dict[i][1])
                     p.addValue('atom_type_charge', charge_dict[i][1])
                     pass
+
+            # opening section_molecule_type
+            with o(p, 'section_molecule_type'):
+                atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
+
+                atom_in_molecule_to_atom_type_ref = []
+                for i in atomTypeInMolecule:
+                    atom_in_molecule_to_atom_type_ref.append(i-1)
+
+                p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray(atom_in_molecule_to_atom_type_ref))
+
+
 
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
