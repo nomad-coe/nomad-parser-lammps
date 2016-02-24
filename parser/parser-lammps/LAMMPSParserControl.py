@@ -145,7 +145,7 @@ def parse(fName):
                 for i in bondTypeList:
                     for j in bondTypeList:
 
-                        store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==i ]
+                        store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==j ]
                     interaction_atoms.append(store)
 
                 for i in range(len(bondTypeList)):
@@ -158,6 +158,10 @@ def parse(fName):
                         if bondFunctional:
                             p.addValue('interaction_kind', bondFunctional)
 
+                        int_index_store = bond_dict[i][1]
+                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_bonds[i][1])
 
 
@@ -199,7 +203,7 @@ def parse(fName):
                 for i in angleTypeList:
                     for j in angleTypeList:
 
-                        store = [ [x[1], x[2], x[3]] for x in angle_interaction_atoms if x[0]==i ]
+                        store = [ [x[1], x[2], x[3]] for x in angle_interaction_atoms if x[0]==j ]
                     interaction_atoms.append(store)
 
                 for i in range(len(angleTypeList)):
@@ -212,6 +216,10 @@ def parse(fName):
                         if bondFunctional:
                             p.addValue('interaction_kind', angleFunctional)
 
+                        int_index_store = angle_dict[i][1]
+                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+
+                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_angles[i][1])
 
 
@@ -253,7 +261,7 @@ def parse(fName):
                 for i in dihedralTypeList:
                     for j in dihedralTypeList:
 
-                        store = [ [x[1], x[2], x[3], x[4]] for x in dihedral_interaction_atoms if x[0]==i ]
+                        store = [ [x[1], x[2], x[3], x[4]] for x in dihedral_interaction_atoms if x[0]==j ]
                     interaction_atoms.append(store)
 
                 for i in range(len(dihedralTypeList)):
@@ -266,6 +274,10 @@ def parse(fName):
                         if bondFunctional:
                             p.addValue('interaction_kind', dihedralFunctional)
 
+                        int_index_store = dihedral_dict[i][1]
+                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_dihedrals[i][1])
 
 
@@ -307,10 +319,15 @@ def parse(fName):
                         int_index_store.append(ljs_dict[i][1])
                         int_param_store.append(list_of_ljs[i][1])
 
-                    p.addValue('interaction_atoms', int_index_store)
+                    interaction_atoms_to_atom_type_ref = []
+                    for i in range(lj_types):
+                        temp = [int_index_store[i][0]-1, int_index_store[i][1]-1]
+                        interaction_atoms_to_atom_type_ref.append(temp)
+
+                    #p.addValue('interaction_atoms', int_index_store)
+                    p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
                     p.addValue('interaction_parameters', int_param_store)
                     pass
-
 
 
         # opening section_sampling_method

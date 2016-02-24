@@ -318,7 +318,7 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
             if int(line[1]) == i:
                 #count += 1
-                hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]) ]
+                hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]), int(line[5])  ]
                 dihedral_interaction_atoms.append(hit)
 
     return (dihedral_dict, dihedralTypeList, dihedral_interaction_atoms)
@@ -326,7 +326,7 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 dihedral_dict, dihedralTypeList, dihedral_interaction_atoms = assignDihedrals()
 
 print dihedralTypeList
-
+#print dihedral_interaction_atoms
 
 
 ########################################################################################################################
