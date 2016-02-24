@@ -32,10 +32,17 @@ for line in data:
         if "types" in line:
             at_types = int(line[0])  # NUMBER OF ATOM TYPES
 
-for line in data:
-    if "atoms" in line:
-        if len(line)==2:
-            at_count = int(line[0])  # NUMBER OF ATOMS
+
+def numberOfTopologyAtoms():
+
+    at_count = 0
+    for line in data:
+        if "atoms" in line:
+            if len(line)==2:
+                at_count = int(line[0])  # NUMBER OF ATOMS
+    return at_count
+
+at_count = numberOfTopologyAtoms()
 
 for line in data:
     if "bond" in line:
@@ -170,10 +177,12 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
         bond_pairs.append(temp)
 
     bond_dict = {}
+    bondTypeList = []
     for line in bond_pairs:
-        ind = line[0]
+        ind = int(line[0])
         at1 = int(line[1])
         at2 = int(line[2])
+        bondTypeList.append(ind)
 
         a = topo_list[at1-1][2]
         b = topo_list[at2-1][2]
@@ -181,7 +190,24 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
         bond_dict.update(bd)
     #bond_dict = { "Bond assignement (index, at_type1, at_type1)" : bond_dict }
 
-    return bond_dict
+    bondTypeList = sorted(bondTypeList)
+
+    bond_interaction_atoms = []
+    for i in bondTypeList:
+        for line in bond_list:
+
+            if int(line[1]) == i:
+                #count += 1
+                hit = [ int(line[1]), int(line[2]), int(line[3]) ]
+                bond_interaction_atoms.append(hit)
+
+    return (bond_dict, bondTypeList, bond_interaction_atoms)
+
+bond_dict, bondTypeList, bond_interaction_atoms = assignBonds()
+
+print bondTypeList
+#print store_interaction_atoms
+
 
 
 ########################################################################################################################
@@ -208,11 +234,13 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
         angle_triplets.append(temp)
 
     angle_dict = {}
+    angleTypeList = []
     for line in angle_triplets:
         ind = int(line[0])
         at1 = int(line[1])
         at2 = int(line[2])
         at3 = int(line[3])
+        angleTypeList.append(ind)
 
         a = topo_list[at1-1][2]
         b = topo_list[at2-1][2]
@@ -221,7 +249,23 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
         angle_dict.update(ag)
     #angle_dict = { "Angle assignement (index, at_type1, at_type1, at_type3)" : angle_dict }
 
-    return angle_dict
+    angleTypeList = sorted(angleTypeList)
+
+    angle_interaction_atoms = []
+    for i in angleTypeList:
+        for line in angle_list:
+
+            if int(line[1]) == i:
+                #count += 1
+                hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]) ]
+                angle_interaction_atoms.append(hit)
+
+    return (angle_dict, angleTypeList, angle_interaction_atoms)
+
+angle_dict, angleTypeList, angle_interaction_atoms = assignAngles()
+
+print angleTypeList
+
 
 
 ########################################################################################################################
@@ -249,12 +293,14 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
         dihedral_quartets.append(temp)
 
     dihedral_dict = {}
+    dihedralTypeList = []
     for line in dihedral_quartets:
         ind = int(line[0])
         at1 = int(line[1])
         at2 = int(line[2])
         at3 = int(line[3])
         at4 = int(line[4])
+        dihedralTypeList.append(ind)
     
         a = topo_list[at1-1][2]
         b = topo_list[at2-1][2]
@@ -264,7 +310,23 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
         dihedral_dict.update(dh)
     #dihedral_dict = { "Dihedral assignement (index, at_type1, at_type1, at_type3, at_type4)" : dihedral_dict }
 
-    return dihedral_dict
+    dihedralTypeList = sorted(dihedralTypeList)
+
+    dihedral_interaction_atoms = []
+    for i in dihedralTypeList:
+        for line in dihedral_list:
+
+            if int(line[1]) == i:
+                #count += 1
+                hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]) ]
+                dihedral_interaction_atoms.append(hit)
+
+    return (dihedral_dict, dihedralTypeList, dihedral_interaction_atoms)
+
+dihedral_dict, dihedralTypeList, dihedral_interaction_atoms = assignDihedrals()
+
+print dihedralTypeList
+
 
 
 ########################################################################################################################
@@ -301,7 +363,7 @@ def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
 
 
 atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
-print atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules
+#print atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules
 
 
 ########################################################################################################################
