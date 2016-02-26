@@ -73,7 +73,8 @@ for i in range(0, len(data)):
         for j in range(0, at_count):
             topo = data[i+j+1]
             topo_list.append(topo)
-
+topo_list.sort(key=lambda x: int(x[0]))  # ordering the atom list (important if the data file is generated from a binary restart file)
+#print topo_list
 
 bond_list = []    #  LIST STORING ALL BONDS
 for i in range(0, len(data)):
@@ -82,6 +83,7 @@ for i in range(0, len(data)):
         for j in range(0, bd_count):
             bd = data[i+j+1]
             bond_list.append(bd)
+bond_list.sort(key=lambda x: int(x[0]))
 
 angle_list = []    #  LIST STORING ALL ANGLES
 for i in range(0, len(data)):
@@ -90,6 +92,7 @@ for i in range(0, len(data)):
         for j in range(0, ag_count):
             ag = data[i+j+1]
             angle_list.append(ag)
+angle_list.sort(key=lambda x: int(x[0]))
 
 dihedral_list = []    #  LIST STORING ALL DIHEDRALS
 for i in range(0, len(data)):
@@ -98,6 +101,7 @@ for i in range(0, len(data)):
         for j in range(0, dh_count):
             dh = data[i+j+1]
             dihedral_list.append(dh)
+dihedral_list.sort(key=lambda x: int(x[0]))
             
 
 ########################################################################################################################
@@ -333,22 +337,64 @@ print dihedralTypeList
 def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
 
     moleculeId = 0
+
+###############################
+###### FIRST MOLECULE #########
+
     store = []
     for i in range(len(bond_list)):
         at1   = int(bond_list[i][2])  # atom 1 index
         at2   = int(bond_list[i][3])  # atom 2 index
         store.append([at1, at2])
 
+    print store
+    storeLine = []
+    for i in range(len(bond_list)):
+        at1   = int(bond_list[i][2])  # atom 1 index
+        at2   = int(bond_list[i][3])  # atom 2 index
+        storeLine.append(at1)
+        storeLine.append(at2)
+
+
     atomIndexInMolecule = []
-    for i in range(0,len(store)-1):
+    for i in range(len(store)):
         atomIndexInMolecule.append(store[i][0])
         atomIndexInMolecule.append(store[i][1])
 
         if store[i+1][0] not in atomIndexInMolecule and store[i+1][1] not in atomIndexInMolecule:
             break
+    atomIndexToTopology = atomIndexInMolecule
+    nextMolecule = len(atomIndexToTopology)/2
+    atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atoms in the molecule
 
-    atomIndexInMolecule = list(set(atomIndexInMolecule))  # clear doubles and return the list of atoms in the molecule
 
+    atomTypeInMolecule = []
+    for i in atomIndexInMolecule:
+        temp = int(topo_list[i-1][2])
+        atomTypeInMolecule.append(temp)
+
+
+    numberOfAtomsInMolecule = len(atomIndexInMolecule)
+    numberOfMolecules  = divmod(at_count, len(atomIndexInMolecule))[0]
+    mixtureFlag        = divmod(at_count, len(atomIndexInMolecule))[1]
+
+    #if count!=countCheck:
+
+##############################
+#### SECOND MOLECULE #########
+
+    atomIndexToTopology2 = []
+    atomIndexInMolecule2 = []
+    for i in range(nextMolecule, len(store)):
+        atomIndexInMolecule2.append(store[i][0])
+        atomIndexInMolecule2.append(store[i][1])
+
+        if store[i+1][0] not in atomIndexInMolecule2 and store[i+1][1] not in atomIndexInMolecule2:
+            break
+
+    atomIndexToTopology2 = atomIndexInMolecule2
+    atomIndexInMolecule2 = sorted(list(set(atomIndexInMolecule2))) # clear duplicates and return the list of atoms in the molecule
+    
     atomTypeInMolecule = []
     for i in atomIndexInMolecule:
         temp = int(topo_list[i-1][2])
@@ -356,7 +402,47 @@ def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
 
     numberOfAtomsInMolecule = len(atomIndexInMolecule)
     numberOfMolecules  = divmod(at_count, len(atomIndexInMolecule))[0]
-    mixtureFlag        = divmod(at_count, len(atomIndexInMolecule))[1]
+
+    print atomIndexInMolecule, atomIndexInMolecule2
+
+
+########################################################################################################################
+
+#### HERE ATOM TYPE PATTERN FOR MOLECULE 1 ARE FOUND
+
+    atomTypePatternInMolecule = []
+    for i in atomIndexToTopology:
+        temp = int(topo_list[i-1][2])
+        atomTypePatternInMolecule.append(temp) # Atom type pattern in molecule 1
+
+    #print atomTypePatternInMolecule
+
+
+    atomTypeInTopology = []
+    for i in storeLine:
+        temp = int(topo_list[i-1][2])
+        atomTypeInTopology.append(temp) # Atom type pattern throughout topology
+
+    #print atomTypeInTopology
+
+    count = len(atomTypeInTopology)/len(atomTypePatternInMolecule)
+
+
+    pattern  = " ".join([ str(x) for x in atomTypePatternInMolecule])
+    topology = " ".join([ str(x) for x in atomTypeInTopology])
+
+    countCheck = topology.count(pattern)
+
+    print count, countCheck
+
+########################################################################################################################
+
+
+
+
+########################################################################################################################
+
+
 
     return (atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules)
 

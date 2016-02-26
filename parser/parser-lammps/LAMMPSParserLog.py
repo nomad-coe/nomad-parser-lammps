@@ -40,10 +40,10 @@ if sys.argv[1].endswith("custom"):
 ########################################################################################################################
 # HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
 
-for file in os.listdir(examplesPath):
-    if file.endswith(extFile):
-        n = file
-        storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
+#for file in os.listdir(examplesPath):
+#    if file.endswith(extFile):
+#        n = file
+        #storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
 
 def logFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skip = True

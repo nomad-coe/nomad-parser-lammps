@@ -151,7 +151,7 @@ def parse(fName):
                 for i in range(len(bondTypeList)):
 
                     with o(p, 'section_interaction'):
-                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
+                        #p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))
                         p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0]))
 
@@ -209,7 +209,7 @@ def parse(fName):
                 for i in range(len(angleTypeList)):
 
                     with o(p, 'section_interaction'):
-                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
+                        #p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))
                         p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0]))
 
@@ -267,7 +267,7 @@ def parse(fName):
                 for i in range(len(dihedralTypeList)):
 
                     with o(p, 'section_interaction'):
-                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
+                        #p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))
                         p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0]))
 
