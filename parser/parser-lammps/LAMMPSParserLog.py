@@ -27,6 +27,9 @@ if logFileName:  # if the output log file name is defined within the input file,
 if sys.argv[1].endswith("1_methyl_naphthalene"):
     extFile = "naph_298_396_20ns"
 
+if sys.argv[1].endswith("hexane_cyclohexane_nvt"):
+    extFile = "-thermo_style_multi"
+
 if sys.argv[1].endswith("multi"):
     extFile = "-thermo_style_multi"
 
@@ -40,10 +43,10 @@ if sys.argv[1].endswith("custom"):
 ########################################################################################################################
 # HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
 
-#for file in os.listdir(examplesPath):
-#    if file.endswith(extFile):
-#        n = file
-        #storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
+for file in os.listdir(examplesPath):
+    if file.endswith(extFile):
+        n = file
+        storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
 
 def logFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skip = True

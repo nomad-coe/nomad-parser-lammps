@@ -40,7 +40,7 @@ fix 1 all nvt temp 300.0 300.0 100.0
 dump 1 all custom 800 hexane_cyclohexane_nvt_20ps.lammpstrj id type x y z ix iy iz
 # dump_modify 1 unwrap yes
 
-log log.hexane_cyclohexane_nvt_thermo_style_multi
+log log.hexane_cyclohexane_nvt-thermo_style_multi
 
 # 20.0ps
 run 80000
