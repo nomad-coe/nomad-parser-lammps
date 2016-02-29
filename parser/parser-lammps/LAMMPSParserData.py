@@ -334,13 +334,7 @@ print dihedralTypeList
 
 
 ########################################################################################################################
-def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
-
-    moleculeId = 0
-
-###############################
-###### FIRST MOLECULE #########
-###############################
+def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
     store = []
     for i in range(len(bond_list)):
@@ -355,6 +349,7 @@ def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
         at2   = int(bond_list[i][3])  # atom 2 index
         storeLine.append(at1)
         storeLine.append(at2)
+    print len(store)
 
 ### TOPOLOGY'S ATOM TYPE PATTERN ###
     atomTypeInTopology = []
@@ -365,114 +360,60 @@ def assignMolecules():  # DEFINING MOLECULE FROM COORDINATION PATTERN
     topologyPattern = " ".join([ str(x) for x in atomTypeInTopology])
 ############
 
-    atomIndexInMolecule = []
-    for i in range(len(store)):
-        atomIndexInMolecule.append(store[i][0])
-        atomIndexInMolecule.append(store[i][1])
+#####################################################################
+###### FIND ALL MOLECULE TYPES AND ALL INDIVIDUAL MOLECULES #########
+#####################################################################
 
-        if store[i+1][0] not in atomIndexInMolecule and store[i+1][1] not in atomIndexInMolecule:
-            moleculeId += 1  # I have found a molecule which will have Id = 1
-            break
-
-    atomIndexToTopology = atomIndexInMolecule
-    nextMolecule = len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from here to find the next molecule in the list "store"
-    atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atoms in the molecule
+    goon = True
+    nextMolecule = 0
+    moleculeId = 0
+    #atomIndexInMolecule = []
 
 
-    atomTypeInMolecule = []
-    for i in atomIndexInMolecule:
-        temp = int(topo_list[i-1][2])
-        atomTypeInMolecule.append(temp)
-
-
-    atomTypePatternInMolecule = []
-    for i in atomIndexToTopology:
-        temp = int(topo_list[i-1][2])
-        atomTypePatternInMolecule.append(temp) # Atom type pattern in molecule 1
-
-    moleculePattern  = " ".join([ str(x) for x in atomTypePatternInMolecule])
-
-
-    numberOfAtomsInMolecule = len(atomIndexInMolecule)
-    numberOfMolecules  = divmod(at_count, len(atomIndexInMolecule))[0]
-
-    countCheck = topologyPattern.count(moleculePattern)  # count the number of molecules from matching string patterns
-
-#### NOTA BENE ###### If countCheck == numberOfMolecules we have a monocomponent system
-##################### If this is not the case we have more molecular types to be found within the topology
-
-
-    if countCheck == numberOfMolecules:
-
-        print "FIGATA"
-
-    else:
-
-        print "BOOOOOH"
-
-
-
-##############################
-#### SECOND MOLECULE #########
-##############################
-
-    #goon = False
-    if countCheck != numberOfMolecules:
-
-        atomIndexToTopology2 = []
-        atomIndexInMolecule2 = []
+    while goon == True:
+        atomIndexInMolecule = []
+        atomTypeInMolecule = []
         for i in range(nextMolecule, len(store)):
-            atomIndexInMolecule2.append(store[i][0])
-            atomIndexInMolecule2.append(store[i][1])
+            atomIndexInMolecule.append(store[i][0])
+            atomIndexInMolecule.append(store[i][1])
 
-            if store[i+1][0] not in atomIndexInMolecule2 and store[i+1][1] not in atomIndexInMolecule2:
+            try:
+                if store[i+1][0] not in atomIndexInMolecule and store[i+1][1] not in atomIndexInMolecule:
+                    moleculeId += 1
+                    print moleculeId
+                    break
+            except IndexError:
+                moleculeId += 1
+                print moleculeId
                 break
 
-        atomIndexToTopology2 = atomIndexInMolecule2
-        atomIndexInMolecule2 = sorted(list(set(atomIndexInMolecule2))) # clear duplicates and return the list of atoms in the molecule
 
-        atomTypeInMolecule2 = []
-        for i in atomIndexInMolecule2:
+        atomIndexToTopology = atomIndexInMolecule
+        nextMolecule += len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from here to find the next molecule in the list "store"
+        print nextMolecule
+
+
+
+        atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atoms in the molecule
+
+        for i in atomIndexInMolecule:
             temp = int(topo_list[i-1][2])
-            atomTypeInMolecule2.append(temp)
+            atomTypeInMolecule.append(temp)
 
 
-        atomTypePatternInMolecule2 = []
-        for i in atomIndexToTopology2:
-            temp = int(topo_list[i-1][2])
-            atomTypePatternInMolecule2.append(temp) # Atom type pattern in molecule 2
+        print atomIndexInMolecule
+        print atomTypeInMolecule
 
-        moleculePattern2  = " ".join([ str(x) for x in atomTypePatternInMolecule2])
-
-        #if moleculePattern2 == moleculePattern:
-        #    print "CACCHIO"
-        #    goon == True
-
-        numberOfAtomsInMolecule2 = len(atomIndexInMolecule2)
-        numberOfMolecules2  = divmod(at_count, len(atomIndexInMolecule2))[0]
-
-        countCheck2 = topologyPattern.count(moleculePattern2)
-
-        print countCheck, countCheck2
-        print numberOfAtomsInMolecule, numberOfAtomsInMolecule2
+        if nextMolecule == len(store):
+            goon = False
 
 
-    else:
-        print countCheck
-        print numberOfAtomsInMolecule
+    return (atomIndexInMolecule, atomTypeInMolecule)
 
 
 
-########################################################################################################################
-
-
-
-    return (atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules)
-
-
-
-atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
-#print atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules
+atomIndexInMolecule, atomTypeInMolecule = assignMolecules()
+print atomIndexInMolecule, atomTypeInMolecule
 
 
 ########################################################################################################################

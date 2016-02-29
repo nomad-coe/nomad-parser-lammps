@@ -119,22 +119,22 @@ def parse(fName):
 
 
             # opening section_molecule_type
-            with o(p, 'section_molecule_type'):
-                atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
+            #with o(p, 'section_molecule_type'):
+                #atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
 
-                atom_in_molecule_to_atom_type_ref = []
-                for i in atomTypeInMolecule:
-                    atom_in_molecule_to_atom_type_ref.append(i-1)
+                #atom_in_molecule_to_atom_type_ref = []
+                #for i in atomTypeInMolecule:
+                    #atom_in_molecule_to_atom_type_ref.append(i-1)
 
-                p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray(atom_in_molecule_to_atom_type_ref))
+                #p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray(atom_in_molecule_to_atom_type_ref))
 
-            p.addValue('number_of_topology_molecules', numberOfMolecules) # TOTAL NUMBER OF TOPOLOGY MOLECULES
+            #p.addValue('number_of_topology_molecules', numberOfMolecules) # TOTAL NUMBER OF TOPOLOGY MOLECULES
 
-            molecule_to_molecule_type_map = []
-            for i in range(numberOfMolecules):
-                molecule_to_molecule_type_map.append(0)   # WILL NEED TO POINT TO THE RELAVANT section_molecule_type
+            #molecule_to_molecule_type_map = []
+            #for i in range(numberOfMolecules):
+                #molecule_to_molecule_type_map.append(0)   # WILL NEED TO POINT TO THE RELAVANT section_molecule_type
 
-            p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+            #p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
 
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
