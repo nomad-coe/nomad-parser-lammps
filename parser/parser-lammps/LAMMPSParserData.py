@@ -329,7 +329,7 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
 dihedral_dict, dihedralTypeList, dihedral_interaction_atoms = assignDihedrals()
 
-print dihedralTypeList
+#print dihedralTypeList
 #print dihedral_interaction_atoms
 
 
@@ -349,15 +349,17 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
         at2   = int(bond_list[i][3])  # atom 2 index
         storeLine.append(at1)
         storeLine.append(at2)
-    print len(store)
+    #print len(store)
 
 ### TOPOLOGY'S ATOM TYPE PATTERN ###
     atomTypeInTopology = []
-    for i in storeLine:
-        temp = int(topo_list[i-1][2])
+    for i in range(len(topo_list)):
+        temp = int(topo_list[i][2])
         atomTypeInTopology.append(temp) # Atom type pattern throughout topology
 
     topologyPattern = " ".join([ str(x) for x in atomTypeInTopology])
+
+    #print topologyPattern
 ############
 
 #####################################################################
@@ -368,11 +370,17 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
     nextMolecule = 0
     moleculeId = 0
     #atomIndexInMolecule = []
+    moleculePattern = str
+    moleculeInfo = []
 
 
     while goon == True:
         atomIndexInMolecule = []
         atomTypeInMolecule = []
+
+        atomPositionInMolecule = []
+        atomCount = 0
+
         for i in range(nextMolecule, len(store)):
             atomIndexInMolecule.append(store[i][0])
             atomIndexInMolecule.append(store[i][1])
@@ -380,19 +388,17 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             try:
                 if store[i+1][0] not in atomIndexInMolecule and store[i+1][1] not in atomIndexInMolecule:
                     moleculeId += 1
-                    print moleculeId
+                    #print moleculeId
                     break
             except IndexError:
                 moleculeId += 1
-                print moleculeId
+                #print moleculeId
                 break
 
 
         atomIndexToTopology = atomIndexInMolecule
         nextMolecule += len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from here to find the next molecule in the list "store"
-        print nextMolecule
-
-
+        #print nextMolecule
 
         atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atoms in the molecule
 
@@ -400,20 +406,61 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             temp = int(topo_list[i-1][2])
             atomTypeInMolecule.append(temp)
 
+            atomCount += 1
+            atomPositionInMolecule.append(atomCount)
 
-        print atomIndexInMolecule
-        print atomTypeInMolecule
+        #moleculePattern = " ".join([ str(x) for x in atomTypeInMolecule])
+
+        newMolecule = [ moleculeId, atomIndexInMolecule, atomTypeInMolecule, atomPositionInMolecule ]
+        moleculeInfo.append(newMolecule)
+
+
+        #print atomIndexInMolecule
+        #print atomTypeInMolecule
 
         if nextMolecule == len(store):
             goon = False
 
 
-    return (atomIndexInMolecule, atomTypeInMolecule)
+
+    moleculeTypeInfo = []
+    ghost = []
+    for line in moleculeInfo:
+        seen = line[2]
+        temp = [line[0], line[2]]
+
+        if seen not in ghost:
+            ghost.append(seen)
+            moleculeTypeInfo.append(temp)
+
+
+    for i in range(len(moleculeTypeInfo)):
+        for j in range(len(moleculeInfo)):
+
+            if moleculeTypeInfo[i][1] == moleculeInfo[j][2]:
+                moleculeInfo[j].insert(1, i+1)   ### moleculeInfo contains: [ moleculeId, moleculeType, atomIndexInMolecule,
+                                                 ###                          atomTypeInMolecule, atomPositionInMolecule ]
+
+    atomPositionInMoleculeList = []
+    for i in range(len(moleculeInfo)):
+        atomPositionInMoleculeList = atomPositionInMoleculeList + moleculeInfo[i][4]
+
+
+    moleculeInfoResolved = []
+    for i in range(0, at_count):
+        for j in range(len(moleculeInfo)):
+
+            if i+1 in moleculeInfo[j][2]:
+                moleculeInfoResolved.append([ i+1, moleculeInfo[j][0], moleculeInfo[j][1], atomPositionInMoleculeList[i] ])
+
+    print moleculeInfoResolved[:10]
+
+    return (moleculeInfo, moleculeInfoResolved)
 
 
 
-atomIndexInMolecule, atomTypeInMolecule = assignMolecules()
-print atomIndexInMolecule, atomTypeInMolecule
+moleculeInfo, moleculeInfoResolved = assignMolecules()
+#print moleculeInfoResolved
 
 
 ########################################################################################################################

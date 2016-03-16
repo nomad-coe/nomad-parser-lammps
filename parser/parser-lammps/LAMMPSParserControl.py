@@ -66,6 +66,9 @@ def parse(fName):
             charge_dict, charge_list        = readCharge()
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
 
+            # collecting information defining different molecules
+            moleculeInfo, moleculeInfoResolved = assignMolecules()
+
             # collection list of force field functional styles
             list_of_styles = readStyles()
             pairFunctional = list_of_styles.get('pair_style')
@@ -102,6 +105,19 @@ def parse(fName):
 
             number_of_topology_atoms = numberOfTopologyAtoms()
             p.addValue('number_of_topology_atoms', number_of_topology_atoms)
+
+
+            atom_to_molecule = []
+            for i in range(number_of_topology_atoms):
+                atom_to_molecule.append([moleculeInfoResolved[i][1], moleculeInfoResolved[i][3]])
+
+            p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
+
+
+
+
+
+
             pass
 
 
@@ -159,9 +175,9 @@ def parse(fName):
                             p.addValue('interaction_kind', bondFunctional)
 
                         int_index_store = bond_dict[i][1]
-                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
 
-                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
+                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_bonds[i][1])
 
 
@@ -217,9 +233,9 @@ def parse(fName):
                             p.addValue('interaction_kind', angleFunctional)
 
                         int_index_store = angle_dict[i][1]
-                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
 
-                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
+                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_angles[i][1])
 
 
@@ -275,9 +291,9 @@ def parse(fName):
                             p.addValue('interaction_kind', dihedralFunctional)
 
                         int_index_store = dihedral_dict[i][1]
-                        interaction_atoms_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
 
-                        p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
+                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_dihedrals[i][1])
 
 
@@ -319,13 +335,13 @@ def parse(fName):
                         int_index_store.append(ljs_dict[i][1])
                         int_param_store.append(list_of_ljs[i][1])
 
-                    interaction_atoms_to_atom_type_ref = []
+                    interaction_atom_to_atom_type_ref = []
                     for i in range(lj_types):
                         temp = [int_index_store[i][0]-1, int_index_store[i][1]-1]
-                        interaction_atoms_to_atom_type_ref.append(temp)
+                        interaction_atom_to_atom_type_ref.append(temp)
 
                     #p.addValue('interaction_atoms', int_index_store)
-                    p.addValue('interaction_atoms_to_atom_type_ref', interaction_atoms_to_atom_type_ref)  # this points to the relative section_atom_type
+                    p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
                     p.addValue('interaction_parameters', int_param_store)
                     pass
 
