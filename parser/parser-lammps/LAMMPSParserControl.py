@@ -8,7 +8,7 @@ from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
                               simulationTime
 
-from LAMMPSParserData  import readMass, readCharge, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
+from LAMMPSParserData  import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
                               numberOfTopologyAtoms
 
 from LAMMPSParserLog import logFileOpen
@@ -43,6 +43,9 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 ####### PARSED VALUES ARE ORDERED IN SECTIONS
 ########################################################################################################################
 ########################################################################################################################
+
+
+
 def parse(fName):
 
     p  = JsonParseEventsWriterBackend(metaInfoEnv)
@@ -57,17 +60,17 @@ def parse(fName):
 
         # opening section_topology
         with o(p, 'section_topology'):
+
             # collecting atomic masses
-            mass_dict, mass_list, mass_xyz  = readMass()
+            charge_dict, charge_list, mass_dict, mass_list, mass_xyz  = readChargeAndMass()
             mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
             at_types = len(mass_dict)
 
-            # collecting atomic partial charges
-            charge_dict, charge_list        = readCharge()
+            # ordering atomic partial charges
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
 
             # collecting information defining different molecules
-            moleculeInfo, moleculeInfoResolved = assignMolecules()
+            moleculeTypeInfo, moleculeInfo, moleculeInfoResolved = assignMolecules()
 
             # collection list of force field functional styles
             list_of_styles = readStyles()
@@ -111,14 +114,8 @@ def parse(fName):
             for i in range(number_of_topology_atoms):
                 atom_to_molecule.append([moleculeInfoResolved[i][1], moleculeInfoResolved[i][3]])
 
+            p.addValue('number_of_topology_molecules', len(moleculeInfo))
             p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
-
-
-
-
-
-
-            pass
 
 
             # opening section_atom_types
@@ -128,30 +125,41 @@ def parse(fName):
                 #print gid
 
                 with o(p, 'section_atom_type'):
-                    p.addValue('atom_type_name', [mass_xyz[i], i+1]) # Here atom_type_name is atomic number plus a integer index
+                    p.addValue('atom_type_name', [mass_xyz[i], i+1]) # Here atom_type_name is atomic number plus an integer index
                     p.addValue('atom_type_mass', mass_dict[i][1])
                     p.addValue('atom_type_charge', charge_dict[i][1])
                     pass
 
 
             # opening section_molecule_type
-            #with o(p, 'section_molecule_type'):
-                #atomIndexInMolecule, atomTypeInMolecule, numberOfAtomsInMolecule, numberOfMolecules = assignMolecules()
+            for i in range(len(moleculeTypeInfo)):
 
-                #atom_in_molecule_to_atom_type_ref = []
-                #for i in atomTypeInMolecule:
-                    #atom_in_molecule_to_atom_type_ref.append(i-1)
+                with o(p, 'section_molecule_type'):
+                    p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
+                    p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
 
-                #p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray(atom_in_molecule_to_atom_type_ref))
+                    p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray([x-1 for x in moleculeTypeInfo[i][1]]))
 
-            #p.addValue('number_of_topology_molecules', numberOfMolecules) # TOTAL NUMBER OF TOPOLOGY MOLECULES
 
-            #molecule_to_molecule_type_map = []
-            #for i in range(numberOfMolecules):
-                #molecule_to_molecule_type_map.append(0)   # WILL NEED TO POINT TO THE RELAVANT section_molecule_type
+                    atom_in_molecule_name = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_name.append([ mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
 
-            #p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+                    p.addValue('atom_in_molecule_name', atom_in_molecule_name)
 
+                    atom_in_molecule_charge = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_charge.append(charge_list[j-1][1])
+
+                    p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
+                    pass
+
+            molecule_to_molecule_type_map = []
+            for i in range(len(moleculeInfo)):
+                molecule_to_molecule_type_map.append(moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
+
+            p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+            pass
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
             if bd_types:

@@ -105,42 +105,7 @@ dihedral_list.sort(key=lambda x: int(x[0]))
             
 
 ########################################################################################################################
-def readMass():  # READING ATOMIC MASSES AND CALCULATING ATOMIC NUMBER FOR XYZ RENDERING
-
-    mass_dict = {}
-    mass_list = []
-    mass_xyz  = []
-    for i in range(0, len(data)):
-        if "Masses" in data[i]:
-
-            for j in range(0, at_types):
-                mass = data[i+j+1]
-                index = int(mass[0])
-                val   = float(mass[1])
-                val1  = int(val/2)     # REQUIRES DOUBLE CHECK
-
-
-                # create list
-                store = [index, val]
-                mass_xyz.append(val1)
-                mass_list.append(store)
-
-                # create dictionary
-                masses = { index : val }
-                mass_dict.update(masses)
-
-    for i in range(0,len(mass_xyz)):
-        if mass_xyz[i] == 0:
-            mass_xyz[i] = 1
-
-    #mass_dict = { "Atomic masses" : mass_dict}
-    return (mass_dict, mass_list, mass_xyz)
-
-mass_dict, mass_list, mass_xyz     = readMass()
-
-
-########################################################################################################################
-def readCharge():  # READING ATOMIC CHARGES
+def readChargeAndMass():  # READING ATOMIC CHARGES
 
     charge_dict = {}
     charge_list = []
@@ -155,7 +120,103 @@ def readCharge():  # READING ATOMIC CHARGES
             charge_dict.update(store)
 
     #charge_dict = { "Atomic charges" : charge_dict}
-    return(charge_dict, charge_list)
+
+    mass_dict = {}
+    mass_list = []
+    mass_xyz  = []
+    if at_types == len(charge_list):
+
+        #mass_dict = {}
+        #mass_list = []
+        #mass_xyz  = []
+        for i in range(0, len(data)):
+            if "Masses" in data[i]:
+
+                for j in range(0, at_types):
+                    mass = data[i+j+1]
+                    index = int(mass[0])
+                    val   = float(mass[1])
+                    val1  = int(val/2)     # REQUIRES DOUBLE CHECK
+
+
+                    # create list
+                    store = [index, val]
+                    mass_xyz.append(val1)
+                    mass_list.append(store)
+
+                    # create dictionary
+                    masses = { index : val }
+                    mass_dict.update(masses)
+
+        for i in range(0,len(mass_xyz)):
+            if mass_xyz[i] == 0:
+                mass_xyz[i] = 1
+
+        return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
+
+
+    elif at_types != len(charge_list):
+
+        #mass_dict = {}
+        #mass_list = []
+        #mass_xyz  = []
+        for i in range(0, len(data)):
+            if "Masses" in data[i]:
+
+                for j in range(0, at_types):
+                    mass = data[i+j+1]
+                    index = int(mass[0])
+                    val   = float(mass[1])
+                    val1  = int(val/2)     # REQUIRES DOUBLE CHECK
+
+
+                    # create list
+                    store = [index, val]
+                    mass_xyz.append(val1)
+                    mass_list.append(store)
+
+                    # create dictionary
+                    masses = { index : val }
+                    mass_dict.update(masses)
+
+        if len(charge_list) != len(mass_list):
+            new_mass_list = []
+            for type in charge_list:
+                index = type[0]-1
+                print index
+                new_mass_list.append([type[0], mass_list[index][1]])
+
+            mass_list = new_mass_list
+
+#########
+            mass_xyz = []
+            for type in mass_list:
+                temp = int(type[1]/2)
+                mass_xyz.append(temp)
+
+            for i in range(0,len(mass_xyz)):
+                if mass_xyz[i] == 0:
+                    mass_xyz[i] = 1
+#########
+            for i in range(len(charge_list)):
+                mass_list[i][0] = i + 1
+                mass_dict.update({ mass_list[i][0] : mass_list[i][1] })
+                charge_list[i][0] = i + 1
+                charge_dict.update({ charge_list[i][0] : charge_list[i][1] })
+
+            for type in charge_list:
+                for i in range(len(topo_list)):
+
+                    if type[1] == float(topo_list[i][3]):
+                        topo_list[i][2] = str(type[0])
+
+            topo_list.sort(key=lambda x: int(x[0]))
+
+        print mass_list, mass_dict
+        return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
+
+#charge_dict, charge_list, mass_dict, mass_list, mass_xyz     = readChargeAndMass()
+#print mass_list
 
 
 ########################################################################################################################
@@ -209,7 +270,7 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
 
 bond_dict, bondTypeList, bond_interaction_atoms = assignBonds()
 
-print bondTypeList
+#print bondTypeList
 #print store_interaction_atoms
 
 
@@ -266,9 +327,9 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
 
     return (angle_dict, angleTypeList, angle_interaction_atoms)
 
-angle_dict, angleTypeList, angle_interaction_atoms = assignAngles()
+#angle_dict, angleTypeList, angle_interaction_atoms = assignAngles()
 
-print angleTypeList
+#print angleTypeList
 
 
 
@@ -327,7 +388,7 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
     return (dihedral_dict, dihedralTypeList, dihedral_interaction_atoms)
 
-dihedral_dict, dihedralTypeList, dihedral_interaction_atoms = assignDihedrals()
+#dihedral_dict, dihedralTypeList, dihedral_interaction_atoms = assignDihedrals()
 
 #print dihedralTypeList
 #print dihedral_interaction_atoms
@@ -358,7 +419,6 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
         atomTypeInTopology.append(temp) # Atom type pattern throughout topology
 
     topologyPattern = " ".join([ str(x) for x in atomTypeInTopology])
-
     #print topologyPattern
 ############
 
@@ -366,19 +426,18 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 ###### FIND ALL MOLECULE TYPES AND ALL INDIVIDUAL MOLECULES #########
 #####################################################################
 
-    goon = True
-    nextMolecule = 0
-    moleculeId = 0
-    #atomIndexInMolecule = []
-    moleculePattern = str
-    moleculeInfo = []
+    goon             = True # looping over all covalent bonds
+    nextMolecule     = 0
+    moleculeId       = 0    # molecular index
+    moleculePattern  = str  # atom type pattern as string (useful for matching/counting)
+    moleculeInfo     = []   # list containing molecule info
 
 
     while goon == True:
-        atomIndexInMolecule = []
-        atomTypeInMolecule = []
+        atomIndexInMolecule = [] # list storing the index of atoms within that molecule
+        atomTypeInMolecule  = [] # list storing the type of atoms within that molecule
 
-        atomPositionInMolecule = []
+        atomPositionInMolecule = [] # list storing the molecular atom index, example: OHH -> 123
         atomCount = 0
 
         for i in range(nextMolecule, len(store)):
@@ -397,10 +456,10 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
 
         atomIndexToTopology = atomIndexInMolecule
-        nextMolecule += len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from here to find the next molecule in the list "store"
+        nextMolecule += len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from this  to find the next molecule in the list "store"
         #print nextMolecule
 
-        atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atoms in the molecule
+        atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atom indexes in the molecule
 
         for i in atomIndexInMolecule:
             temp = int(topo_list[i-1][2])
@@ -409,11 +468,10 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             atomCount += 1
             atomPositionInMolecule.append(atomCount)
 
-        #moleculePattern = " ".join([ str(x) for x in atomTypeInMolecule])
+        moleculePattern = " ".join([ str(x) for x in atomTypeInMolecule])
 
-        newMolecule = [ moleculeId, atomIndexInMolecule, atomTypeInMolecule, atomPositionInMolecule ]
+        newMolecule = [ moleculeId, atomIndexInMolecule, atomTypeInMolecule, atomPositionInMolecule ] # storing molecule information
         moleculeInfo.append(newMolecule)
-
 
         #print atomIndexInMolecule
         #print atomTypeInMolecule
@@ -421,8 +479,7 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
         if nextMolecule == len(store):
             goon = False
 
-
-
+#### Storing molecule info for each molecule type (the size of moleculeTypeInfo is the number of molecule types)
     moleculeTypeInfo = []
     ghost = []
     for line in moleculeInfo:
@@ -432,7 +489,7 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
         if seen not in ghost:
             ghost.append(seen)
             moleculeTypeInfo.append(temp)
-
+#################
 
     for i in range(len(moleculeTypeInfo)):
         for j in range(len(moleculeInfo)):
@@ -443,7 +500,7 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
     atomPositionInMoleculeList = []
     for i in range(len(moleculeInfo)):
-        atomPositionInMoleculeList = atomPositionInMoleculeList + moleculeInfo[i][4]
+        atomPositionInMoleculeList = atomPositionInMoleculeList + moleculeInfo[i][4] # complete list storing the molecular atom index, example: OHHOHHOHH -> 123123123
 
 
     moleculeInfoResolved = []
@@ -453,24 +510,22 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             if i+1 in moleculeInfo[j][2]:
                 moleculeInfoResolved.append([ i+1, moleculeInfo[j][0], moleculeInfo[j][1], atomPositionInMoleculeList[i] ])
 
-    print moleculeInfoResolved[:10]
+    #print moleculeInfoResolved[:10]
 
-    return (moleculeInfo, moleculeInfoResolved)
+    return (moleculeTypeInfo, moleculeInfo, moleculeInfoResolved)
 
-
-
-moleculeInfo, moleculeInfoResolved = assignMolecules()
+#moleculeInfo, moleculeInfoResolved = assignMolecules()
 #print moleculeInfoResolved
 
 
 ########################################################################################################################
-xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
-xyz_file.append([at_count])
-xyz_file.append([' '])
-for line in topo_list:
-    index = int(line[2])
-    xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
-    xyz_file.append(xyz_line)
+#xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+#xyz_file.append([at_count])
+#xyz_file.append([' '])
+#for line in topo_list:
+#    index = int(line[2])
+#    xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
+#    xyz_file.append(xyz_line)
 
-with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
-    xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
+#with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
+#    xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
