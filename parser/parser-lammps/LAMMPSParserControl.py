@@ -169,13 +169,16 @@ def parse(fName):
                 for i in bondTypeList:
                     for j in bondTypeList:
 
-                        store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==j ]
+                        store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==i ]
+                    #print store
                     interaction_atoms.append(store)
+
+                #print interaction_atoms
 
                 for i in range(len(bondTypeList)):
 
                     with o(p, 'section_interaction'):
-                        #p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
+                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))
                         p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0]))
 
@@ -227,7 +230,7 @@ def parse(fName):
                 for i in angleTypeList:
                     for j in angleTypeList:
 
-                        store = [ [x[1], x[2], x[3]] for x in angle_interaction_atoms if x[0]==j ]
+                        store = [ [x[1], x[2], x[3]] for x in angle_interaction_atoms if x[0]==i ]
                     interaction_atoms.append(store)
 
                 for i in range(len(angleTypeList)):
@@ -285,7 +288,7 @@ def parse(fName):
                 for i in dihedralTypeList:
                     for j in dihedralTypeList:
 
-                        store = [ [x[1], x[2], x[3], x[4]] for x in dihedral_interaction_atoms if x[0]==j ]
+                        store = [ [x[1], x[2], x[3], x[4]] for x in dihedral_interaction_atoms if x[0]==i ]
                     interaction_atoms.append(store)
 
                 for i in range(len(dihedralTypeList)):

@@ -126,9 +126,6 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
     mass_xyz  = []
     if at_types == len(charge_list):
 
-        #mass_dict = {}
-        #mass_list = []
-        #mass_xyz  = []
         for i in range(0, len(data)):
             if "Masses" in data[i]:
 
@@ -152,14 +149,23 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
             if mass_xyz[i] == 0:
                 mass_xyz[i] = 1
 
+        xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+        xyz_file.append([at_count])
+        xyz_file.append([' '])
+        for line in topo_list:
+            index = int(line[2])
+            xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
+            xyz_file.append(xyz_line)
+
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
+            xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
+
         return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
 
+#### A SINGLE ATOM TYPE MIGHT HAVE MORE THAN ONE CHARGE (E.G. CARBON IN CH3, CH2, CH, ...)
+#### WITH THE CODE BELOW, WE CREATE A NEW ATOM TYPE WHENEVER A SINGLE ATOM TYPE HAS MORE THAN ONE ASSOCIATED PARTIAL CHARGE
+    elif at_types != len(charge_list):  #
 
-    elif at_types != len(charge_list):
-
-        #mass_dict = {}
-        #mass_list = []
-        #mass_xyz  = []
         for i in range(0, len(data)):
             if "Masses" in data[i]:
 
@@ -183,7 +189,7 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
             new_mass_list = []
             for type in charge_list:
                 index = type[0]-1
-                print index
+                #print index
                 new_mass_list.append([type[0], mass_list[index][1]])
 
             mass_list = new_mass_list
@@ -212,11 +218,21 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
 
             topo_list.sort(key=lambda x: int(x[0]))
 
-        print mass_list, mass_dict
+        #print mass_list, mass_dict
+
+        xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+        xyz_file.append([at_count])
+        xyz_file.append([' '])
+        for line in topo_list:
+            index = int(line[2])
+            xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
+            xyz_file.append(xyz_line)
+
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
+            xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
+
         return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
 
-#charge_dict, charge_list, mass_dict, mass_list, mass_xyz     = readChargeAndMass()
-#print mass_list
 
 
 ########################################################################################################################
@@ -270,7 +286,8 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
 
 bond_dict, bondTypeList, bond_interaction_atoms = assignBonds()
 
-#print bondTypeList
+print bond_dict, bondTypeList
+#print bond_interaction_atoms
 #print store_interaction_atoms
 
 
@@ -519,13 +536,3 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
 
 ########################################################################################################################
-#xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
-#xyz_file.append([at_count])
-#xyz_file.append([' '])
-#for line in topo_list:
-#    index = int(line[2])
-#    xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
-#    xyz_file.append(xyz_line)
-
-#with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
-#    xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
