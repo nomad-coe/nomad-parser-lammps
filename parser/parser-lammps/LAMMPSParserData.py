@@ -1,5 +1,5 @@
 import fnmatch
-import os, sys
+import os, sys, copy
 import numpy as np
 
 examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
@@ -105,10 +105,30 @@ dihedral_list.sort(key=lambda x: int(x[0]))
             
 
 ########################################################################################################################
-def readChargeAndMass():  # READING ATOMIC CHARGES
+# def run_once(f):
+#     def wrapper(*args, **kwargs):
+#         if not wrapper.has_run:
+#             wrapper.has_run = True
+#             return f(*args, **kwargs)
+#     wrapper.has_run = False
+#     return wrapper
+#
+#
+# @run_once
 
-    charge_dict = {}
-    charge_list = []
+# topo_list_new = copy.deepcopy(topo_list)
+
+def readChargeAndMass():
+
+    charge_dict   = {}
+    charge_list   = []
+    mass_dict     = {}
+    mass_list     = []
+    mass_xyz      = []
+    new_mass_list = []
+
+    #topo_list_new = list(topo_list)
+
     for line in topo_list:
         index = int(line[2])
         charge = float(line[3])
@@ -119,12 +139,12 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
             charge_list.append(seen)
             charge_dict.update(store)
 
-    #charge_dict = { "Atomic charges" : charge_dict}
+    # print charge_list
 
-    mass_dict = {}
-    mass_list = []
-    mass_xyz  = []
+    switch = False
     if at_types == len(charge_list):
+
+        switch = True
 
         for i in range(0, len(data)):
             if "Masses" in data[i]:
@@ -149,6 +169,7 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
             if mass_xyz[i] == 0:
                 mass_xyz[i] = 1
 
+
         xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
         xyz_file.append([at_count])
         xyz_file.append([' '])
@@ -160,11 +181,12 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
         with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
-        return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
 
-#### A SINGLE ATOM TYPE MIGHT HAVE MORE THAN ONE CHARGE (E.G. CARBON IN CH3, CH2, CH, ...)
-#### WITH THE CODE BELOW, WE CREATE A NEW ATOM TYPE WHENEVER A SINGLE ATOM TYPE HAS MORE THAN ONE ASSOCIATED PARTIAL CHARGE
-    elif at_types != len(charge_list):  #
+
+        #### A SINGLE ATOM TYPE MIGHT HAVE MORE THAN ONE CHARGE (E.G. CARBON IN CH3, CH2, CH, ...)
+        #### WITH THE CODE BELOW, WE CREATE A NEW ATOM TYPE WHENEVER A SINGLE ATOM TYPE HAS MORE THAN ONE ASSOCIATED PARTIAL CHARGE
+    #if len(mass_list) != len(charge_list):  #
+    if switch == False:
 
         for i in range(0, len(data)):
             if "Masses" in data[i]:
@@ -185,45 +207,54 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
                     masses = { index : val }
                     mass_dict.update(masses)
 
-        if len(charge_list) != len(mass_list):
-            new_mass_list = []
-            for type in charge_list:
-                index = type[0]-1
-                #print index
-                new_mass_list.append([type[0], mass_list[index][1]])
+        #print mass_list
 
-            mass_list = new_mass_list
+        new_mass_list = []
+        for type in charge_list:
+            index = type[0]-1
+            print index
+            new_mass_list.append([type[0], mass_list[index][1]])
 
-#########
-            mass_xyz = []
-            for type in mass_list:
-                temp = int(type[1]/2)
-                mass_xyz.append(temp)
+        #print new_mass_list
+        mass_list = list(new_mass_list)
 
-            for i in range(0,len(mass_xyz)):
-                if mass_xyz[i] == 0:
-                    mass_xyz[i] = 1
-#########
-            for i in range(len(charge_list)):
-                mass_list[i][0] = i + 1
-                mass_dict.update({ mass_list[i][0] : mass_list[i][1] })
-                charge_list[i][0] = i + 1
-                charge_dict.update({ charge_list[i][0] : charge_list[i][1] })
+        #########
+        for type in mass_list:
+            temp = int(type[1]/2)
+            mass_xyz.append(temp)
 
-            for type in charge_list:
-                for i in range(len(topo_list)):
+        for i in range(0,len(mass_xyz)):
+            if mass_xyz[i] == 0:
+                mass_xyz[i] = 1
+        #########
 
-                    if type[1] == float(topo_list[i][3]):
-                        topo_list[i][2] = str(type[0])
+        for i in range(len(charge_list)):
+            new_mass_list[i] = [ charge_list[i][0], mass_list[i][1] ]
+            mass_list[i][0] = i + 1
+            mass_dict.update({ mass_list[i][0] : mass_list[i][1] })
+            charge_list[i][0] = i + 1
+            charge_dict.update({ charge_list[i][0] : charge_list[i][1] })
 
-            topo_list.sort(key=lambda x: int(x[0]))
+            #print mass_list
 
-        #print mass_list, mass_dict
+        topo_list_new = []
+        for line in topo_list:
+            topo_list_new.append(line)
+
+        for type in charge_list:
+            for i in range(len(topo_list_new)):
+
+                if type[1] == float(topo_list_new[i][3]):
+                    topo_list_new[i][2] = str(type[0])
+
+        topo_list_new.sort(key=lambda x: int(x[0]))
+
+        #print topo_list_new
 
         xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
         xyz_file.append([at_count])
         xyz_file.append([' '])
-        for line in topo_list:
+        for line in topo_list_new:
             index = int(line[2])
             xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
             xyz_file.append(xyz_line)
@@ -231,12 +262,22 @@ def readChargeAndMass():  # READING ATOMIC CHARGES
         with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
-        return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz)
+
+        # for type in charge_list:
+        #     for i in range(len(topo_list)):
+        #
+        #         if type[1] == float(topo_list[i][3]):
+        #             topo_list[i][2] = str(type[0])
+        #
+        # topo_list.sort(key=lambda x: int(x[0]))
 
 
+    return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list)
+
+#print topo_list_new
 
 ########################################################################################################################
-def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
+def assignBonds(updateAtomTypes):  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
 
     bond_ass_d = {}
     bond_ass = []
@@ -282,18 +323,88 @@ def assignBonds():  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
                 hit = [ int(line[1]), int(line[2]), int(line[3]) ]
                 bond_interaction_atoms.append(hit)
 
+
+    ##################
+    if updateAtomTypes:
+
+        bond_ass   = []
+        for line in bond_list:
+
+            at1   = int(line[2])
+            at2   = int(line[3])
+
+            type_at1 = int(topo_list[at1-1][2])
+            type_at2 = int(topo_list[at2-1][2])
+
+            store = [ type_at1, type_at2 ]
+            store = sorted(store)
+
+            if store not in bond_ass:
+                bond_ass.append(store)
+
+            bond_ass = sorted(bond_ass)
+
+        bond_ass_eq = copy.deepcopy(bond_ass)
+
+        for line in updateAtomTypes:
+            if line[0] != line[1]:
+
+                for i in range(len(bond_ass_eq)):
+                    for j in range(2):
+                        if bond_ass_eq[i][j] == line[1]:
+                            bond_ass_eq[i][j] = line[0]
+
+        # for line in bond_list:
+        #     ind1 = int(line[2])
+        #     ind2 = int(line[3])
+        #     to_atom_type = sorted( [ int(topo_list[ind1-1][2]), int(topo_list[ind2-1][2]) ] )
+        #
+        #     new_bond_index = bond_ass.index(to_atom_type) + 1
+        #
+        #     new_bond_list_line = [ int(line[0]), new_bond_index, ind1, ind2 ]
+
+        new_bond_list =[]
+        for line in bond_list:
+            bd   = int(line[1])
+            ind1 = int(line[2])
+            ind2 = int(line[3])
+            # to_atom_type = sorted( [ int(topo_list[ind1-1][2]), int(topo_list[ind2-1][2]) ] )
+
+            new_bond_list_line = [ int(line[0]), bd, int(topo_list[ind1-1][2]), int(topo_list[ind2-1][2]) ]
+            # print new_bond_list_line
+            new_bond_list.append(new_bond_list_line)
+
+        bond_list_unique = []
+        for bond in bond_ass:
+            for line in new_bond_list:
+
+                temp = [ line[1], [ line[2], line[3] ] ]
+                if temp not in bond_list_unique and [temp[0], temp[1][::-1]] not in bond_list_unique:   # VIP
+                    bond_list_unique.append(temp)
+
+        updated_bond_list = list(sorted(bond_list_unique))
+
+        bond_dict = {}
+        for bond in updated_bond_list:
+            bond_dict.setdefault(bond[0], [])
+            bond_dict[bond[0]].append(bond[1])
+
+        # for bond in updated_bond_list:
+        #     temp = { bond[0] : bond[1] }
+        #     new_bond_dict.update(temp)
+
     return (bond_dict, bondTypeList, bond_interaction_atoms)
 
-bond_dict, bondTypeList, bond_interaction_atoms = assignBonds()
+# bond_dict, bondTypeList, bond_interaction_atoms = assignBonds(updateAtomTypes)
 
-print bond_dict, bondTypeList
+#print bond_dict, bondTypeList
 #print bond_interaction_atoms
 #print store_interaction_atoms
 
 
 
 ########################################################################################################################
-def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
+def assignAngles(updateAtomTypes):  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
 
     angle_ass_d = {}
     angle_ass = []
@@ -342,6 +453,67 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
                 hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]) ]
                 angle_interaction_atoms.append(hit)
 
+
+    ##################
+    if updateAtomTypes:
+
+        angle_ass   = []
+        for line in angle_list:
+
+            at1   = int(line[2])
+            at2   = int(line[3])
+            at3   = int(line[4])
+
+            type_at1 = int(topo_list[at1-1][2])
+            type_at2 = int(topo_list[at2-1][2])
+            type_at3 = int(topo_list[at3-1][2])
+
+            store = [ type_at1, type_at2, type_at3 ]
+            #store = sorted(store)
+
+            if store not in angle_ass:
+                angle_ass.append(store)
+
+        angle_ass = sorted(angle_ass)
+
+        angle_ass_eq = copy.deepcopy(angle_ass)
+
+        for line in updateAtomTypes:
+            if line[0] != line[1]:
+
+                for i in range(len(angle_ass_eq)):
+                    for j in range(3):
+                        if angle_ass_eq[i][j] == line[1]:
+                            angle_ass_eq[i][j] = line[0]
+
+        new_angle_list =[]
+        for line in angle_list:
+            bd   = int(line[1])
+            ind1 = int(line[2])
+            ind2 = int(line[3])
+            ind3 = int(line[4])
+
+            new_angle_list_line = [ int(line[0]), bd, int(topo_list[ind1-1][2]), int(topo_list[ind2-1][2]), int(topo_list[ind3-1][2]) ]
+            new_angle_list.append(new_angle_list_line)
+
+        angle_list_unique = []
+        for angle in angle_ass:
+            for line in new_angle_list:
+
+                temp = [ line[1], [ line[2], line[3], line[4] ] ]
+                if temp not in angle_list_unique and [temp[0], temp[1][::-1]] not in angle_list_unique:   # VIP
+                    angle_list_unique.append(temp)
+
+        updated_angle_list = list(sorted(angle_list_unique))
+
+        angle_dict = {}
+        for angle in updated_angle_list:
+            angle_dict.setdefault(angle[0], [])
+            angle_dict[angle[0]].append(angle[1])
+
+        # print angle_ass, '########'
+        # print angle_dict, '#######'
+
     return (angle_dict, angleTypeList, angle_interaction_atoms)
 
 #angle_dict, angleTypeList, angle_interaction_atoms = assignAngles()
@@ -351,7 +523,7 @@ def assignAngles():  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
 
 
 ########################################################################################################################
-def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
+def assignDihedrals(updateAtomTypes):  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
     dihedral_ass_d = {}
     dihedral_ass = []
@@ -402,6 +574,73 @@ def assignDihedrals():  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
                 #count += 1
                 hit = [ int(line[1]), int(line[2]), int(line[3]), int(line[4]), int(line[5])  ]
                 dihedral_interaction_atoms.append(hit)
+
+
+    ##################
+    if updateAtomTypes:
+
+        dihedral_ass   = []
+        for line in dihedral_list:
+
+            at1   = int(line[2])
+            at2   = int(line[3])
+            at3   = int(line[4])
+            at4   = int(line[5])
+
+
+            type_at1 = int(topo_list[at1-1][2])
+            type_at2 = int(topo_list[at2-1][2])
+            type_at3 = int(topo_list[at3-1][2])
+            type_at4 = int(topo_list[at4-1][2])
+
+            store = [ type_at1, type_at2, type_at3, type_at4 ]
+            #store = sorted(store)
+
+            if store not in dihedral_ass:
+                dihedral_ass.append(store)
+
+        dihedral_ass = sorted(dihedral_ass)
+
+        dihedral_ass_eq = copy.deepcopy(dihedral_ass)
+
+        for line in updateAtomTypes:
+            if line[0] != line[1]:
+
+                for i in range(len(dihedral_ass_eq)):
+                    for j in range(4):
+                        if dihedral_ass_eq[i][j] == line[1]:
+                            dihedral_ass_eq[i][j] = line[0]
+
+        new_dihedral_list =[]
+        for line in dihedral_list:
+            bd   = int(line[1])
+            ind1 = int(line[2])
+            ind2 = int(line[3])
+            ind3 = int(line[4])
+            ind4 = int(line[5])
+
+            new_dihedral_list_line = [ int(line[0]), bd, int(topo_list[ind1-1][2]), int(topo_list[ind2-1][2]), int(topo_list[ind3-1][2]), int(topo_list[ind4-1][2]) ]
+            new_dihedral_list.append(new_dihedral_list_line)
+
+        dihedral_list_unique = []
+        for dihedral in dihedral_ass:
+            for line in new_dihedral_list:
+
+                temp = [ line[1], [ line[2], line[3], line[4], line[5] ] ]
+                if temp not in dihedral_list_unique and [temp[0], temp[1][::-1]] not in dihedral_list_unique:   # VIP
+                    dihedral_list_unique.append(temp)
+
+        updated_dihedral_list = list(sorted(dihedral_list_unique))
+
+        # print updated_dihedral_list, "#######"
+
+        dihedral_dict = {}
+        for dihedral in updated_dihedral_list:
+            dihedral_dict.setdefault(dihedral[0], [])
+            dihedral_dict[dihedral[0]].append(dihedral[1])
+
+        # print dihedral_ass, '########'
+        # print dihedral_dict, '#######'
 
     return (dihedral_dict, dihedralTypeList, dihedral_interaction_atoms)
 
@@ -527,12 +766,12 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             if i+1 in moleculeInfo[j][2]:
                 moleculeInfoResolved.append([ i+1, moleculeInfo[j][0], moleculeInfo[j][1], atomPositionInMoleculeList[i] ])
 
-    #print moleculeInfoResolved[:10]
+    #print moleculeTypeInfo
 
     return (moleculeTypeInfo, moleculeInfo, moleculeInfoResolved)
 
 #moleculeInfo, moleculeInfoResolved = assignMolecules()
-#print moleculeInfoResolved
+
 
 
 ########################################################################################################################

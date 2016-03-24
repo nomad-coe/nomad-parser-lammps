@@ -2,6 +2,7 @@ import fnmatch
 import os, sys
 import numpy as np
 
+
 #examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 ########################################################################################################################
 # FIRST I OPEN THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
@@ -251,6 +252,11 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
 
 int_type, tstep, steps = readIntegratorSettings()
 
+################################################################################################################################
+
+#cacchio = updateAtomicTypes()
+
+#print cacchio
 
 ################################################################################################################################
 
@@ -324,6 +330,8 @@ def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
         bond_dict = {index1 : bond }
         list_of_bonds.update(bond_dict)
     #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
+
+    #print bond_list
 
     return list_of_bonds
 
@@ -457,5 +465,7 @@ def simulationTime():
 
 
     return (frame_length, time_length)
+
+
 
 

@@ -1,6 +1,6 @@
 import setup_paths
 import numpy as np
-import math
+import math, copy
 import operator
 from contextlib import contextmanager
 
@@ -16,6 +16,8 @@ from LAMMPSParserLog import logFileOpen
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
+
+
 
 
 ########################################################################################################################
@@ -45,6 +47,24 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
 ########################################################################################################################
 
 
+# collecting atomic masses
+charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list  = readChargeAndMass()
+mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
+
+updateAtomTypes = []
+if new_mass_list:
+    for i in range(len(mass_list)):
+        updateAtomTypes.append([ new_mass_list[i][0], mass_list[i][0] ])
+else:
+    pass
+
+print updateAtomTypes
+# print topo_list_new
+
+# ordering atomic partial charges
+charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
+
+at_types = len(mass_list)
 
 def parse(fName):
 
@@ -61,13 +81,6 @@ def parse(fName):
         # opening section_topology
         with o(p, 'section_topology'):
 
-            # collecting atomic masses
-            charge_dict, charge_list, mass_dict, mass_list, mass_xyz  = readChargeAndMass()
-            mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
-            at_types = len(mass_dict)
-
-            # ordering atomic partial charges
-            charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0))
 
             # collecting information defining different molecules
             moleculeTypeInfo, moleculeInfo, moleculeInfoResolved = assignMolecules()
@@ -80,21 +93,21 @@ def parse(fName):
             dihedralFunctional = list_of_styles.get('dihedral_style')
 
             # collecting covalent bond definitions
-            bond_dict, bondTypeList, bond_interaction_atoms  = assignBonds()
+            bond_dict, bondTypeList, bond_interaction_atoms  = assignBonds(updateAtomTypes)
             bond_dict = sorted(bond_dict.items(), key=operator.itemgetter(0))
             list_of_bonds = readBonds()
             list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
             bd_types = len(bond_dict)
 
             # collecting bond angles definitions
-            angle_dict, angleTypeList, angle_interaction_atoms  = assignAngles()
+            angle_dict, angleTypeList, angle_interaction_atoms  = assignAngles(updateAtomTypes)
             angle_dict = sorted(angle_dict.items(), key=operator.itemgetter(0))
             list_of_angles = readAngles()
             list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
             ag_types = len(angle_dict)
 
             # collecting dihedral angles definitions
-            dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = assignDihedrals()
+            dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = assignDihedrals(updateAtomTypes)
             dihedral_dict = sorted(dihedral_dict.items(), key=operator.itemgetter(0))
             list_of_dihedrals = readDihedrals()
             list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
@@ -106,6 +119,8 @@ def parse(fName):
             list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
 
+
+
             number_of_topology_atoms = numberOfTopologyAtoms()
             p.addValue('number_of_topology_atoms', number_of_topology_atoms)
 
@@ -115,7 +130,7 @@ def parse(fName):
                 atom_to_molecule.append([moleculeInfoResolved[i][1], moleculeInfoResolved[i][3]])
 
             p.addValue('number_of_topology_molecules', len(moleculeInfo))
-            p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
+            #p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
 
 
             # opening section_atom_types
@@ -126,7 +141,7 @@ def parse(fName):
 
                 with o(p, 'section_atom_type'):
                     p.addValue('atom_type_name', [mass_xyz[i], i+1]) # Here atom_type_name is atomic number plus an integer index
-                    p.addValue('atom_type_mass', mass_dict[i][1])
+                    p.addValue('atom_type_mass', mass_list[i][1])
                     p.addValue('atom_type_charge', charge_dict[i][1])
                     pass
 
@@ -158,7 +173,7 @@ def parse(fName):
             for i in range(len(moleculeInfo)):
                 molecule_to_molecule_type_map.append(moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
 
-            p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+            #p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
             pass
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
@@ -178,7 +193,7 @@ def parse(fName):
                 for i in range(len(bondTypeList)):
 
                     with o(p, 'section_interaction'):
-                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
+                        #p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))
                         p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0]))
 
@@ -186,9 +201,19 @@ def parse(fName):
                             p.addValue('interaction_kind', bondFunctional)
 
                         int_index_store = bond_dict[i][1]
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+                        interaction_atom_to_atom_type_ref = []
 
-                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
+                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                            interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                        else:
+                            for line in int_index_store:
+                                temp = sorted(map(lambda x:x-1, line))
+                                interaction_atom_to_atom_type_ref.append(temp)
+
+                        # interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_bonds[i][1])
 
 
@@ -244,9 +269,20 @@ def parse(fName):
                             p.addValue('interaction_kind', angleFunctional)
 
                         int_index_store = angle_dict[i][1]
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+                        interaction_atom_to_atom_type_ref = []
 
-                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
+                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                            interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+
+                        else:
+                            for line in int_index_store:
+                                temp = map(lambda x:x-1, line)
+                                interaction_atom_to_atom_type_ref.append(temp)
+
+                        # int_index_store = angle_dict[i][1]
+                        # interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+
+                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_angles[i][1])
 
 
@@ -302,9 +338,20 @@ def parse(fName):
                             p.addValue('interaction_kind', dihedralFunctional)
 
                         int_index_store = dihedral_dict[i][1]
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+                        interaction_atom_to_atom_type_ref = []
 
-                        p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
+                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                            interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                        else:
+                            for line in int_index_store:
+                                temp = map(lambda x:x-1, line)
+                                interaction_atom_to_atom_type_ref.append(temp)
+
+                        # int_index_store = dihedral_dict[i][1]
+                        # interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', list_of_dihedrals[i][1])
 
 
