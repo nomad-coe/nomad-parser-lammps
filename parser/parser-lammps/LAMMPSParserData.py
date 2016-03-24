@@ -212,7 +212,7 @@ def readChargeAndMass():
         new_mass_list = []
         for type in charge_list:
             index = type[0]-1
-            print index
+            # print index
             new_mass_list.append([type[0], mass_list[index][1]])
 
         #print new_mass_list

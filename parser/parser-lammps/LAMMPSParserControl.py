@@ -114,7 +114,7 @@ def parse(fName):
             dh_types = len(dihedral_dict)
 
             # collecting dispersion interactions ff terms
-            list_of_ljs, ljs_dict  = readPairCoeff()
+            list_of_ljs, ljs_dict  = readPairCoeff(updateAtomTypes)
             ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
             list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
@@ -394,13 +394,22 @@ def parse(fName):
                         int_param_store.append(list_of_ljs[i][1])
 
                     interaction_atom_to_atom_type_ref = []
-                    for i in range(lj_types):
-                        temp = [int_index_store[i][0]-1, int_index_store[i][1]-1]
-                        interaction_atom_to_atom_type_ref.append(temp)
+                    if all(isinstance(elem, list) for elem in int_index_store) == False:
+                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                    else:
+                        for line in int_index_store:
+                            temp = map(lambda x:x-1, line)
+                            interaction_atom_to_atom_type_ref.append(temp)
+
+                    # interaction_atom_to_atom_type_ref = []
+                    # for i in range(lj_types):
+                    #     temp = [int_index_store[i][0]-1, int_index_store[i][1]-1]
+                    #     interaction_atom_to_atom_type_ref.append(temp)
 
                     #p.addValue('interaction_atoms', int_index_store)
-                    p.addValue('interaction_atom_to_atom_type_ref', interaction_atom_to_atom_type_ref)  # this points to the relative section_atom_type
-                    p.addValue('interaction_parameters', int_param_store)
+                    p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                    p.addArrayValues('interaction_parameters', np.asarray(int_param_store))
                     pass
 
 

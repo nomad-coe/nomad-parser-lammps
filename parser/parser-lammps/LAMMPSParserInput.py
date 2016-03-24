@@ -260,7 +260,7 @@ int_type, tstep, steps = readIntegratorSettings()
 
 ################################################################################################################################
 
-def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
+def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
     lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
 
@@ -300,6 +300,22 @@ def readPairCoeff():  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
         lj_param = {index : coeff}
         list_of_ljs.update(lj_param)
+
+
+    if updateAtomTypes:
+
+        for line in updateAtomTypes:
+            if line[0] != line[1]:
+
+                list_of_ljs.setdefault(line[1], [])
+                list_of_ljs[line[1]].append(list_of_ljs[line[0]][0])
+                list_of_ljs[line[1]].append(list_of_ljs[line[0]][1])
+
+                ljs_dict.setdefault(line[1], [])
+                ljs_dict[line[1]].append(line[1])
+                ljs_dict[line[1]].append(line[1])
+
+    print list_of_ljs, ljs_dict, updateAtomTypes, '#######'
 
     #list_of_ljs = { "Pair coefficients" : list_of_ljs}
     return (list_of_ljs, ljs_dict)
