@@ -25,7 +25,7 @@ object LammpsParser extends SimpleExternalParserGenerator(
     "parser-lammps/LAMMPSParserControl.py",
     "parser-lammps/LAMMPSParserData.py",
     "parser-lammps/LAMMPSParserInput.py",
-    "parser-lammps/parser_lammps.py",
+    "parser-lammps/LAMMPSParserLog.py",
     "parser-lammps/setup_paths.py",
     "nomad_meta_info/common.nomadmetainfo.json",
     "nomad_meta_info/meta_types.nomadmetainfo.json",
