@@ -740,7 +740,7 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
     ghost = []
     for line in moleculeInfo:
         seen = line[2]
-        temp = [line[0], line[2]]
+        temp = [line[0], line[2], line[1]]
 
         if seen not in ghost:
             ghost.append(seen)
@@ -766,7 +766,8 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
             if i+1 in moleculeInfo[j][2]:
                 moleculeInfoResolved.append([ i+1, moleculeInfo[j][0], moleculeInfo[j][1], atomPositionInMoleculeList[i] ])
 
-    #print moleculeTypeInfo
+
+    # print moleculeTypeInfo
 
     return (moleculeTypeInfo, moleculeInfo, moleculeInfoResolved)
 

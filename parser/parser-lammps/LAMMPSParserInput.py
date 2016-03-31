@@ -65,7 +65,7 @@ storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR 
 
 def readLogFileName():
 
-    log_filter = filter(lambda x: x.startswith("log "), storeInput)
+    log_filter = filter(lambda x: x.startswith("log"), storeInput)
 
     if not log_filter:
         logFileName = 'log.lammps'  # thermo output is put in the log.lammps file
@@ -81,7 +81,7 @@ def readLogFileName():
 
 def readDumpFileName():
 
-    dump_filter = filter(lambda x: x.startswith("dump "), storeInput)
+    dump_filter = filter(lambda x: x.startswith("dump"), storeInput)
 
     for line in dump_filter:
         line_split = line.split()
@@ -315,7 +315,7 @@ def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
                 ljs_dict[line[1]].append(line[1])
                 ljs_dict[line[1]].append(line[1])
 
-    print list_of_ljs, ljs_dict, updateAtomTypes, '#######'
+    #print list_of_ljs, ljs_dict, updateAtomTypes, '#######'
 
     #list_of_ljs = { "Pair coefficients" : list_of_ljs}
     return (list_of_ljs, ljs_dict)

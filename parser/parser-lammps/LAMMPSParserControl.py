@@ -58,7 +58,7 @@ if new_mass_list:
 else:
     pass
 
-print updateAtomTypes
+# print updateAtomTypes
 # print topo_list_new
 
 # ordering atomic partial charges
@@ -120,7 +120,6 @@ def parse(fName):
             lj_types = len(ljs_dict)
 
 
-
             number_of_topology_atoms = numberOfTopologyAtoms()
             p.addValue('number_of_topology_atoms', number_of_topology_atoms)
 
@@ -130,7 +129,7 @@ def parse(fName):
                 atom_to_molecule.append([moleculeInfoResolved[i][1], moleculeInfoResolved[i][3]])
 
             p.addValue('number_of_topology_molecules', len(moleculeInfo))
-            #p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
+            # p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
 
 
             # opening section_atom_types
@@ -145,36 +144,6 @@ def parse(fName):
                     p.addValue('atom_type_charge', charge_dict[i][1])
                     pass
 
-
-            # opening section_molecule_type
-            for i in range(len(moleculeTypeInfo)):
-
-                with o(p, 'section_molecule_type'):
-                    p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
-                    p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
-
-                    p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray([x-1 for x in moleculeTypeInfo[i][1]]))
-
-
-                    atom_in_molecule_name = []
-                    for j in moleculeTypeInfo[i][1]:
-                        atom_in_molecule_name.append([ mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
-
-                    p.addValue('atom_in_molecule_name', atom_in_molecule_name)
-
-                    atom_in_molecule_charge = []
-                    for j in moleculeTypeInfo[i][1]:
-                        atom_in_molecule_charge.append(charge_list[j-1][1])
-
-                    p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
-                    pass
-
-            molecule_to_molecule_type_map = []
-            for i in range(len(moleculeInfo)):
-                molecule_to_molecule_type_map.append(moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
-
-            #p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
-            pass
 
             # opening section_interaction for covalent bonds (number_of_atoms_per_interaction = 2)
             if bd_types:
@@ -411,6 +380,51 @@ def parse(fName):
                     p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                     p.addArrayValues('interaction_parameters', np.asarray(int_param_store))
                     pass
+
+
+            # opening section_molecule_type
+            for i in range(len(moleculeTypeInfo)):
+
+                with o(p, 'section_molecule_type'):
+                    p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
+                    p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
+
+                    p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray([x-1 for x in moleculeTypeInfo[i][1]]))
+
+
+                    atom_in_molecule_name = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_name.append([ mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
+
+                    p.addArrayValues('atom_in_molecule_name', np.asarray(atom_in_molecule_name))
+
+                    atom_in_molecule_charge = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_charge.append(charge_list[j-1][1])
+
+                    p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
+
+                    if bd_types:
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        for h in bondTypeList:
+                            for k in bondTypeList:
+
+                                store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_atoms.append(store)
+
+                        print molecule_interaction_atoms
+
+
+                    pass
+
+            molecule_to_molecule_type_map = []
+            for i in range(len(moleculeInfo)):
+                molecule_to_molecule_type_map.append(moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
+
+            p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+            pass
 
 
         # opening section_sampling_method
