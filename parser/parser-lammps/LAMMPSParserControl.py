@@ -386,6 +386,7 @@ def parse(fName):
             for i in range(len(moleculeTypeInfo)):
 
                 with o(p, 'section_molecule_type'):
+                    # gindex = 0
                     p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
                     p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
 
@@ -406,18 +407,161 @@ def parse(fName):
 
                     if bd_types:
 
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
                         store = []
                         molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
                         for h in bondTypeList:
                             for k in bondTypeList:
 
-                                store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
                             molecule_interaction_atoms.append(store)
 
-                        print molecule_interaction_atoms
+                        for l in bondTypeList:
+                            store1  = [ x[0] for x in bond_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        for bond in bondTypeList:
+                                if bond in molecule_interaction_type:
+
+                                    with o(p, 'section_molecule_interaction'):
+
+                                        p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[bond-1]))
+                                        p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[bond-1]))
+                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                        if bondFunctional:
+                                            p.addValue('molecule_interaction_kind', bondFunctional)
 
 
+                                        int_index_store = bond_dict[bond-1][1]
+                                        molecule_interaction_atom_to_atom_type_ref = []
+
+                                        # print int_index_store, '######'
+
+                                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                            molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                                        else:
+                                            for line in int_index_store:
+                                                temp = sorted(map(lambda x:x-1, line))
+                                                molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addValue('molecule_interaction_parameters', list_of_bonds[bond-1][1])
+
+
+                    if ag_types:
+
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
+                        for h in angleTypeList:
+                            for k in angleTypeList:
+
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex] for x in angle_interaction_atoms
+                                            if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
+                            molecule_interaction_atoms.append(store)
+
+                        for l in angleTypeList:
+                            store1  = [ x[0] for x in angle_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        for angle in angleTypeList:
+                                if angle in molecule_interaction_type:
+
+                                    with o(p, 'section_molecule_interaction'):
+
+                                        p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[angle-1]))
+                                        p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[angle-1]))
+                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                        if bondFunctional:
+                                            p.addValue('molecule_interaction_kind', angleFunctional)
+
+
+                                        int_index_store = angle_dict[angle-1][1]
+                                        molecule_interaction_atom_to_atom_type_ref = []
+
+                                        # print int_index_store, '######'
+
+                                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                            molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+
+                                        else:
+                                            for line in int_index_store:
+                                                temp = map(lambda x:x-1, line)
+                                                molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addValue('molecule_interaction_parameters', list_of_angles[angle-1][1])
+
+
+                    if dh_types:
+
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
+                        for h in dihedralTypeList:
+                            for k in dihedralTypeList:
+
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex, x[4] - toMoleculeAtomIndex]
+                                            for x in dihedral_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2]
+                                            and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
+                            molecule_interaction_atoms.append(store)
+
+                        for l in dihedralTypeList:
+                            store1  = [ x[0] for x in dihedral_interaction_atoms if x[0]==l
+                                        and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        for dihedral in dihedralTypeList:
+                                if dihedral in molecule_interaction_type:
+
+                                    with o(p, 'section_molecule_interaction'):
+
+                                        p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[dihedral-1]))
+                                        p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[dihedral-1]))
+                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                        if bondFunctional:
+                                            p.addValue('molecule_interaction_kind', dihedralFunctional)
+
+
+                                        int_index_store = dihedral_dict[dihedral-1][1]
+                                        molecule_interaction_atom_to_atom_type_ref = []
+
+                                        # print int_index_store, '######'
+
+                                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                            molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                                        else:
+                                            for line in int_index_store:
+                                                temp = map(lambda x:x-1, line)
+                                                molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addValue('molecule_interaction_parameters', list_of_dihedrals[dihedral-1][1])
                     pass
+
 
             molecule_to_molecule_type_map = []
             for i in range(len(moleculeInfo)):
