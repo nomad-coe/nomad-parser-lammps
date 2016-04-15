@@ -278,7 +278,7 @@ def parse(fName):
 
                 with o(p, 'section_interaction'):
 
-                    p.addValue('number_of_interactions', lj_types)  # number of LJ interaction types
+                    p.addValue('number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
                     if pairFunctional:
@@ -301,8 +301,8 @@ def parse(fName):
                             interaction_atom_to_atom_type_ref.append(temp)
 
                     # p.addValue('interaction_atoms', int_index_store)
-                    p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                    p.addArrayValues('interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+                    p.addArrayValues('pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                    p.addArrayValues('pair_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
                     pass
 
             ####################################################################################################################################################################################################################################
@@ -332,6 +332,8 @@ def parse(fName):
                         atom_in_molecule_charge.append(charge_list[j-1][1])
 
                     p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
+
+                    ############################################################################################################################################################################################################################
 
 
                     #### COVALENT BONDS INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ######################################################################################################################
@@ -469,6 +471,9 @@ def parse(fName):
 
                         molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
 
+                        # print molecule_interaction_type,  '#######'
+                        # print molecule_interaction_atoms, '#######'
+
                         for dihedral in dihedralTypeList:
                                 if dihedral in molecule_interaction_type:
 
@@ -498,6 +503,42 @@ def parse(fName):
                                         p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                                         p.addValue('molecule_interaction_parameters', list_of_dihedrals[dihedral-1][1])
 
+                    ############################################################################################################################################################################################################################
+
+
+                    #### DISPERSIVE FORCES INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ###################################################################################################################
+
+                    if lj_types:  # LJ-like interactions
+
+                        with o(p, 'section_molecule_interaction'):
+
+                            if pairFunctional:
+                                p.addValue('molecule_interaction_kind', pairFunctional)  # functional form of the interaction
+
+                            int_index_store = []
+                            int_param_store = []
+
+                            for z in range(lj_types):
+
+                                if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
+                                    int_index_store.append(ljs_dict[z][1])
+                                    int_param_store.append(list_of_ljs[z][1])
+
+                            interaction_atom_to_atom_type_ref = []
+                            if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                            else:
+                                for line in int_index_store:
+                                    temp = map(lambda x:x-1, line)
+                                    interaction_atom_to_atom_type_ref.append(temp)
+
+                            p.addValue('number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types
+                            p.addValue('number_of_atoms_per_molecule_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
+                            p.addArrayValues('pair_molecule_interaction_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                            p.addArrayValues('pair_molecule_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+
+                        pass
                     ############################################################################################################################################################################################################################
 
 
@@ -565,13 +606,13 @@ def parse(fName):
                 p.addValue('frame_sequence_time', [frame_length, simulation_length])
                 p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                p.addArrayValues('frame_sequence_potential_energy', pe)
+                # p.addArrayValues('frame_sequence_potential_energy', pe)
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                # p.addArrayValues('frame_sequence_kinetic_energy', ke)
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
+                # p.addArrayValues('frame_sequence_temperature', temp)
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_pressure', press)
+                # p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -593,22 +634,22 @@ def parse(fName):
                 if pe:
                     pe = np.asarray(pe)
                     p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                    p.addArrayValues('frame_sequence_potential_energy', pe)
+                    # p.addArrayValues('frame_sequence_potential_energy', pe)
 
                 if ke:
                     ke = np.asarray(ke)
                     p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                    # p.addArrayValues('frame_sequence_kinetic_energy', ke)
 
                 if temp:
                     temp = np.asarray(temp)
                     p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                    p.addArrayValues('frame_sequence_temperature', temp)
+                    # p.addArrayValues('frame_sequence_temperature', temp)
 
                 if press:
                     press = np.asarray(press)
                     p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                    p.addArrayValues('frame_sequence_pressure', press)
+                    # p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -631,8 +672,8 @@ def parse(fName):
 
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
-                p.addArrayValues('frame_sequence_pressure', press)
+                # p.addArrayValues('frame_sequence_temperature', temp)
+                # p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
