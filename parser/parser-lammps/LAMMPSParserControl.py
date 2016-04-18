@@ -13,6 +13,8 @@ from LAMMPSParserData  import readChargeAndMass, assignBonds, assignAngles, assi
 
 from LAMMPSParserLog import logFileOpen
 
+from LAMMPSParserTraj import *
+
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
 import re, os, sys, json, logging
