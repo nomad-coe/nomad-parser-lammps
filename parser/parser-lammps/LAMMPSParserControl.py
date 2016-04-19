@@ -6,14 +6,14 @@ from contextlib import contextmanager
 
 from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, readStyles, \
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
-                              simulationTime
+                              simulationTime, readDumpFileName
 
 from LAMMPSParserData  import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
                               numberOfTopologyAtoms
 
 from LAMMPSParserLog import logFileOpen
 
-from LAMMPSParserTraj import *
+from LAMMPSParserTraj import trajFileOpen
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -588,13 +588,13 @@ def parse(fName):
         #### DYNAMICS FRAME INFORMATION IN section_frame_sequece ###########################################################################################################################################################################
         ####################################################################################################################################################################################################################################
 
-        skip = logFileOpen()                                # bool var telling if an output log file is open
+        skipThermo = logFileOpen()                          # bool var telling if an output log file is open
         var, thermo_style = readLoggedThermoOutput()        # collecting the read thermodynamic output
-        frame_length, simulation_length = simulationTime()  # frame and simulation time length
+        frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()  # frame and simulation time length
 
         #### THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
 
-        if thermo_style == 'multi' and skip == False:   # Open section_frame_sequence only if an output log file is found
+        if thermo_style == 'multi' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
             from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
 
             with o(p, 'section_frame_sequence'):
@@ -608,13 +608,13 @@ def parse(fName):
                 p.addValue('frame_sequence_time', [frame_length, simulation_length])
                 p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                # p.addArrayValues('frame_sequence_potential_energy', pe)
+                p.addArrayValues('frame_sequence_potential_energy', pe)
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                # p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                p.addArrayValues('frame_sequence_kinetic_energy', ke)
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                # p.addArrayValues('frame_sequence_temperature', temp)
+                p.addArrayValues('frame_sequence_temperature', temp)
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                # p.addArrayValues('frame_sequence_pressure', press)
+                p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -622,7 +622,7 @@ def parse(fName):
 
         #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
 
-        if thermo_style == 'custom' and skip == False:   # Open section_frame_sequence only if an output log file is found
+        if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
             from LAMMPSParserLog import pickNOMADVarsCustom
 
 
@@ -636,22 +636,22 @@ def parse(fName):
                 if pe:
                     pe = np.asarray(pe)
                     p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                    # p.addArrayValues('frame_sequence_potential_energy', pe)
+                    p.addArrayValues('frame_sequence_potential_energy', pe)
 
                 if ke:
                     ke = np.asarray(ke)
                     p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                    # p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
 
                 if temp:
                     temp = np.asarray(temp)
                     p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                    # p.addArrayValues('frame_sequence_temperature', temp)
+                    p.addArrayValues('frame_sequence_temperature', temp)
 
                 if press:
                     press = np.asarray(press)
                     p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                    # p.addArrayValues('frame_sequence_pressure', press)
+                    p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
@@ -659,7 +659,7 @@ def parse(fName):
 
         #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
 
-        if thermo_style == 'one' and skip == False:   # Open section_frame_sequence only if an output log file is found
+        if thermo_style == 'one' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
             from LAMMPSParserLog import pickNOMADVarsOne
 
 
@@ -674,11 +674,60 @@ def parse(fName):
 
                 p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
                 p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                # p.addArrayValues('frame_sequence_temperature', temp)
-                # p.addArrayValues('frame_sequence_pressure', press)
+                p.addArrayValues('frame_sequence_temperature', temp)
+                p.addArrayValues('frame_sequence_pressure', press)
 
         else:
             pass
+
+
+        #### TRAJECTORY INFORMATION IN section_system ##########################################################################################################################################################################################
+        ########################################################################################################################################################################################################################################
+
+        skipTraj = trajFileOpen()     # if False no trajectory info is available here
+        fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
+
+        #### TRAJECTORY OUTPUTS FOR trajDumpStyle = custom TO THE BACKEND
+
+        if trajDumpStyle == 'custom' and skipTraj == False:
+
+            from LAMMPSParserTraj import readCustomTraj
+            simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
+            atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
+
+            for i in range(len(simulationCell)):
+            # for i in range(1):
+
+                with o(p,'section_system'):
+
+                    p.addArrayValues('simulation_cell', np.asarray(simulationCell[i]))
+                    # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
+
+                    if atomPositionBool:
+                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+                    if imageFlagIndexBool:
+                        p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[1]))
+                        pass
+
+                    if atomPositionWrappedBool:
+                        p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[i]))
+                        # p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[1]))
+                        pass
+
+                    if atomForceBool:
+                        p.addArrayValues('atom_forces', np.asarray(atomForce[i]))
+                        # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
+                        pass
+
+                    if atomVelocityBool:
+                        p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
+                        # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
+                        pass
+
 
 
 ########################################################################################################################

@@ -83,12 +83,17 @@ def readDumpFileName():
 
     dump_filter = filter(lambda x: x.startswith("dump"), storeInput)
 
+    dumpFileName    = None
+    stepsPrintFrame = 0
+    trajDumpStyle   = None
     for line in dump_filter:
         line_split = line.split()
 
-        dumpFileName = line_split[5]
+        stepsPrintFrame = int(line_split[4])
+        dumpFileName    = line_split[5]
+        trajDumpStyle   = line_split[3]
 
-    return dumpFileName
+    return (dumpFileName, stepsPrintFrame, trajDumpStyle)
 
 ################################################################################################################################
 
@@ -467,20 +472,20 @@ def simulationTime():
 
     for line in run_filt:
         line_split = line.split()
-        steps = float(line_split[1])
+        integrationSteps = int(line_split[1]) # total number of integration steps (single run)
 
         if unitsType == "real":
-            time_length = steps * tstep
+            time_length = integrationSteps * tstep
             #time_length = str(time_length) + " ns"
             #time_length = { "Simulation time" : time_length }
 
     for line in frame_filt:
         line_split = line.split()
-        frame = int(line_split[1])
-        frame_length = frame * tstep
+        stepsPrintThermo = int(line_split[1])  # thermo output is printed every stepsPrintThermo steps
+        frame_length = stepsPrintThermo * tstep
 
 
-    return (frame_length, time_length)
+    return (frame_length, time_length, stepsPrintThermo, integrationSteps)
 
 
 

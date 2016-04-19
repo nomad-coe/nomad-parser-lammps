@@ -37,7 +37,7 @@ thermo_style multi
 fix 1 all nvt temp 300.0 300.0 100.0
 
 # equilibration trajectory
-dump 1 all custom 800 hexane_cyclohexane_nvt_20ps.lammpstrj id type x y z ix iy iz
+dump 1 all custom 400 hexane_cyclohexane_nvt_20ps.lammpstrj id type x y z ix iy iz
 # dump_modify 1 unwrap yes
 
 log log.hexane_cyclohexane_nvt-thermo_style_multi

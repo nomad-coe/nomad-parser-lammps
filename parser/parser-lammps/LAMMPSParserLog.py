@@ -49,11 +49,11 @@ for file in os.listdir(examplesPath):
         storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
 
 def logFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
-    skip = True
+    skipThermo = True
     if storedOutput:
-        skip = False
+        skipThermo = False
 
-    return skip
+    return skipThermo
 
 skip = logFileOpen()
 
