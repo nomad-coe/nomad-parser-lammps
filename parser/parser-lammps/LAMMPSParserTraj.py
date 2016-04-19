@@ -4,6 +4,7 @@ import os, sys
 
 from LAMMPSParserInput import readDumpFileName, simulationTime
 
+stepsPrintFrame = 0
 fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
 frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()
 
@@ -24,7 +25,7 @@ else:
 
 def trajFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skipTraj = True
-    if traj:
+    if traj and stepsPrintFrame == stepsPrintThermo: # also checks if the thermo and trajectory output settings are consistent  <=== NOTA BENE
         skipTraj = False
 
     return skipTraj
@@ -32,7 +33,7 @@ def trajFileOpen():  # skip section_frame_sequence if an output log file is not 
 skipTraj = trajFileOpen()
 ########################################################################################################################
 
-if trajDumpStyle == 'custom' and skipTraj == False and stepsPrintFrame == stepsPrintFrame: # also checks if the thermo and trajectory output settings are consistent  <=== NOTA BENE
+if trajDumpStyle == 'custom' and skipTraj == False:
 
     nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
 
@@ -50,11 +51,11 @@ if trajDumpStyle == 'custom' and skipTraj == False and stepsPrintFrame == stepsP
                 trajTotal.append(line)
 
 
-        for i in range(len(trajTotal)):  # atom index and type converted to int
-            try:
-                trajTotal[i][:2] = map(int, trajTotal[i][:2])
-            except ValueError:
-                pass
+        # for i in range(len(trajTotal)):  # atom index and type converted to int
+        #     try:
+        #         trajTotal[i][:2] = map(int, trajTotal[i][:2])
+        #     except ValueError:
+        #         pass
 
 
         nofLinesPerFrame = len(trajTotal)/(nofFrames+1)

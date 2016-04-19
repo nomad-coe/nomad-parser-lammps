@@ -155,7 +155,6 @@ def readChargeAndMass():
                     val   = float(mass[1])
                     val1  = int(val/2)     # REQUIRES DOUBLE CHECK
 
-
                     # create list
                     store = [index, val]
                     mass_xyz.append(val1)

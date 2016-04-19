@@ -134,6 +134,10 @@ def parse(fName):
             for i in range(number_of_topology_atoms):
                 atom_to_molecule.append([moleculeInfoResolved[i][1], moleculeInfoResolved[i][3]])
 
+            atomic_number = []
+            for i in range(number_of_topology_atoms):
+                pass
+
             p.addValue('number_of_topology_molecules', len(moleculeInfo))  # backend add number of topology molecules
             p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
 
@@ -681,15 +685,26 @@ def parse(fName):
             pass
 
 
-        #### TRAJECTORY INFORMATION IN section_system ##########################################################################################################################################################################################
+        #### SYSTEM INFORMATION TO section_system ##############################################################################################################################################################################################
         ########################################################################################################################################################################################################################################
 
         skipTraj = trajFileOpen()     # if False no trajectory info is available here
         fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
 
+
+        #### INITIAL CONFIGURATION (ONLY IF A TRAJECTORY IS NOT FOUND)
+
+        if skipTraj == True:
+
+            # TODO
+
+            pass
+
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = custom TO THE BACKEND
 
         if trajDumpStyle == 'custom' and skipTraj == False:
+
+
 
             from LAMMPSParserTraj import readCustomTraj
             simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
@@ -718,15 +733,30 @@ def parse(fName):
                         # p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
+                    if atomVelocityBool:
+                        p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
+                        # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
+                        pass
+
+
+            #### SENDING FORCES TO section_single_configuration_calculation
+
+            refSecSingConf = -1
+            for i in range(len(simulationCell)):
+            # for i in range(1):
+
+                refSecSingConf += 1
+
+                with o(p, 'section_single_configuration_calculation'):
+
                     if atomForceBool:
                         p.addArrayValues('atom_forces', np.asarray(atomForce[i]))
                         # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
                         pass
 
-                    if atomVelocityBool:
-                        p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
-                        # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
-                        pass
+                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+
+
 
 
 
