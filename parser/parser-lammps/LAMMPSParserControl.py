@@ -67,7 +67,7 @@ def parse(fName):
             ####################################################################################################################################################################################################################################
 
             # collecting atomic masses
-            charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list  = readChargeAndMass()
+            charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list, atomLabelling  = readChargeAndMass()
             mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0)) # ordering atomic partial charges
 
@@ -696,19 +696,42 @@ def parse(fName):
 
         if skipTraj == True:
 
-            # TODO
+            atomPosInit = []
+            atomAtLabel  = []
+            for i in range(len(atomLabelling)):
+                storeAtNumb = atomLabelling[i][0]    # atomic number from data file
+                storeAtPos  = [atomLabelling[i][1], atomLabelling[i][2], atomLabelling[i][3]] # atomic position from data file
+                atomAtLabel.append(storeAtNumb)
+                atomPosInit.append(storeAtPos)
 
-            pass
+
+            h = 0
+            c = 0
+            for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_label
+                if at == 1:
+                    h += 1
+                    atomAtLabel[i] = 'H' + '  ' + str(h)
+                if at == 6:
+                    c += 1
+                    atomAtLabel[i] = 'C' + '  ' + str(c)
+
+
+            with o(p,'section_system'):
+                p.addArrayValues('atom_position', np.asarray(atomPosInit))
+                p.addArrayValues('atom_label', np.asarray(atomAtLabel))
+
+
 
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = custom TO THE BACKEND
 
         if trajDumpStyle == 'custom' and skipTraj == False:
 
-
-
             from LAMMPSParserTraj import readCustomTraj
             simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
             atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
+
+            atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
+
 
             for i in range(len(simulationCell)):
             # for i in range(1):
@@ -720,6 +743,11 @@ def parse(fName):
 
                     if atomPositionBool:
                         p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+                    if atomPositionBool:
+                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
                         # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
                         pass
 

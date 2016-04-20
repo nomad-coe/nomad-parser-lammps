@@ -170,12 +170,14 @@ def readChargeAndMass():
 
 
         xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+        atomLabelling = []
         xyz_file.append([at_count])
         xyz_file.append([' '])
         for line in topo_list:
             index = int(line[2])
             xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
             xyz_file.append(xyz_line)
+            atomLabelling.append(xyz_line)
 
         with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
@@ -251,12 +253,14 @@ def readChargeAndMass():
         #print topo_list_new
 
         xyz_file = []     # WRITE AN XYZ FILE FROM LAMMPS TOPOLOGY DATA
+        atomLabelling = []
         xyz_file.append([at_count])
         xyz_file.append([' '])
         for line in topo_list_new:
             index = int(line[2])
             xyz_line = [mass_xyz[index-1], float(line[4]), float(line[5]),  float(line[6])]
             xyz_file.append(xyz_line)
+            atomLabelling.append(xyz_line)
 
         with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
@@ -271,7 +275,7 @@ def readChargeAndMass():
         # topo_list.sort(key=lambda x: int(x[0]))
 
 
-    return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list)
+    return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list, atomLabelling)
 
 #print topo_list_new
 
