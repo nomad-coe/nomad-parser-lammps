@@ -31,8 +31,11 @@ def trajFileOpen():  # skip section_frame_sequence if an output log file is not 
     return skipTraj
 
 skipTraj = trajFileOpen()
-########################################################################################################################
 
+
+########################################################################################################################
+###### HERE custom LAMMPS TRAJECORY IS PARSED
+########################################################################################################################
 if trajDumpStyle == 'custom' and skipTraj == False:
 
     nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
@@ -90,7 +93,7 @@ if trajDumpStyle == 'custom' and skipTraj == False:
         def strToBool(x):
             return x.lower() in ('pp')
 
-        pbcBool = []
+        pbcBool = []  # periodic boundary conditions (true or false) for x, y and z
         for header in frameHeader:
             for line in header:
                 if 'BOX' and 'BOUNDS' in line:
@@ -175,9 +178,6 @@ if trajDumpStyle == 'custom' and skipTraj == False:
 
             imageFlagIndex.append(store_1)
 
-        # for line in imageFlagIndex[0]:
-        #     print line
-
 
         # Atom position wrapped
         atomPositionWrappedBool = False
@@ -201,18 +201,6 @@ if trajDumpStyle == 'custom' and skipTraj == False:
                     store = [xw, yw, zw]
                     store_1.append(store)
                 atomPositionWrapped.append(store_1)
-
-        # xyz_file = []
-        # xyz_file.append(len(atomPositionWrapped[0]))
-        # xyz_file.append([' '])
-        # for line in atomPositionWrapped[0]:
-        #     index = 1
-        #     xyz_line = [index, line[0], line[1], line[2]]
-        #     xyz_file.append(xyz_line)
-        #     print index, line[0], line[1], line[2]
-
-        # with open('generated_from_data_file.xyz', 'w') as xyz:
-        #     xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
         # Atom velocities
@@ -247,9 +235,6 @@ if trajDumpStyle == 'custom' and skipTraj == False:
 
             atomVelocity.append(store_1)
 
-        # for line in atomVelocity:
-        #     print line
-
 
         # Atom forces
         try:
@@ -283,8 +268,119 @@ if trajDumpStyle == 'custom' and skipTraj == False:
 
             atomForce.append(store_1)
 
-        # for line in atomVelocity:
-        #     print line
+
 
         return (simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,
                 atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool)
+
+
+
+########################################################################################################################
+###### HERE atom LAMMPS TRAJECORY IS PARSED
+########################################################################################################################
+if trajDumpStyle == 'atom' and skipTraj == False:
+
+    nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
+
+    def readAtomTraj():
+
+        # SPLIT AND CLEAN THE TRAJ FILE LINES
+        trajTotal = []
+        for line in traj:
+            line = line.strip('\n' + '').split(' ')
+            line = filter(None, line)
+
+            # If line is just empty
+            if line != []:
+                pass
+                trajTotal.append(line)
+
+
+        nofLinesPerFrame = len(trajTotal)/(nofFrames+1)
+
+        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in xrange(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
+
+
+        frameHeader = []
+        frameAtomInfo = []
+        for frame in trajByFrame:
+            header = frame[:9]
+            atomInfo = frame[9:]
+            frameHeader.append(header)     # header info per frame
+            frameAtomInfo.append(atomInfo) # atom info per frame
+
+        for frame in frameAtomInfo:        # sorting frame atom by index thoughout frameAtomInfo
+            frame.sort(key=lambda x: x[0])
+
+        for header in frameHeader:         # box boundaries to floating
+            for line in header:
+                try:
+                    line[:2] = map(float, line[:2])
+                except ValueError:
+                    pass
+
+
+        # Reading frame column header (stored quantity name)
+        variables = frameHeader[0][8][1:]
+
+
+        # Boundary periodicity bool
+        def strToBool(x):
+            return x.lower() in ('pp')
+
+        pbcBool = []  # periodic boundary conditions (true or false) for x, y and z
+        for header in frameHeader:
+            for line in header:
+                if 'BOX' and 'BOUNDS' in line:
+                    xbool = strToBool(line[3])
+                    ybool = strToBool(line[4])
+                    zbool = strToBool(line[5])
+                    store = [xbool, ybool, zbool]
+                    pbcBool.append(store)
+
+
+        # Calculating simulation cell vectors frame by frame
+        simulationCell = []
+        for header in frameHeader:
+            xx = [ header[5][0] - header[5][1], 0, 0 ]
+            yy = [ 0, header[6][0] - header[6][1], 0 ]
+            zz = [ 0, 0, header[7][0] - header[7][1] ]
+            store = [xx, yy, zz]
+            simulationCell.append(store)
+
+
+        # Atom position (scaled)
+        try:
+            xsInd = variables.index('xs')-1
+        except ValueError:
+            xsInd = 0
+
+        try:
+            ysInd = variables.index('ys')-1
+        except ValueError:
+            ysInd = 0
+
+        try:
+            zsInd = variables.index('zs')-1
+        except ValueError:
+            zsInd = 0
+
+        atomPositionScaledBool = False
+        if xsInd and ysInd and zsInd:
+            atomPositionScaledBool = True
+
+        store = []
+        atomPositionScaled = []
+        for frame in frameAtomInfo:
+            store_1 =[]
+            for line in frame:
+
+                if xsInd and ysInd and zsInd:
+                    store = [ float(line[xsInd]), float(line[ysInd]), float(line[zsInd]) ]
+                    store_1.append(store)
+            atomPositionScaled.append(store_1)
+
+
+
+        return (simulationCell, atomPositionScaled, atomPositionScaledBool)
+

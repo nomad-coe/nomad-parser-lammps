@@ -692,33 +692,58 @@ def parse(fName):
         fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
 
 
-        #### INITIAL CONFIGURATION (ONLY IF A TRAJECTORY IS NOT FOUND)
+        #### INTIAL CONFIGURATION AND ATOM LABELS
+
+        atomPosInit = []
+        atomAtLabel  = []
+        for i in range(len(atomLabelling)):
+            storeAtNumb = atomLabelling[i][0]    # atomic number from data file
+            storeAtPos  = [atomLabelling[i][1], atomLabelling[i][2], atomLabelling[i][3]] # atomic position from data file
+            atomAtLabel.append(storeAtNumb)
+            atomPosInit.append(storeAtPos)
+
+
+        H = 0
+        C = 0
+        N = 0
+        O = 0
+        P = 0
+        S = 0
+        for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_label
+            if at == 1:
+                H += 1
+                atomAtLabel[i] = 'H' + '  ' + str(H) # hydrogen
+            if at == 6:
+                C += 1
+                atomAtLabel[i] = 'C' + '  ' + str(C) # carbon
+            if at == 7:
+                N += 1
+                atomAtLabel[i] = 'N' + '  ' + str(N) # nitrogen
+            if at == 8:
+                O += 1
+                atomAtLabel[i] = 'O' + '  ' + str(O) # oxygen
+            if at == 9:
+                P += 1
+                atomAtLabel[i] = 'P' + '  ' + str(P) # phospho
+            if at == 16:
+                S += 1
+                atomAtLabel[i] = 'S' + '  ' + str(S) # sulfur
+
+
+
+        #### INITIAL CONFIGURATION TO BACKEND (ONLY IF A TRAJECTORY IS NOT FOUND)
 
         if skipTraj == True:
-
-            atomPosInit = []
-            atomAtLabel  = []
-            for i in range(len(atomLabelling)):
-                storeAtNumb = atomLabelling[i][0]    # atomic number from data file
-                storeAtPos  = [atomLabelling[i][1], atomLabelling[i][2], atomLabelling[i][3]] # atomic position from data file
-                atomAtLabel.append(storeAtNumb)
-                atomPosInit.append(storeAtPos)
-
-
-            h = 0
-            c = 0
-            for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_label
-                if at == 1:
-                    h += 1
-                    atomAtLabel[i] = 'H' + '  ' + str(h)
-                if at == 6:
-                    c += 1
-                    atomAtLabel[i] = 'C' + '  ' + str(c)
-
 
             with o(p,'section_system'):
                 p.addArrayValues('atom_position', np.asarray(atomPosInit))
                 p.addArrayValues('atom_label', np.asarray(atomAtLabel))
+
+
+            refSecSingConf = -1
+            with o(p, 'section_single_configuration_calculation'):
+                refSecSingConf += 1
+                p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
 
 
 
@@ -730,7 +755,7 @@ def parse(fName):
             simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
             atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
 
-            atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
+            # atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
 
 
             for i in range(len(simulationCell)):
@@ -784,6 +809,46 @@ def parse(fName):
 
                     p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
 
+
+        #### TRAJECTORY OUTPUTS FOR trajDumpStyle = atom TO THE BACKEND
+
+        if trajDumpStyle == 'atom' and skipTraj == False:
+
+            from LAMMPSParserTraj import readAtomTraj
+            simulationCell, atomPositionScaled, atomPositionScaledBool = readAtomTraj()
+
+            # atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
+
+
+            for i in range(len(simulationCell)):
+            # for i in range(1):
+
+                with o(p,'section_system'):
+
+                    p.addArrayValues('simulation_cell', np.asarray(simulationCell[i]))
+                    # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
+
+                    if atomPositionScaledBool:
+                        p.addArrayValues('atom_position_scaled', np.asarray(atomPositionScaled[i]))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+                    if atomPositionScaledBool:
+                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+
+            #### section_single_configuration_calculation
+
+            refSecSingConf = -1
+            for i in range(len(simulationCell)):
+            # for i in range(1):
+
+                refSecSingConf += 1
+
+                with o(p, 'section_single_configuration_calculation'):
+                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
 
 
 
