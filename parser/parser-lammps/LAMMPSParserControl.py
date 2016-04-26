@@ -755,8 +755,6 @@ def parse(fName):
             simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
             atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
 
-            # atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
-
 
             for i in range(len(simulationCell)):
             # for i in range(1):
@@ -815,9 +813,8 @@ def parse(fName):
         if trajDumpStyle == 'atom' and skipTraj == False:
 
             from LAMMPSParserTraj import readAtomTraj
-            simulationCell, atomPositionScaled, atomPositionScaledBool = readAtomTraj()
-
-            # atomLabels = [ [ x[0] in x ] for x in atomLabelling ]
+            simulationCell, atomPositionScaled, atomPositionScaledBool, atomPosition, atomPositionBool, \
+            atomPositionWrapped, atomPositionWrappedBool, imageFlagIndex, imageFlagIndexBool = readAtomTraj()
 
 
             for i in range(len(simulationCell)):
@@ -831,6 +828,21 @@ def parse(fName):
                     if atomPositionScaledBool:
                         p.addArrayValues('atom_position_scaled', np.asarray(atomPositionScaled[i]))
                         # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+                    if atomPositionBool:
+                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+                    if imageFlagIndexBool:
+                        p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[1]))
+                        pass
+
+                    if atomPositionWrappedBool:
+                        p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[i]))
+                        # p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomPositionScaledBool:

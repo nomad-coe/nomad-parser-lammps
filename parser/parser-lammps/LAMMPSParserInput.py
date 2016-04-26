@@ -81,7 +81,7 @@ def readLogFileName():
 
 def readDumpFileName():
 
-    dump_filter = filter(lambda x: x.startswith("dump"), storeInput)
+    dump_filter = filter(lambda x: x.startswith("dump "), storeInput)
 
     dumpFileName    = None
     stepsPrintFrame = 0

@@ -323,6 +323,19 @@ if trajDumpStyle == 'atom' and skipTraj == False:
         # Reading frame column header (stored quantity name)
         variables = frameHeader[0][8][1:]
 
+        isAtomPositionScaled  = False
+        isAtomPosition        = False
+        isImageFlagIndex      = False
+
+        if 'xs' in variables and 'ys' in variables and 'zs' in variables:  # if true, scaled coord are dumped
+            isAtomPositionScaled = True
+
+        if 'x' in variables and 'y' in variables and 'z' in variables:     # if true, unwrapped coord are dumped
+            isAtomPosition = True
+
+        if 'ix' in variables and 'iy' in variables and 'iz' in variables:  # if true, image flag indexes are dumped
+            isImageFlagIndex = True
+
 
         # Boundary periodicity bool
         def strToBool(x):
@@ -349,38 +362,176 @@ if trajDumpStyle == 'atom' and skipTraj == False:
             simulationCell.append(store)
 
 
-        # Atom position (scaled)
-        try:
-            xsInd = variables.index('xs')-1
-        except ValueError:
-            xsInd = 0
+        # Atom position (scaled) [0, 1]
+        if isAtomPositionScaled == True:
 
-        try:
-            ysInd = variables.index('ys')-1
-        except ValueError:
-            ysInd = 0
+            try:
+                xsInd = variables.index('xs')-1
+            except ValueError:
+                xsInd = 0
 
-        try:
-            zsInd = variables.index('zs')-1
-        except ValueError:
-            zsInd = 0
+            try:
+                ysInd = variables.index('ys')-1
+            except ValueError:
+                ysInd = 0
 
-        atomPositionScaledBool = False
-        if xsInd and ysInd and zsInd:
-            atomPositionScaledBool = True
+            try:
+                zsInd = variables.index('zs')-1
+            except ValueError:
+                zsInd = 0
 
-        store = []
-        atomPositionScaled = []
-        for frame in frameAtomInfo:
-            store_1 =[]
-            for line in frame:
+            atomPositionScaledBool = False
+            if xsInd and ysInd and zsInd:
+                atomPositionScaledBool = True
 
-                if xsInd and ysInd and zsInd:
-                    store = [ float(line[xsInd]), float(line[ysInd]), float(line[zsInd]) ]
-                    store_1.append(store)
-            atomPositionScaled.append(store_1)
+            store = []
+            atomPositionScaled = []
+            for frame in frameAtomInfo:
+                store_1 =[]
+                for line in frame:
+
+                    if xsInd and ysInd and zsInd:
+                        store = [ float(line[xsInd]), float(line[ysInd]), float(line[zsInd]) ]
+                        store_1.append(store)
+                atomPositionScaled.append(store_1)
+
+
+            # Atom position (converted from scaled positions)
+            atomPositionBool = False
+
+            if len(atomPositionScaled)==(nofFrames+1) and atomPositionScaled:
+                atomPositionBool = True
+
+                atomPosition = []
+                store = []
+                i = -1 # frame index
+                for frame in atomPositionScaled:
+                    i += 1
+                    j = -1
+                    store_1 = []
+                    for atom in frame:
+
+                        j += 1 # atom in frame index
+                        x = atom[0] * np.linalg.norm(simulationCell[i][0]) + np.min(simulationCell[i][0])
+                        y = atom[1] * np.linalg.norm(simulationCell[i][1]) + np.min(simulationCell[i][1])
+                        z = atom[2] * np.linalg.norm(simulationCell[i][2]) + np.min(simulationCell[i][2])
+                        store = [x, y, z]
+                        store_1.append(store)
+                    atomPosition.append(store_1)
+
+        else:
+            atomPositionScaled = []
+            atomPositionScaledBool = False
+            atomPosition = []
+            atomPositionBool = False
 
 
 
-        return (simulationCell, atomPositionScaled, atomPositionScaledBool)
+        # Atom position (unwrapped)
+        if isAtomPosition == True:
+
+            try:
+                xInd = variables.index('x')-1
+            except ValueError:
+                xInd = 0
+
+            try:
+                yInd = variables.index('y')-1
+            except ValueError:
+                yInd = 0
+
+            try:
+                zInd = variables.index('z')-1
+            except ValueError:
+                zInd = 0
+
+            atomPositionBool = False
+            if xInd and yInd and zInd:
+                atomPositionBool = True
+
+            store = []
+            atomPosition = []
+            for frame in frameAtomInfo:
+                store_1 =[]
+                for line in frame:
+
+                    if xInd and yInd and zInd:
+                        store = [ float(line[xInd]), float(line[yInd]), float(line[zInd]) ]
+                        store_1.append(store)
+                atomPosition.append(store_1)
+
+        else:
+            atomPosition = []
+            atomPositionBool = False
+
+
+        # Atom position wrapped
+        if isAtomPosition == True and isImageFlagIndex == True:
+
+            # Atom periodic image index
+            try:
+                ixInd = variables.index('ix')-1
+            except ValueError:
+                ixInd = 0
+
+            try:
+                iyInd = variables.index('iy')-1
+            except ValueError:
+                iyInd = 0
+
+            try:
+                izInd = variables.index('iz')-1
+            except ValueError:
+                izInd = 0
+
+            imageFlagIndexBool = False
+            if ixInd and izInd and izInd:
+                imageFlagIndexBool = True
+
+            store = []
+            imageFlagIndex = []
+            for frame in frameAtomInfo:
+                store_1 = []
+                for line in frame:
+
+                    if ixInd and izInd and izInd:
+                        store = [ int(line[ixInd]), int(line[iyInd]), int(line[izInd]) ]
+                        store_1.append(store)
+
+                imageFlagIndex.append(store_1)
+
+            atomPosition = list(atomPosition)
+            atomPositionWrappedBool = False
+
+            if len(atomPosition)==(nofFrames+1) and len(atomPosition)==len(imageFlagIndex) and atomPosition and imageFlagIndex:
+                atomPositionWrappedBool = True
+
+                atomPositionWrapped = []
+                store = []
+                i = -1 # frame index
+                for frame in atomPosition:
+                    i += 1
+                    j = -1
+                    store_1 = []
+                    for atom in frame:
+
+                        j += 1 # atom in frame index
+                        xw = atom[0] + imageFlagIndex[i][j][0] * np.linalg.norm(simulationCell[i][0])
+                        yw = atom[1] + imageFlagIndex[i][j][1] * np.linalg.norm(simulationCell[i][1])
+                        zw = atom[2] + imageFlagIndex[i][j][2] * np.linalg.norm(simulationCell[i][2])
+                        store = [xw, yw, zw]
+                        store_1.append(store)
+                    atomPositionWrapped.append(store_1)
+
+        else:
+            atomPositionWrapped = []
+            atomPositionWrappedBool = False
+            imageFlagIndex = []
+            imageFlagIndexBool = False
+
+
+
+
+        return (simulationCell, atomPositionScaled, atomPositionScaledBool, atomPosition, atomPositionBool,
+                atomPositionWrapped, atomPositionWrappedBool , imageFlagIndex, imageFlagIndexBool )
 
