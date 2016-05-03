@@ -1,6 +1,6 @@
 package eu.nomad_lab.parsers
 
-import eu.{ nomad_lab => lab }
+import eu.nomad_lab
 import eu.nomad_lab.DefaultPythonInterpreter
 import org.{ json4s => jn }
 import scala.collection.breakOut
@@ -23,7 +23,7 @@ object LammpsParser extends SimpleExternalParserGenerator(
   mainFileTypes = Seq("text/.*"),
   mainFileRe = """# input script for topotools""".r,
   cmd = Seq(DefaultPythonInterpreter.python2Exe(), "${envDir}/parsers/lammps/parser/parser-lammps/LAMMPSParserControl.py",
-    "${mainFilePath}"),
+    "--uri", "${mainFileUri}", "${mainFilePath}"),
   resList = Seq(
     "parser-lammps/LAMMPSParserControl.py",
     "parser-lammps/LAMMPSParserData.py",
@@ -38,6 +38,7 @@ object LammpsParser extends SimpleExternalParserGenerator(
   ) ++ DefaultPythonInterpreter.commonFiles(),
   dirMap = Map(
     "parser-lammps" -> "parsers/lammps/parser/parser-lammps",
-    "nomad_meta_info" -> "nomad-meta-info/meta_info/nomad_meta_info"
+    "nomad_meta_info" -> "nomad-meta-info/meta_info/nomad_meta_info",
+    "python" -> "python-common/common/python/nomadcore"
   ) ++ DefaultPythonInterpreter.commonDirMapping()
 )
