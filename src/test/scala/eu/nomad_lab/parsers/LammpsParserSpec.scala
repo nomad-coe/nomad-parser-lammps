@@ -7,8 +7,5 @@ object LammpsParserSpec extends Specification {
     "test with json-events" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
     }
-    "test with json" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
-    }
   }
 }
