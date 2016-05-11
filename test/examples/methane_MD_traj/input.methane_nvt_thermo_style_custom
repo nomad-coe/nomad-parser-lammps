@@ -36,9 +36,10 @@ fix 2 all nvt temp 100.0 100.0 100.0
 # equilibration trajectory
 
 # dump 1 all dcd 400 64xmethane-nvt.dcd
+dump 1 all xyz 400 64xmethane-nvt.xyz
 # dump 1 all atom 400 64xmethane-nvt.atom
-dump 1 all atom 400 64xmethane-nvt.atom_unscaled_image_flags 
-# dump 1 all custom 400 64xmethane-nvt.lammpstrj id type x y z vx vy vz fx fy fz ix iy iz
+# dump 1 all atom 400 64xmethane-nvt.atom_unscaled_image_flags 
+dump 1 all custom 400 64xmethane-nvt.lammpstrj id type x y z vx vy vz fx fy fz ix iy iz
 # dump_modify 1 image yes scale no
 
 # output log

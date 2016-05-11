@@ -34,7 +34,7 @@ skipTraj = trajFileOpen()
 
 
 ########################################################################################################################
-###### HERE custom LAMMPS TRAJECORY IS PARSED
+###### HERE custom LAMMPS TRAJECORY IS PARSED (*.lammpstrj)
 ########################################################################################################################
 if trajDumpStyle == 'custom' and skipTraj == False:
 
@@ -276,7 +276,7 @@ if trajDumpStyle == 'custom' and skipTraj == False:
 
 
 ########################################################################################################################
-###### HERE atom LAMMPS TRAJECORY IS PARSED
+###### HERE atom LAMMPS TRAJECORY IS PARSED (*.atom)
 ########################################################################################################################
 if trajDumpStyle == 'atom' and skipTraj == False:
 
@@ -530,8 +530,67 @@ if trajDumpStyle == 'atom' and skipTraj == False:
             imageFlagIndexBool = False
 
 
-
-
         return (simulationCell, atomPositionScaled, atomPositionScaledBool, atomPosition, atomPositionBool,
                 atomPositionWrapped, atomPositionWrappedBool , imageFlagIndex, imageFlagIndexBool )
 
+
+
+########################################################################################################################
+###### HERE xyz LAMMPS TRAJECORY IS PARSED (*.xyz)
+########################################################################################################################
+if trajDumpStyle == 'atom' and skipTraj == False:
+
+    nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
+
+    def readXyzTraj():
+
+        # SPLIT AND CLEAN THE TRAJ FILE LINES
+        trajTotal = []
+        for line in traj:
+            line = line.strip('\n' + '').split(' ')
+            line = filter(None, line)
+
+            # If line is just empty
+            if line != []:
+                pass
+                trajTotal.append(line)
+
+
+        atomPositionBool = False   # just a boolean flag
+        if trajTotal:
+            atomPositionBool = True
+
+
+        nofLinesPerFrame = len(trajTotal)/(nofFrames+1)
+
+        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in xrange(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
+
+
+        frameHeader = []
+        frameAtomInfo = []
+        for frame in trajByFrame:
+            header = frame[:2]
+            atomInfo = frame[2:]
+            frameHeader.append(header)     # header info per frame  ---> we have just the step number and number of atoms record
+            frameAtomInfo.append(atomInfo) # atom info per frame
+
+        for header in frameHeader:         # number of atoms and step number to integer
+            for line in header:
+                try:
+                    line = map(int, line)
+                except ValueError:
+                    pass
+
+
+        store = []
+        atomPosition = []
+        for frame in frameAtomInfo:
+            store_1 =[]
+            for line in frame:
+
+                store = [ float(line[1]), float(line[2]), float(line[3]) ]
+                store_1.append(store)
+            atomPosition.append(store_1)
+
+
+        return (atomPosition, atomPositionBool)

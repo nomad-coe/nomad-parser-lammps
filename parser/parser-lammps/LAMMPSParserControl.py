@@ -863,6 +863,35 @@ def parse(fName):
                     p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
 
 
+        #### TRAJECTORY OUTPUTS FOR trajDumpStyle = xyz TO THE BACKEND
+
+        if trajDumpStyle == 'xyz' and skipTraj == False:
+
+            from LAMMPSParserTraj import readXyzTraj
+            atomPosition, atomPositionBool = readXyzTraj()
+
+
+            for i in range(len(atomPosition)):
+            # for i in range(1):
+
+                with o(p,'section_system_description'):
+
+                    if atomPositionBool:
+                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
+
+            #### section_single_configuration_calculation
+
+            refSecSingConf = -1
+            for i in range(len(atomPosition)):
+            # for i in range(1):
+
+                refSecSingConf += 1
+
+                with o(p, 'section_single_configuration_calculation'):
+                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
 
 
 ########################################################################################################################
