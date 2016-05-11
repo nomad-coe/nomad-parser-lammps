@@ -538,7 +538,7 @@ if trajDumpStyle == 'atom' and skipTraj == False:
 ########################################################################################################################
 ###### HERE xyz LAMMPS TRAJECORY IS PARSED (*.xyz)
 ########################################################################################################################
-if trajDumpStyle == 'atom' and skipTraj == False:
+if trajDumpStyle == 'xyz' and skipTraj == False:
 
     nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
 

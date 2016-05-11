@@ -881,6 +881,11 @@ def parse(fName):
                         # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
                         pass
 
+                    if atomPositionBool:
+                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        pass
+
 
             #### section_single_configuration_calculation
 
