@@ -27,8 +27,8 @@ class LAMMPSParserContext(object):
 		print "<onClose_section_method>"
 		return
 
-	def onClose_section_system_description(self, backend, gIndex, section):
-		print "<onClose_section_system_description>"
+	def onClose_section_system(self, backend, gIndex, section):
+		print "<onClose_section_system>"
 		return
 
 	def onClose_lammps_section_md_molecule_type(self, backend, gIndex, section):

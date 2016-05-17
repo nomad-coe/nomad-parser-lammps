@@ -735,7 +735,7 @@ def parse(fName):
 
         if skipTraj == True:
 
-            with o(p,'section_system_description'):
+            with o(p,'section_system'):
                 p.addArrayValues('atom_position', np.asarray(atomPosInit))
                 p.addArrayValues('atom_label', np.asarray(atomAtLabel))
 
@@ -759,7 +759,7 @@ def parse(fName):
             for i in range(len(simulationCell)):
             # for i in range(1):
 
-                with o(p,'section_system_description'):
+                with o(p,'section_system'):
 
                     p.addArrayValues('simulation_cell', np.asarray(simulationCell[i]))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
@@ -820,7 +820,7 @@ def parse(fName):
             for i in range(len(simulationCell)):
             # for i in range(1):
 
-                with o(p,'section_system_description'):
+                with o(p,'section_system'):
 
                     p.addArrayValues('simulation_cell', np.asarray(simulationCell[i]))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
@@ -874,7 +874,7 @@ def parse(fName):
             for i in range(len(atomPosition)):
             # for i in range(1):
 
-                with o(p,'section_system_description'):
+                with o(p,'section_system'):
 
                     if atomPositionBool:
                         p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
