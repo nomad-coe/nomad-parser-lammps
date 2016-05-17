@@ -709,7 +709,7 @@ def parse(fName):
         O = 0
         P = 0
         S = 0
-        for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_label
+        for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_labels
             if at == 1:
                 H += 1
                 atomAtLabel[i] = 'H' + '  ' + str(H) # hydrogen
@@ -736,8 +736,8 @@ def parse(fName):
         if skipTraj == True:
 
             with o(p,'section_system'):
-                p.addArrayValues('atom_position', np.asarray(atomPosInit))
-                p.addArrayValues('atom_label', np.asarray(atomAtLabel))
+                p.addArrayValues('atom_positions', np.asarray(atomPosInit))
+                p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
 
 
             refSecSingConf = -1
@@ -765,23 +765,23 @@ def parse(fName):
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if imageFlagIndexBool:
-                        p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[i]))
-                        # p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[1]))
+                        p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
                         pass
 
                     if atomPositionWrappedBool:
-                        p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[i]))
-                        # p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[1]))
+                        p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
+                        # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomVelocityBool:
@@ -826,28 +826,28 @@ def parse(fName):
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionScaledBool:
-                        p.addArrayValues('atom_position_scaled', np.asarray(atomPositionScaled[i]))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_positions_scaled', np.asarray(atomPositionScaled[i]))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if imageFlagIndexBool:
-                        p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[i]))
-                        # p.addArrayValues('atom_position_image_index', np.asarray(imageFlagIndex[1]))
+                        p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
                         pass
 
                     if atomPositionWrappedBool:
-                        p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[i]))
-                        # p.addArrayValues('atom_position_wrapped', np.asarray(atomPositionWrapped[1]))
+                        p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
+                        # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomPositionScaledBool:
-                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
 
@@ -877,13 +877,13 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_position', np.asarray(atomPosition[i]))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_label', np.asarray(atomAtLabel))
-                        # p.addArrayValues('atom_position', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
 
