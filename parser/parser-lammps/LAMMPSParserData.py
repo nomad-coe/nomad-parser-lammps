@@ -1,6 +1,9 @@
 import fnmatch
-import os, sys, copy
-import numpy as np
+import os, sys, copy, tempfile, re, scipy
+import mdtraj as md
+from LAMMPSParserInput import readDumpFileName
+
+fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
 
 examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
 #examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
@@ -74,7 +77,7 @@ for i in range(0, len(data)):
             topo = data[i+j+1]
             topo_list.append(topo)
 topo_list.sort(key=lambda x: int(x[0]))  # ordering the atom list (important if the data file is generated from a binary restart file)
-#print topo_list
+# print topo_list
 
 bond_list = []    #  LIST STORING ALL BONDS
 for i in range(0, len(data)):
@@ -103,6 +106,41 @@ for i in range(0, len(data)):
             dihedral_list.append(dh)
 dihedral_list.sort(key=lambda x: int(x[0]))
             
+
+########################################################################################################################
+# CREATE A .pdb TOPOLOGY TO BE FED TO MDTraj
+
+# noNumb =  re.compile(r'[#A-Za-z]+')
+# topology = []    #  LIST STORING ATOMIC CHARGES AND COORDINATES
+# for i in range(at_count):
+#
+#     topo = topo_list[i]
+#     topo_up = []
+#     for el in topo:
+#
+#         if re.match(noNumb, el) is None:
+#             exc = el
+#             topo_up.append(exc)
+#     topology.append(topo_up)
+
+
+os.remove('top.pdb')
+with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
+    for line in topo_list:
+        atID = line[0]
+        atTy = line[2]
+        atCh = line[3]
+        atX  = float(line[4])
+        atY  = float(line[5])
+        atZ  = float(line[6])
+
+        pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.4f'), format(atY, '.4f'), format(atZ, '.4f')))
+    os.link(pdb.name, 'top.pdb')
+
+mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
+
+mdTopology = md.load_topology('top.pdb')
+
 
 ########################################################################################################################
 # def run_once(f):

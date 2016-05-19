@@ -877,12 +877,12 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
