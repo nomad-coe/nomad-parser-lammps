@@ -1,5 +1,5 @@
 import fnmatch
-import os, sys, copy, tempfile, re, scipy
+import os, sys, copy, tempfile, re
 import mdtraj as md
 from LAMMPSParserInput import readDumpFileName
 
