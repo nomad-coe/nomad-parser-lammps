@@ -8,12 +8,14 @@ from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
                               simulationTime, readDumpFileName
 
-from LAMMPSParserData  import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
+from LAMMPSParserData import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
                               numberOfTopologyAtoms
 
 from LAMMPSParserLog import logFileOpen
 
 from LAMMPSParserTraj import trajFileOpen
+
+from LAMMPSParserMDTraj import MDTrajParser
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -897,6 +899,12 @@ def parse(fName):
 
                 with o(p, 'section_single_configuration_calculation'):
                     p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+
+
+########################################################################################################################
+
+    MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
+
 
 
 ########################################################################################################################

@@ -1,5 +1,5 @@
 import fnmatch
-import os, sys, copy, tempfile, re
+import os, sys, copy, tempfile
 import mdtraj as md
 from LAMMPSParserInput import readDumpFileName
 
@@ -124,7 +124,7 @@ dihedral_list.sort(key=lambda x: int(x[0]))
 #     topology.append(topo_up)
 
 
-os.remove('top.pdb')
+# os.remove('top.pdb')
 with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
     for line in topo_list:
         atID = line[0]
@@ -137,9 +137,9 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
         pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.4f'), format(atY, '.4f'), format(atZ, '.4f')))
     os.link(pdb.name, 'top.pdb')
 
-mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
+# mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
 
-mdTopology = md.load_topology('top.pdb')
+# mdTopology = md.load_topology('top.pdb')
 
 
 ########################################################################################################################
