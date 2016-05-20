@@ -1,6 +1,5 @@
 import fnmatch
 import os, sys, copy, tempfile
-import mdtraj as md
 from LAMMPSParserInput import readDumpFileName
 
 fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
