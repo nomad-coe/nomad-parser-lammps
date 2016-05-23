@@ -776,35 +776,35 @@ def parse(fName):
             # for i in range(1):
 
                 with o(p,'section_system'):
-                    temp_simulation_cell = list()
-                    temp_simulation_cell = simulationCell[i]
-                    p.addArrayValues('simulation_cell', np.asarray(temp_simulation_cell))
-                    # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
-
-                    if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
-                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
-                        pass
+                    # temp_simulation_cell = list()
+                    # temp_simulation_cell = simulationCell[i]
+                    # p.addArrayValues('simulation_cell', np.asarray(temp_simulation_cell))
+                    # # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
+                    #
+                    # if atomPositionBool:
+                    #     p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                    #     # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
+                    #     pass
 
                     if atomPositionBool:
                         p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
-                    if imageFlagIndexBool:
-                        p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
-                        # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
-                        pass
-
-                    if atomPositionWrappedBool:
-                        p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
-                        # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
-                        pass
-
-                    if atomVelocityBool:
-                        p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
-                        # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
-                        pass
+                    # if imageFlagIndexBool:
+                    #     p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
+                    #     # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
+                    #     pass
+                    #
+                    # if atomPositionWrappedBool:
+                    #     p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
+                    #     # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
+                    #     pass
+                    #
+                    # if atomVelocityBool:
+                    #     p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
+                    #     # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
+                    #     pass
 
 
             #### SENDING FORCES TO section_single_configuration_calculation
