@@ -777,7 +777,7 @@ def parse(fName):
 
                 with o(p,'section_system'):
 
-                    # p.addArrayValues('simulation_cell', np.array([ np.array(vec) for vec in simulationCell[i] ]))
+                    p.addArrayValues('simulation_cell', np.array(simulationCell[i]))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionBool:
@@ -838,7 +838,7 @@ def parse(fName):
 
                 with o(p,'section_system'):
 
-                    # p.addArrayValues('simulation_cell', np.array([ np.array(vec) for vec in simulationCell[i] ]))
+                    p.addArrayValues('simulation_cell', np.array(simulationCell[i]))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionScaledBool:
