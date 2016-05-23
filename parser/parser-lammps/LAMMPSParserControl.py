@@ -804,7 +804,7 @@ def parse(fName):
                     # if atomVelocityBool:
                     #     p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
                     #     # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
-                    #     pass
+                        pass
 
 
             #### SENDING FORCES TO section_single_configuration_calculation
