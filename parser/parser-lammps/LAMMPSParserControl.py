@@ -153,7 +153,7 @@ def parse(fName):
 
                 with o(p, 'section_atom_type'):
                     # p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
-                    p.addValue('atom_type_name', str(mass_xyz[i])+' : '+str(i+1))
+                    p.addValue('atom_type_name', str(mass_xyz[i])+' : '+str(i+1))  ### TO BE CHECKED LATER
                     p.addValue('atom_type_mass', mass_list[i][1])     # Atomic mass
                     p.addValue('atom_type_charge', charge_dict[i][1]) # Atomic charge, either partial or ionic
                     pass
@@ -298,7 +298,7 @@ def parse(fName):
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
                     if pairFunctional:
-                        p.addValue('interaction_kind', str(pairFunctional))  # functional form of the interaction
+                        p.addValue('interaction_kind', str(pairFunctional))  # functional form of the interaction   TO BE CHECKED LATER
 
                     int_index_store = []
                     int_param_store = []
