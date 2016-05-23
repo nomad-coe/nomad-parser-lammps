@@ -809,20 +809,20 @@ def parse(fName):
 
             #### SENDING FORCES TO section_single_configuration_calculation
 
-            refSecSingConf = -1
-            for i in range(len(simulationCell)):
-            # for i in range(1):
-
-                refSecSingConf += 1
-
-                with o(p, 'section_single_configuration_calculation'):
-
-                    if atomForceBool:
-                        p.addArrayValues('atom_forces', np.asarray(atomForce[i]))
-                        # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
-                        pass
-
-                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
+            # refSecSingConf = -1
+            # for i in range(len(simulationCell)):
+            # # for i in range(1):
+            #
+            #     refSecSingConf += 1
+            #
+            #     with o(p, 'section_single_configuration_calculation'):
+            #
+            #         if atomForceBool:
+            #             p.addArrayValues('atom_forces', np.asarray(atomForce[i]))
+            #             # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
+            #             pass
+            #
+            #         p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = atom TO THE BACKEND
