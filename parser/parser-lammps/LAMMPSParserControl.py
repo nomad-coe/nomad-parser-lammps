@@ -152,7 +152,8 @@ def parse(fName):
             for i in range(at_types):
 
                 with o(p, 'section_atom_type'):
-                    p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
+                    # p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
+                    p.addValue('atom_type_name', str(mass_xyz[i])+' : '+str(i+1))
                     p.addValue('atom_type_mass', mass_list[i][1])     # Atomic mass
                     p.addValue('atom_type_charge', charge_dict[i][1]) # Atomic charge, either partial or ionic
                     pass
