@@ -642,39 +642,39 @@ def parse(fName):
 
         #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
 
-        if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-            from LAMMPSParserLog import pickNOMADVarsCustom
-
-
-            with o(p, 'section_frame_sequence'):
-
-                ke, pe, press, temp = pickNOMADVarsCustom()
-
-                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length, simulation_length])
-
-                if pe:
-                    pe = np.asarray(pe)
-                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                    p.addArrayValues('frame_sequence_potential_energy', pe)
-
-                if ke:
-                    ke = np.asarray(ke)
-                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
-
-                if temp:
-                    temp = np.asarray(temp)
-                    p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                    p.addArrayValues('frame_sequence_temperature', temp)
-
-                if press:
-                    press = np.asarray(press)
-                    p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                    p.addArrayValues('frame_sequence_pressure', press)
-
-        else:
-            pass
+        # if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+        #     from LAMMPSParserLog import pickNOMADVarsCustom
+        #
+        #
+        #     with o(p, 'section_frame_sequence'):
+        #
+        #         ke, pe, press, temp = pickNOMADVarsCustom()
+        #
+        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+        #         p.addValue('frame_sequence_time', [frame_length, simulation_length])
+        #
+        #         if pe:
+        #             pe = np.asarray(pe)
+        #             p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
+        #             p.addArrayValues('frame_sequence_potential_energy', pe)
+        #
+        #         if ke:
+        #             ke = np.asarray(ke)
+        #             p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
+        #             p.addArrayValues('frame_sequence_kinetic_energy', ke)
+        #
+        #         if temp:
+        #             temp = np.asarray(temp)
+        #             p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
+        #             p.addArrayValues('frame_sequence_temperature', temp)
+        #
+        #         if press:
+        #             press = np.asarray(press)
+        #             p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
+        #             p.addArrayValues('frame_sequence_pressure', press)
+        #
+        # else:
+        #     pass
 
 
         #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
@@ -765,12 +765,12 @@ def parse(fName):
 
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = custom TO THE BACKEND
 
-        if trajDumpStyle == 'custom' and skipTraj == False:
-
-            # from LAMMPSParserTraj import readCustomTraj
-            # simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
-            # atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
-            pass
+        # if trajDumpStyle == 'custom' and skipTraj == False:
+        #
+        #     # from LAMMPSParserTraj import readCustomTraj
+        #     # simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
+        #     # atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
+        #     pass
 
 
             # for i in range(len(simulationCell)):
