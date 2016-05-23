@@ -767,9 +767,9 @@ def parse(fName):
 
         if trajDumpStyle == 'custom' and skipTraj == False:
 
-            from LAMMPSParserTraj import readCustomTraj
-            simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
-            atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
+            # from LAMMPSParserTraj import readCustomTraj
+            # simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
+            # atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
             pass
 
 
