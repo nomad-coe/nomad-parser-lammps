@@ -770,6 +770,7 @@ def parse(fName):
             from LAMMPSParserTraj import readCustomTraj
             simulationCell, atomPosition, imageFlagIndex, atomPositionWrapped, atomVelocity, atomForce,\
             atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
+            pass
 
 
             # for i in range(len(simulationCell)):
