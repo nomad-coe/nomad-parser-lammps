@@ -772,10 +772,10 @@ def parse(fName):
             atomPositionBool, atomPositionBool, imageFlagIndexBool, atomPositionWrappedBool, atomVelocityBool, atomForceBool = readCustomTraj()
 
 
-            for i in range(len(simulationCell)):
+            # for i in range(len(simulationCell)):
             # for i in range(1):
 
-                with o(p,'section_system'):
+                # with o(p,'section_system'):
                     # temp_simulation_cell = list()
                     # temp_simulation_cell = simulationCell[i]
                     # p.addArrayValues('simulation_cell', np.asarray(temp_simulation_cell))
@@ -804,7 +804,7 @@ def parse(fName):
                     # if atomVelocityBool:
                     #     p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
                     #     # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
-                        pass
+                    #     pass
 
 
             #### SENDING FORCES TO section_single_configuration_calculation
