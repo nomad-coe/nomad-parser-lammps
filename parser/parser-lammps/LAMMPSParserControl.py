@@ -786,10 +786,10 @@ def parse(fName):
                     #     # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                     #     pass
 
-                    if atomPositionBool:
-                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
-                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
-                        pass
+                    # if atomPositionBool:
+                    #     p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                    #     # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
+                    #     pass
 
                     # if imageFlagIndexBool:
                     #     p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
