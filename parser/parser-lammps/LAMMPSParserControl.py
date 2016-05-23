@@ -298,7 +298,7 @@ def parse(fName):
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
                     if pairFunctional:
-                        p.addValue('interaction_kind', pairFunctional)  # functional form of the interaction
+                        p.addValue('interaction_kind', str(pairFunctional))  # functional form of the interaction
 
                     int_index_store = []
                     int_param_store = []
