@@ -15,7 +15,7 @@ from LAMMPSParserLog import logFileOpen
 
 from LAMMPSParserTraj import trajFileOpen
 
-from LAMMPSParserMDTraj import MDTrajParser
+# from LAMMPSParserMDTraj import MDTrajParser
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -173,6 +173,7 @@ def parse(fName):
                         store = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==i ]
                     interaction_atoms.append(store)
 
+
                 for i in range(len(bondTypeList)):
 
                     with o(p, 'section_interaction'):
@@ -194,8 +195,10 @@ def parse(fName):
                                 temp = sorted(map(lambda x:x-1, line))
                                 interaction_atom_to_atom_type_ref.append(temp)
 
+                        bondParameters = dict()
+                        bondParameters.update({list_of_bonds[i][0] : list_of_bonds[i][1]})
                         p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                        p.addValue('interaction_parameters', list_of_bonds[i][1])  # interaction parameters for the functional
+                        p.addValue('interaction_parameters', bondParameters)  # interaction parameters for the functional
 
             ####################################################################################################################################################################################################################################
 
@@ -234,8 +237,10 @@ def parse(fName):
                                 temp = map(lambda x:x-1, line)
                                 interaction_atom_to_atom_type_ref.append(temp)
 
+                        angleParameters = dict()
+                        angleParameters.update({list_of_angles[i][0] : list_of_angles[i][1]})
                         p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                        p.addValue('interaction_parameters', list_of_angles[i][1])  # interaction parameters for the functional
+                        p.addValue('interaction_parameters', angleParameters)  # interaction parameters for the functional
 
             ####################################################################################################################################################################################################################################
 
@@ -274,8 +279,10 @@ def parse(fName):
                                 temp = map(lambda x:x-1, line)
                                 interaction_atom_to_atom_type_ref.append(temp)
 
+                        dihedralParameters = dict()
+                        dihedralParameters.update({list_of_dihedrals[i][0] : list_of_dihedrals[i][1]})
                         p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                        p.addValue('interaction_parameters', list_of_dihedrals[i][1])  # interaction parameters for the functional
+                        p.addValue('interaction_parameters', dihedralParameters)  # interaction parameters for the functional
             ####################################################################################################################################################################################################################################
 
 
@@ -391,8 +398,10 @@ def parse(fName):
                                                 temp = sorted(map(lambda x:x-1, line))
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
+                                        moleculeBondParameters = dict()
+                                        moleculeBondParameters.update({list_of_bonds[bond-1][0] : list_of_bonds[bond-1][1]})
                                         p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                        p.addValue('molecule_interaction_parameters', list_of_bonds[bond-1][1])
+                                        p.addValue('molecule_interaction_parameters', moleculeBondParameters)
 
                     ############################################################################################################################################################################################################################
 
@@ -447,6 +456,8 @@ def parse(fName):
                                                 temp = map(lambda x:x-1, line)
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
+                                        moleculeAngleParameters = dict()
+                                        moleculeAngleParameters.update({list_of_angles[angle-1][0] : list_of_angles[angle-1][1]})
                                         p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                                         p.addValue('molecule_interaction_parameters', list_of_angles[angle-1][1])
 
@@ -508,8 +519,10 @@ def parse(fName):
                                                 temp = map(lambda x:x-1, line)
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
+                                        moleculeDihedralParameters = dict()
+                                        moleculeDihedralParameters.update({list_of_dihedrals[dihedral-1][0] : list_of_dihedrals[dihedral-1][1]})
                                         p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                        p.addValue('molecule_interaction_parameters', list_of_dihedrals[dihedral-1][1])
+                                        p.addValue('molecule_interaction_parameters', moleculeDihedralParameters)
 
                     ############################################################################################################################################################################################################################
 
@@ -745,7 +758,7 @@ def parse(fName):
             refSecSingConf = -1
             with o(p, 'section_single_configuration_calculation'):
                 refSecSingConf += 1
-                p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+                p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
 
@@ -807,7 +820,7 @@ def parse(fName):
                         # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
                         pass
 
-                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = atom TO THE BACKEND
@@ -862,7 +875,7 @@ def parse(fName):
                 refSecSingConf += 1
 
                 with o(p, 'section_single_configuration_calculation'):
-                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
         #### TRAJECTORY OUTPUTS FOR trajDumpStyle = xyz TO THE BACKEND
@@ -879,13 +892,13 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
                     if atomPositionBool:
-                        # p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
-                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                        # p.addArrayValues('atom_labels', np.asarray(atomAtLabel[1]))
                         pass
 
 
@@ -898,12 +911,12 @@ def parse(fName):
                 refSecSingConf += 1
 
                 with o(p, 'section_single_configuration_calculation'):
-                    p.addValue('single_configuration_calculation_to_system_description_ref', refSecSingConf)
+                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
 ########################################################################################################################
 
-    MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
+    # MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
 
 
 
@@ -912,7 +925,7 @@ def parse(fName):
 
 
 ########################################################################################################################
-# POIT TO A FILE TO PARSE FROM COMMAND LINE
+# PONIT TO A FILE TO PARSE FROM COMMAND LINE
 if __name__ == '__main__':
     import sys
     fName = sys.argv[1]
