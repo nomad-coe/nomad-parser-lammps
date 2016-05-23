@@ -776,9 +776,9 @@ def parse(fName):
             # for i in range(1):
 
                 with o(p,'section_system'):
-
+                    temp_simulation_cell = list()
                     temp_simulation_cell = simulationCell[i]
-                    p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
+                    p.addArrayValues('simulation_cell', np.asarray(temp_simulation_cell))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionBool:
