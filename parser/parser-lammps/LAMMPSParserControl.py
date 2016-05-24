@@ -15,7 +15,7 @@ from LAMMPSParserLog import logFileOpen
 
 from LAMMPSParserTraj import trajFileOpen
 
-from LAMMPSParserMDTraj import MDTrajParser
+# from LAMMPSParserMDTraj import MDTrajParser
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -919,7 +919,7 @@ def parse(fName):
 
 ########################################################################################################################
 
-    MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
+    # MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
 
 ########################################################################################################################
     p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED

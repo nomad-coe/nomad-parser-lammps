@@ -135,7 +135,7 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
 
         pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.4f'), format(atY, '.4f'), format(atZ, '.4f')))
     os.link(pdb.name, 'top.pdb')
-# os.remove('top.pdb')
+os.remove('top.pdb')
 
 # mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
 
