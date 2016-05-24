@@ -535,7 +535,7 @@ def parse(fName):
                         with o(p, 'section_molecule_interaction'):
 
                             if pairFunctional:
-                                p.addValue('molecule_interaction_kind', pairFunctional)  # functional form of the interaction
+                                p.addValue('molecule_interaction_kind', str(pairFunctional))  # functional form of the interaction
 
                             int_index_store = []
                             int_param_store = []
