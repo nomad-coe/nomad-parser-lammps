@@ -382,7 +382,7 @@ def parse(fName):
 
                                         p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[bond-1]))
                                         p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[bond-1]))
-                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+                                        p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
 
                                         if bondFunctional:
                                             p.addValue('molecule_interaction_kind', bondFunctional)
@@ -438,7 +438,7 @@ def parse(fName):
 
                                         p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[angle-1]))
                                         p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[angle-1]))
-                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+                                        p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
 
                                         if bondFunctional:
                                             p.addValue('molecule_interaction_kind', angleFunctional)
@@ -501,7 +501,7 @@ def parse(fName):
 
                                         p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[dihedral-1]))
                                         p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[dihedral-1]))
-                                        p.addValue('number_of_atoms_per_interaction', len(molecule_interaction_atoms[0][0]))
+                                        p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
 
                                         if bondFunctional:
                                             p.addValue('molecule_interaction_kind', dihedralFunctional)
