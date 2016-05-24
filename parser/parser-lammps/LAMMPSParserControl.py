@@ -180,7 +180,7 @@ def parse(fName):
                     with o(p, 'section_interaction'):
                         p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of bound pairs for a specific covalent bond
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of covalent bonds of this type
-                        # p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (2 for covalent bonds)
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (2 for covalent bonds)
 
                         if bondFunctional:
                             p.addValue('interaction_kind', bondFunctional)  # functional form of the interaction
@@ -222,7 +222,7 @@ def parse(fName):
                     with o(p, 'section_interaction'):
                         p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of triplets for a specific bond angle
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of bond angles of this type
-                        # p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (3 for bond angles)
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (3 for bond angles)
 
                         if bondFunctional:
                             p.addValue('interaction_kind', angleFunctional)  # functional form of the interaction
@@ -264,7 +264,7 @@ def parse(fName):
                     with o(p, 'section_interaction'):
                         p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of quartets for a specific dihedral angle
                         p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of dihedral angles of this type
-                        # p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (4 for dihedral angles)
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (4 for dihedral angles)
 
                         if bondFunctional:
                             p.addValue('interaction_kind', dihedralFunctional)  # functional form of the interaction
@@ -295,7 +295,7 @@ def parse(fName):
                 with o(p, 'section_interaction'):
 
                     p.addValue('number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
-                    # p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
+                    p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
                     if pairFunctional:
                         p.addValue('interaction_kind', str(pairFunctional))  # functional form of the interaction   TO BE CHECKED LATER
@@ -460,7 +460,7 @@ def parse(fName):
                                         moleculeAngleParameters = dict()
                                         moleculeAngleParameters.update({list_of_angles[angle-1][0] : list_of_angles[angle-1][1]})
                                         p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                        p.addValue('molecule_interaction_parameters', list_of_angles[angle-1][1])
+                                        p.addValue('molecule_interaction_parameters', moleculeAngleParameters)
 
                     ############################################################################################################################################################################################################################
 
