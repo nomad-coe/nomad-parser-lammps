@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, readStyles, \
                               readTPSettings, readIntegratorSettings, readLoggedThermoOutput, \
-                              simulationTime, readDumpFileName
+                              simulationTime, readDumpFileName, readUnits
 
 from LAMMPSParserData import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
                               numberOfTopologyAtoms
@@ -16,6 +16,8 @@ from LAMMPSParserLog import logFileOpen
 from LAMMPSParserTraj import trajFileOpen
 
 from LAMMPSParserMDTraj import MDTrajParser
+
+from LAMMPSParserUnitConversion import unitConversion
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
@@ -43,6 +45,11 @@ metaInfoEnv, warns = loadJsonFile(filePath=metaInfoPath,
                                   extraArgsHandling=InfoKindEl.ADD_EXTRA_ARGS,
                                   uri=None)
 
+################################################################################################################################################################################################################################################
+# LOAD UNIT CONVERSION
+
+unitsDict, unitsType = readUnits()
+toMass,toDistance,toTime,toEnergy,toVelocity,toForce,toTorque,toTemp,toPress,toDynVisc,toCharge,toDipole,toElField,toDensity = unitConversion(unitsType)
 
 ################################################################################################################################################################################################################################################
 ################################################################################################################################################################################################################################################
@@ -154,8 +161,8 @@ def parse(fName):
                 with o(p, 'section_atom_type'):
                     # p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
                     p.addValue('atom_type_name', str(mass_xyz[i])+' : '+str(i+1))  ### TO BE CHECKED LATER
-                    p.addValue('atom_type_mass', mass_list[i][1])     # Atomic mass
-                    p.addValue('atom_type_charge', charge_dict[i][1]) # Atomic charge, either partial or ionic
+                    p.addValue('atom_type_mass', mass_list[i][1]*toMass)     # Atomic mass
+                    p.addValue('atom_type_charge', charge_dict[i][1]*toCharge) # Atomic charge, either partial or ionic
                     pass
 
             ####################################################################################################################################################################################################################################
@@ -584,22 +591,22 @@ def parse(fName):
             int_type, tstep, steps = readIntegratorSettings()
 
             p.addValue('integrator_type', int_type)
-            p.addValue('integrator_dt', tstep)
+            p.addValue('integrator_dt', tstep*toTime)
             p.addValue('number_of_steps_requested', steps)
 
             p.addValue('sampling_method', sampling)
             p.addValue('ensemble_type', ensemble)
 
             if target_t:
-                p.addValue('thermostat_target_temperature', target_t)
+                p.addValue('thermostat_target_temperature', target_t*toTemp)
                 p.addValue('thermostat_tau', thermo_tau)
 
             if target_p:
-                p.addValue('barostat_target_pressure', target_p)
+                p.addValue('barostat_target_pressure', target_p*toPress)
                 p.addValue('barostat_tau', baro_tau)
 
             if langevin_gamma:
-                p.addValue('thermostat_target_temperature', target_t)
+                p.addValue('thermostat_target_temperature', target_t*toTemp)
                 p.addValue('langevin_gamma', langevin_gamma)
 
         ####################################################################################################################################################################################################################################
@@ -625,16 +632,16 @@ def parse(fName):
                 vol = readVolume()
 
                 p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length, simulation_length])
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
                 p.addValue('number_of_frames_in_sequence', frames_count-1)
-                p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                p.addArrayValues('frame_sequence_potential_energy', pe)
-                p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                p.addArrayValues('frame_sequence_kinetic_energy', ke)
-                p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
-                p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_pressure', press)
+                p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+                p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
+                p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+                p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
+                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                p.addArrayValues('frame_sequence_pressure', press*toPress)
 
         else:
             pass
@@ -651,27 +658,27 @@ def parse(fName):
                 ke, pe, press, temp = pickNOMADVarsCustom()
 
                 p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length, simulation_length])
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
 
                 if pe:
                     pe = np.asarray(pe)
-                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean(), pe.std()])
-                    p.addArrayValues('frame_sequence_potential_energy', pe)
+                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+                    p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
 
                 if ke:
                     ke = np.asarray(ke)
-                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean(), ke.std()])
-                    p.addArrayValues('frame_sequence_kinetic_energy', ke)
+                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+                    p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
 
                 if temp:
                     temp = np.asarray(temp)
-                    p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                    p.addArrayValues('frame_sequence_temperature', temp)
+                    p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                    p.addArrayValues('frame_sequence_temperature', temp*toTemp)
 
                 if press:
                     press = np.asarray(press)
-                    p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                    p.addArrayValues('frame_sequence_pressure', press)
+                    p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                    p.addArrayValues('frame_sequence_pressure', press*toPress)
 
         else:
             pass
@@ -690,12 +697,12 @@ def parse(fName):
                 press = np.asarray(press)
 
                 p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length, simulation_length])
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
 
-                p.addValue('frame_sequence_temperature_stats', [temp.mean(), temp.std()])
-                p.addValue('frame_sequence_pressure_stats', [press.mean(), press.std()])
-                p.addArrayValues('frame_sequence_temperature', temp)
-                p.addArrayValues('frame_sequence_pressure', press)
+                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+                p.addArrayValues('frame_sequence_pressure', press*toPress)
 
         else:
             pass
@@ -751,8 +758,10 @@ def parse(fName):
 
         if skipTraj == True:
 
-            with o(p,'section_system'):
-                p.addArrayValues('atom_positions', np.asarray(atomPosInit))
+            with o(p, 'section_system'):
+                temp_atom_positions = list()
+                temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosInit ]
+                p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
                 p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
 
 
@@ -778,12 +787,14 @@ def parse(fName):
 
                 with o(p,'section_system'):
                     temp_simulation_cell = list()
-                    temp_simulation_cell = simulationCell[i]
+                    temp_simulation_cell = [ [ dim*toDistance for dim in box ]for box in simulationCell[i] ]
                     p.addArrayValues('simulation_cell', np.asarray(temp_simulation_cell))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
@@ -798,12 +809,16 @@ def parse(fName):
                         pass
 
                     if atomPositionWrappedBool:
-                        p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
+                        temp_atom_positions_wrapped = list()
+                        temp_atom_positions_wrapped = [ [ crd*toDistance for crd in atom ] for atom in atomPositionWrapped[i] ]
+                        p.addArrayValues('atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
                         # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomVelocityBool:
-                        p.addArrayValues('atom_velocities', np.asarray(atomVelocity[i]))
+                        temp_atom_velocities = list()
+                        temp_atom_velocities = [ [ vi*toVelocity for vi in atom ] for atom in atomVelocity[i] ]
+                        p.addArrayValues('atom_velocities', np.asarray(temp_atom_velocities))
                         # p.addArrayValues('atom_velocities', np.asarray(atomVelocity[1]))
                         pass
 
@@ -819,7 +834,9 @@ def parse(fName):
                 with o(p, 'section_single_configuration_calculation'):
 
                     if atomForceBool:
-                        p.addArrayValues('atom_forces', np.asarray(atomForce[i]))
+                        temp_atom_forces = list()
+                        temp_atom_forces = [ [ fi*toForce for fi in atom ] for atom in atomForce[i] ]
+                        p.addArrayValues('atom_forces', np.asarray(temp_atom_forces))
                         # p.addArrayValues('atom_forces', np.asarray(atomForce[1]))
                         pass
 
@@ -840,7 +857,9 @@ def parse(fName):
 
                 with o(p,'section_system'):
 
-                    p.addArrayValues('simulation_cell', np.array(simulationCell[i]))
+                    temp_simulation_cell = list()
+                    temp_simulation_cell = [ [ dim*toDistance for dim in box ]for box in simulationCell[i] ]
+                    p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionScaledBool:
@@ -849,7 +868,9 @@ def parse(fName):
                         pass
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
@@ -859,7 +880,9 @@ def parse(fName):
                         pass
 
                     if atomPositionWrappedBool:
-                        p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[i]))
+                        temp_atom_positions_wrapped = list()
+                        temp_atom_positions_wrapped = [ [ crd*toDistance for crd in atom ] for atom in atomPositionWrapped[i] ]
+                        p.addArrayValues('atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
                         # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
@@ -895,7 +918,9 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
