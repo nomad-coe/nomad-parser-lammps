@@ -205,7 +205,7 @@ def parse(fName):
 
                         bondParameters = dict()
                         bondParameters.update({list_of_bonds[i][0] : list_of_bonds[i][1]})
-                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', bondParameters)  # interaction parameters for the functional
 
             ####################################################################################################################################################################################################################################
@@ -247,7 +247,7 @@ def parse(fName):
 
                         angleParameters = dict()
                         angleParameters.update({list_of_angles[i][0] : list_of_angles[i][1]})
-                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', angleParameters)  # interaction parameters for the functional
 
             ####################################################################################################################################################################################################################################
@@ -289,7 +289,7 @@ def parse(fName):
 
                         dihedralParameters = dict()
                         dihedralParameters.update({list_of_dihedrals[i][0] : list_of_dihedrals[i][1]})
-                        p.addArrayValues('interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', dihedralParameters)  # interaction parameters for the functional
             ####################################################################################################################################################################################################################################
 
@@ -301,7 +301,7 @@ def parse(fName):
 
                 with o(p, 'section_interaction'):
 
-                    p.addValue('number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
+                    p.addValue('x_lammps_number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
                     if pairFunctional:
@@ -324,8 +324,8 @@ def parse(fName):
                             interaction_atom_to_atom_type_ref.append(temp)
 
                     # p.addValue('interaction_atoms', int_index_store)
-                    p.addArrayValues('pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                    p.addArrayValues('pair_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+                    p.addArrayValues('x_lammps_pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                    p.addArrayValues('x_lammps_pair_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
                     pass
 
             ####################################################################################################################################################################################################################################
@@ -408,7 +408,7 @@ def parse(fName):
 
                                         moleculeBondParameters = dict()
                                         moleculeBondParameters.update({list_of_bonds[bond-1][0] : list_of_bonds[bond-1][1]})
-                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                                         p.addValue('molecule_interaction_parameters', moleculeBondParameters)
 
                     ############################################################################################################################################################################################################################
@@ -466,7 +466,7 @@ def parse(fName):
 
                                         moleculeAngleParameters = dict()
                                         moleculeAngleParameters.update({list_of_angles[angle-1][0] : list_of_angles[angle-1][1]})
-                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                                         p.addValue('molecule_interaction_parameters', moleculeAngleParameters)
 
                     ############################################################################################################################################################################################################################
@@ -529,7 +529,7 @@ def parse(fName):
 
                                         moleculeDihedralParameters = dict()
                                         moleculeDihedralParameters.update({list_of_dihedrals[dihedral-1][0] : list_of_dihedrals[dihedral-1][1]})
-                                        p.addArrayValues('molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                        p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                                         p.addValue('molecule_interaction_parameters', moleculeDihedralParameters)
 
                     ############################################################################################################################################################################################################################
@@ -562,10 +562,10 @@ def parse(fName):
                                     temp = map(lambda x:x-1, line)
                                     interaction_atom_to_atom_type_ref.append(temp)
 
-                            p.addValue('number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types
+                            p.addValue('x_lammps_number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types
                             p.addValue('number_of_atoms_per_molecule_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
-                            p.addArrayValues('pair_molecule_interaction_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                            p.addArrayValues('pair_molecule_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+                            p.addArrayValues('x_lammps_pair_molecule_interaction_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                            p.addArrayValues('x_lammps_pair_molecule_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
 
                         pass
                     ############################################################################################################################################################################################################################
@@ -590,24 +590,24 @@ def parse(fName):
             target_t, thermo_tau, langevin_gamma, target_p, baro_tau = readTPSettings()
             int_type, tstep, steps = readIntegratorSettings()
 
-            p.addValue('integrator_type', int_type)
-            p.addValue('integrator_dt', tstep*toTime)
-            p.addValue('number_of_steps_requested', steps)
+            p.addValue('x_lammps_integrator_type', int_type)
+            p.addValue('x_lammps_integrator_dt', tstep*toTime)
+            p.addValue('x_lammps_number_of_steps_requested', steps)
 
             p.addValue('sampling_method', sampling)
             p.addValue('ensemble_type', ensemble)
 
             if target_t:
-                p.addValue('thermostat_target_temperature', target_t*toTemp)
-                p.addValue('thermostat_tau', thermo_tau)
+                p.addValue('x_lammps_thermostat_target_temperature', target_t*toTemp)
+                p.addValue('x_lammps_thermostat_tau', thermo_tau*toTime)
 
             if target_p:
-                p.addValue('barostat_target_pressure', target_p*toPress)
-                p.addValue('barostat_tau', baro_tau)
+                p.addValue('x_lammps_barostat_target_pressure', target_p*toPress)
+                p.addValue('x_lammps_barostat_tau', baro_tau*toTime)
 
             if langevin_gamma:
-                p.addValue('thermostat_target_temperature', target_t*toTemp)
-                p.addValue('langevin_gamma', langevin_gamma)
+                p.addValue('x_lammps_thermostat_target_temperature', target_t*toTemp)
+                p.addValue('x_lammps_langevin_gamma', langevin_gamma*toTime)
 
         ####################################################################################################################################################################################################################################
 
@@ -804,15 +804,15 @@ def parse(fName):
                         pass
 
                     if imageFlagIndexBool:
-                        p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
-                        # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
+                        p.addArrayValues('x_lammps_atom_positions_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('x_lammps_atom_positions_image_index', np.asarray(imageFlagIndex[1]))
                         pass
 
                     if atomPositionWrappedBool:
                         temp_atom_positions_wrapped = list()
                         temp_atom_positions_wrapped = [ [ crd*toDistance for crd in atom ] for atom in atomPositionWrapped[i] ]
-                        p.addArrayValues('atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
-                        # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
+                        p.addArrayValues('x_lammps_atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
+                        # p.addArrayValues('x_lammps_atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomVelocityBool:
@@ -863,8 +863,10 @@ def parse(fName):
                     # p.addArrayValues('simulation_cell', np.asarray(simulationCell[1]))
 
                     if atomPositionScaledBool:
-                        p.addArrayValues('atom_positions_scaled', np.asarray(atomPositionScaled[i]))
-                        # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
+                        temp_atom_positions_scaled = list()
+                        temp_atom_positions_scaled = [ [ crd*toDistance for crd in atom ] for atom in atomPositionScaled[i] ]
+                        p.addArrayValues('x_lammps_atom_positions_scaled', np.asarray(temp_atom_positions_scaled))
+                        # p.addArrayValues('x_lammps_atom_positions_scaled', np.asarray(atomPositionScaled[1]))
                         pass
 
                     if atomPositionBool:
@@ -875,15 +877,15 @@ def parse(fName):
                         pass
 
                     if imageFlagIndexBool:
-                        p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[i]))
-                        # p.addArrayValues('atom_positions_image_index', np.asarray(imageFlagIndex[1]))
+                        p.addArrayValues('x_lammps_atom_positions_image_index', np.asarray(imageFlagIndex[i]))
+                        # p.addArrayValues('x_lammps_atom_positions_image_index', np.asarray(imageFlagIndex[1]))
                         pass
 
                     if atomPositionWrappedBool:
                         temp_atom_positions_wrapped = list()
                         temp_atom_positions_wrapped = [ [ crd*toDistance for crd in atom ] for atom in atomPositionWrapped[i] ]
-                        p.addArrayValues('atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
-                        # p.addArrayValues('atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
+                        p.addArrayValues('x_lammps_atom_positions_wrapped', np.asarray(temp_atom_positions_wrapped))
+                        # p.addArrayValues('x_lammps_atom_positions_wrapped', np.asarray(atomPositionWrapped[1]))
                         pass
 
                     if atomPositionScaledBool:
@@ -918,9 +920,7 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        temp_atom_positions = list()
-                        temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosition[i] ]
-                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
+                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
