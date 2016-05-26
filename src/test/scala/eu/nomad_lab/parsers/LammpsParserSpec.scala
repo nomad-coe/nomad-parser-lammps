@@ -45,3 +45,14 @@ object LammpsParserSpec3 extends Specification {
     }
   }
 }
+
+object LammpsParserSpec4 extends Specification {
+  "LammpsParserTest4" >> {
+    "test with json-events 4" >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/in.hexane_cyclohexane_nvt", "json-events") must_== ParseResult.ParseSuccess
+    }
+    "test with json 4" >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/in.hexane_cyclohexane_nvt", "json") must_== ParseResult.ParseSuccess
+    }
+  }
+}

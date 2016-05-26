@@ -133,7 +133,7 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
         atY  = float(line[5])
         atZ  = float(line[6])
 
-        pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.4f'), format(atY, '.4f'), format(atZ, '.4f')))
+        pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.3f'), format(atY, '.3f'), format(atZ, '.3f')))
     os.link(pdb.name, 'top.pdb')
 # os.remove('top.pdb')
 
