@@ -1,34 +1,30 @@
 import os, sys
 import mdtraj as md
-# from LAMMPSParserInput import readDumpFileName
-
-
-
-# fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()  # recover traj file name
-
 
 
 def MDTrajParser(fNameTraj):
 
-    if fNameTraj:
+    skipMDtraj = False
+    if fNameTraj.endswith("atom") or fNameTraj.endswith("xyz") or fNameTraj.endswith("lammpstrj"):  ## these trajectory styles are handled by LAMMPSParserTraj.py
+        skipMDtraj = True
+
+    if fNameTraj and skipMDtraj == False:
 
         ### LOADING TRAJECTORY AND TOPOLOGY
         mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
         mdTopology = md.load_topology('top.pdb')
         ###
 
-
-
-        MDTrajAtomPosition = mdTrajectory.xyz
+        MDTrajAtomPosition = mdTrajectory.xyz                  # atomic positions per frame
         MDTrajAtomPosition = MDTrajAtomPosition.tolist()
 
-        MDTrajSimulationCell = mdTrajectory.unitcell_lengths
+        MDTrajSimulationCell = mdTrajectory.unitcell_vectors   # simulation cell per frame
         MDTrajSimulationCell = MDTrajSimulationCell.tolist()
 
-        os.remove('top.pdb')
+    else:
+        MDTrajAtomPosition   = None
+        MDTrajSimulationCell = None
 
-    # print MDTrajAtomPosition[0][0]
-    # print len(MDTrajAtomPosition[0][0])
-    # print len(MDTrajAtomPosition), len(MDTrajSimulationCell)
+    os.remove('top.pdb')  # remove the temporary .pdb topology (required to load a traj file through MDTraj)
 
     return (MDTrajAtomPosition, MDTrajSimulationCell)

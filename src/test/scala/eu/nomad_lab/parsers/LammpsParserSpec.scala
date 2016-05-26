@@ -56,3 +56,25 @@ object LammpsParserSpec4 extends Specification {
     }
   }
 }
+
+object LammpsParserSpec5 extends Specification {
+  "LammpsParserTest5” >> {
+    "test with json-events 5” >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/64xmethane-nvt_unwrapped.dcd", "json-events") must_== ParseResult.ParseSuccess
+    }
+    "test with json 5” >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/64xmethane-nvt_unwrapped.dcd", "json") must_== ParseResult.ParseSuccess
+    }
+  }
+}
+
+object LammpsParserSpec6 extends Specification {
+  "LammpsParserTest6” >> {
+    "test with json-events 6” >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/64xmethane-nvt_unwrapped.xtc”, "json-events") must_== ParseResult.ParseSuccess
+    }
+    "test with json 6” >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/64xmethane-nvt_unwrapped.xtc”, "json") must_== ParseResult.ParseSuccess
+    }
+  }
+}

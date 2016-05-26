@@ -920,7 +920,9 @@ def parse(fName):
                 with o(p,'section_system'):
 
                     if atomPositionBool:
-                        p.addArrayValues('atom_positions', np.asarray(atomPosition[i]))
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in atomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
                         # p.addArrayValues('atom_positions', np.asarray(atomPosition[1]))
                         pass
 
@@ -944,8 +946,80 @@ def parse(fName):
 
 ########################################################################################################################
 
-    if fNameTraj:
-        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
+        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)  ### load trajectory data extracted by MDTraj
+
+########################################################################################################################
+
+        #### TRAJECTORY OUTPUTS FOR trajDumpStyle = dcd TO THE BACKEND
+
+        if trajDumpStyle == 'dcd' and skipTraj == False:
+
+            if MDTrajAtomPosition and MDTrajSimulationCell:
+
+                for i in range(len(MDTrajAtomPosition)):
+                # for i in range(1):
+
+                    with o(p,'section_system'):
+
+                        temp_simulation_cell = list()
+                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ]
+                        p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
+
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*(1e-9) for crd in atom ] for atom in MDTrajAtomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
+
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+
+
+
+            #### section_single_configuration_calculation
+
+            refSecSingConf = -1
+            for i in range(len(MDTrajAtomPosition)):
+            # for i in range(1):
+
+                refSecSingConf += 1
+
+                with o(p, 'section_single_configuration_calculation'):
+                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
+
+
+        #### TRAJECTORY OUTPUTS FOR trajDumpStyle = xtc TO THE BACKEND
+
+        if trajDumpStyle == 'xtc' and skipTraj == False:
+
+            if MDTrajAtomPosition and MDTrajSimulationCell:
+
+                for i in range(len(MDTrajAtomPosition)):
+                # for i in range(1):
+
+                    with o(p,'section_system'):
+
+                        temp_simulation_cell = list()
+                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ]
+                        p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
+
+                        temp_atom_positions = list()
+                        temp_atom_positions = [ [ crd*(1e-9) for crd in atom ] for atom in MDTrajAtomPosition[i] ]
+                        p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
+
+                        p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+
+
+
+            #### section_single_configuration_calculation
+
+            refSecSingConf = -1
+            for i in range(len(MDTrajAtomPosition)):
+            # for i in range(1):
+
+                refSecSingConf += 1
+
+                with o(p, 'section_single_configuration_calculation'):
+                    p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
+
+
 
 ########################################################################################################################
     p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED
