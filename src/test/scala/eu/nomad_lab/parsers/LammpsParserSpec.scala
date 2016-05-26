@@ -35,13 +35,3 @@ object LammpsParserSpec2 extends Specification {
   }
 }
 
-object LammpsParserSpec3 extends Specification {
-  "LammpsParserTest3" >> {
-    "test with json-events 3" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/1_methyl_naphthalene/input.1_methyl_naphthalene", "json-events") must_== ParseResult.ParseSuccess
-    }
-    "test with json 3" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/1_methyl_naphthalene/input.1_methyl_naphthalene", "json") must_== ParseResult.ParseSuccess
-    }
-  }
-}
