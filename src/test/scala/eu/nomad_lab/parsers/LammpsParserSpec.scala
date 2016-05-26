@@ -13,34 +13,34 @@ object LammpsParserSpec extends Specification {
   }
 }
 
-object LammpsParserSpec extends Specification {
-  "LammpsParserTest" >> {
-    "test with json-events" >> {
+object LammpsParserSpec1 extends Specification {
+  "LammpsParserTest1" >> {
+    "test with json-events 1" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_one", "json-events") must_== ParseResult.ParseSuccess
     }
-    "test with json" >> {
+    "test with json 1" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_one", "json") must_== ParseResult.ParseSuccess
     }
   }
 }
 
-object LammpsParserSpec extends Specification {
-  "LammpsParserTest" >> {
-    "test with json-events" >> {
+object LammpsParserSpec2 extends Specification {
+  "LammpsParserTest2" >> {
+    "test with json-events 2" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_multi", "json-events") must_== ParseResult.ParseSuccess
     }
-    "test with json" >> {
+    "test with json 2" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane/input.methane_nvt_thermo_style_multi", "json") must_== ParseResult.ParseSuccess
     }
   }
 }
 
-object LammpsParserSpec extends Specification {
-  "LammpsParserTest" >> {
-    "test with json-events" >> {
+object LammpsParserSpec3 extends Specification {
+  "LammpsParserTest3" >> {
+    "test with json-events 3" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/1_methyl_naphthalene/input.1_methyl_naphthalene", "json-events") must_== ParseResult.ParseSuccess
     }
-    "test with json" >> {
+    "test with json 3" >> {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/1_methyl_naphthalene/input.1_methyl_naphthalene", "json") must_== ParseResult.ParseSuccess
     }
   }
