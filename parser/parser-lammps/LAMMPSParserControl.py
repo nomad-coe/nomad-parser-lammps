@@ -633,7 +633,7 @@ def parse(fName):
 
                 p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
                 p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-                p.addValue('number_of_frames_in_sequence', frames_count-1)
+                # p.addValue('number_of_frames_in_sequence', frames_count-1)
                 p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
                 p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
                 p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
@@ -944,7 +944,8 @@ def parse(fName):
 
 ########################################################################################################################
 
-    MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
+    if fNameTraj:
+        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)
 
 ########################################################################################################################
     p.finishedParsingSession("ParseSuccess", None)    # PARSING FINISHED

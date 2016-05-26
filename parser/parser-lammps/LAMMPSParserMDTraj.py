@@ -10,20 +10,22 @@ import mdtraj as md
 
 def MDTrajParser(fNameTraj):
 
-    ### LOADING TRAJECTORY AND TOPOLOGY
-    mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
-    mdTopology = md.load_topology('top.pdb')
-    ###
+    if fNameTraj:
+
+        ### LOADING TRAJECTORY AND TOPOLOGY
+        mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
+        mdTopology = md.load_topology('top.pdb')
+        ###
 
 
 
-    MDTrajAtomPosition = mdTrajectory.xyz
-    MDTrajAtomPosition = MDTrajAtomPosition.tolist()
+        MDTrajAtomPosition = mdTrajectory.xyz
+        MDTrajAtomPosition = MDTrajAtomPosition.tolist()
 
-    MDTrajSimulationCell = mdTrajectory.unitcell_lengths
-    MDTrajSimulationCell = MDTrajSimulationCell.tolist()
+        MDTrajSimulationCell = mdTrajectory.unitcell_lengths
+        MDTrajSimulationCell = MDTrajSimulationCell.tolist()
 
-    os.remove('top.pdb')
+        os.remove('top.pdb')
 
     # print MDTrajAtomPosition[0][0]
     # print len(MDTrajAtomPosition[0][0])
