@@ -5,7 +5,7 @@ import mdtraj as md
 def MDTrajParser(fNameTraj):
 
     skipMDtraj = False
-    if fNameTraj.endswith("atom") or fNameTraj.endswith("xyz") or fNameTraj.endswith("lammpstrj"):  ## these trajectory styles are handled by LAMMPSParserTraj.py
+    if fNameTraj and (fNameTraj.endswith("atom") or fNameTraj.endswith("xyz") or fNameTraj.endswith("lammpstrj")):  ## these trajectory styles are handled by LAMMPSParserTraj.py
         skipMDtraj = True
 
     if fNameTraj and skipMDtraj == False:
