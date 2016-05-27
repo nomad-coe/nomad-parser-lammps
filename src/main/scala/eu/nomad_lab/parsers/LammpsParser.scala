@@ -21,7 +21,7 @@ object LammpsParser extends SimpleExternalParserGenerator(
       )) :: Nil
   ),
   mainFileTypes = Seq("text/.*"),
-  mainFileRe = """# input script for topotools""".r,
+  mainFileRe = """\s*boundary\s*[a-z]+\s*[a-z]+\s*[a-z]+\s*""".r,
   cmd = Seq(DefaultPythonInterpreter.python2Exe(), "${envDir}/parsers/lammps/parser/parser-lammps/LAMMPSParserControl.py",
     "${mainFilePath}"),
   resList = Seq(
