@@ -31,7 +31,7 @@ import re, os, sys, json, logging
 @contextmanager # SECTIONS ARE CLOSED AUTOMATICALLY
 def open_section(p, name):
 	gid = p.openSection(name)
-	yield
+	yield gid
 	p.closeSection(name, gid)
 
 ################################################################################################################################################################################################################################################
@@ -612,101 +612,102 @@ def parse(fName):
         ####################################################################################################################################################################################################################################
 
 
-        #### DYNAMICS FRAME INFORMATION IN section_frame_sequece ###########################################################################################################################################################################
-        ####################################################################################################################################################################################################################################
-
-        skipThermo = logFileOpen()                          # bool var telling if an output log file is open
-        var, thermo_style = readLoggedThermoOutput()        # collecting the read thermodynamic output
-        frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()  # frame and simulation time length
-
-        #### THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
-
-        if thermo_style == 'multi' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-            from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
-
-            with o(p, 'section_frame_sequence'):
-                frames_count = readFrames()
-                pe = readPotEnergy()
-                ke, temp = readKinEnergy()
-                press = readPressure()
-                vol = readVolume()
-
-                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-                # p.addValue('number_of_frames_in_sequence', frames_count-1)
-                p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
-                p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
-                p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
-                p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
-                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-                p.addArrayValues('frame_sequence_pressure', press*toPress)
-
-        else:
-            pass
-
-
-        #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
-
-        if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-            from LAMMPSParserLog import pickNOMADVarsCustom
-
-
-            with o(p, 'section_frame_sequence'):
-
-                ke, pe, press, temp = pickNOMADVarsCustom()
-
-                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-
-                if pe:
-                    pe = np.asarray(pe)
-                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
-                    p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
-
-                if ke:
-                    ke = np.asarray(ke)
-                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
-                    p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
-
-                if temp:
-                    temp = np.asarray(temp)
-                    p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-                    p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-
-                if press:
-                    press = np.asarray(press)
-                    p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-                    p.addArrayValues('frame_sequence_pressure', press*toPress)
-
-        else:
-            pass
-
-
-        #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
-
-        if thermo_style == 'one' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-            from LAMMPSParserLog import pickNOMADVarsOne
-
-
-            with o(p, 'section_frame_sequence'):
-
-                press, temp = pickNOMADVarsOne()
-                temp = np.asarray(temp)
-                press = np.asarray(press)
-
-                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-
-                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-                p.addArrayValues('frame_sequence_pressure', press*toPress)
-
-        else:
-            pass
-
+        # #### DYNAMICS FRAME INFORMATION IN section_frame_sequece ###########################################################################################################################################################################
+        # ####################################################################################################################################################################################################################################
+        #
+        # skipThermo = logFileOpen()                          # bool var telling if an output log file is open
+        # var, thermo_style = readLoggedThermoOutput()        # collecting the read thermodynamic output
+        # frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()  # frame and simulation time length
+        #
+        # #### THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
+        #
+        # if thermo_style == 'multi' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+        #     from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
+        #
+        #     with o(p, 'section_frame_sequence'):
+        #         frames_count = readFrames()
+        #         pe = readPotEnergy()
+        #         ke, temp = readKinEnergy()
+        #         press = readPressure()
+        #         vol = readVolume()
+        #
+        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+        #         # p.addValue('number_of_frames_in_sequence', frames_count-1)
+        #         p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+        #         p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
+        #         p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+        #         p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
+        #         p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+        #         p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+        #         p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+        #         p.addArrayValues('frame_sequence_pressure', press*toPress)
+        #         p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+        #
+        # else:
+        #     pass
+        #
+        #
+        # #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
+        #
+        # if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+        #     from LAMMPSParserLog import pickNOMADVarsCustom
+        #
+        #
+        #     with o(p, 'section_frame_sequence'):
+        #
+        #         ke, pe, press, temp = pickNOMADVarsCustom()
+        #
+        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+        #
+        #         if pe:
+        #             pe = np.asarray(pe)
+        #             p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+        #             p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
+        #
+        #         if ke:
+        #             ke = np.asarray(ke)
+        #             p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+        #             p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
+        #
+        #         if temp:
+        #             temp = np.asarray(temp)
+        #             p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+        #             p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+        #
+        #         if press:
+        #             press = np.asarray(press)
+        #             p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+        #             p.addArrayValues('frame_sequence_pressure', press*toPress)
+        #
+        # else:
+        #     pass
+        #
+        #
+        # #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
+        #
+        # if thermo_style == 'one' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+        #     from LAMMPSParserLog import pickNOMADVarsOne
+        #
+        #
+        #     with o(p, 'section_frame_sequence'):
+        #
+        #         press, temp = pickNOMADVarsOne()
+        #         temp = np.asarray(temp)
+        #         press = np.asarray(press)
+        #
+        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+        #
+        #         p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+        #         p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+        #         p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+        #         p.addArrayValues('frame_sequence_pressure', press*toPress)
+        #
+        # else:
+        #     pass
+        #
 
         #### SYSTEM INFORMATION TO section_system ##############################################################################################################################################################################################
         ########################################################################################################################################################################################################################################
@@ -766,8 +767,10 @@ def parse(fName):
 
 
             refSecSingConf = -1
-            with o(p, 'section_single_configuration_calculation'):
+            refToFrame = []
+            with o(p, 'section_single_configuration_calculation') as gid:
                 refSecSingConf += 1
+                refToFrame.append(gid)
                 p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
@@ -826,12 +829,16 @@ def parse(fName):
             #### SENDING FORCES TO section_single_configuration_calculation
 
             refSecSingConf = -1
+            refToFrame = []
+
             for i in range(len(simulationCell)):
             # for i in range(1):
 
                 refSecSingConf += 1
 
-                with o(p, 'section_single_configuration_calculation'):
+                with o(p, 'section_single_configuration_calculation') as gid:
+
+                    refToFrame.append(gid)
 
                     if atomForceBool:
                         temp_atom_forces = list()
@@ -897,12 +904,16 @@ def parse(fName):
             #### section_single_configuration_calculation
 
             refSecSingConf = -1
+            refToFrame = []
+
             for i in range(len(simulationCell)):
             # for i in range(1):
 
                 refSecSingConf += 1
 
-                with o(p, 'section_single_configuration_calculation'):
+                with o(p, 'section_single_configuration_calculation') as gid:
+
+                    refToFrame.append(gid)
                     p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
@@ -935,12 +946,15 @@ def parse(fName):
             #### section_single_configuration_calculation
 
             refSecSingConf = -1
+            refToFrame = []
             for i in range(len(atomPosition)):
             # for i in range(1):
 
                 refSecSingConf += 1
 
-                with o(p, 'section_single_configuration_calculation'):
+                with o(p, 'section_single_configuration_calculation') as gid:
+
+                    refToFrame.append(gid)
                     p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
@@ -976,12 +990,15 @@ def parse(fName):
             #### section_single_configuration_calculation
 
             refSecSingConf = -1
+            refToFrame = []
             for i in range(len(MDTrajAtomPosition)):
             # for i in range(1):
 
                 refSecSingConf += 1
 
-                with o(p, 'section_single_configuration_calculation'):
+                with o(p, 'section_single_configuration_calculation') as gid:
+
+                    refToFrame.append(gid)
                     p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
 
 
@@ -1011,13 +1028,118 @@ def parse(fName):
             #### section_single_configuration_calculation
 
             refSecSingConf = -1
+            refToFrame = []
             for i in range(len(MDTrajAtomPosition)):
             # for i in range(1):
 
                 refSecSingConf += 1
 
-                with o(p, 'section_single_configuration_calculation'):
+                with o(p, 'section_single_configuration_calculation') as gid:
+
+                    refToFrame.append(gid)
                     p.addValue('single_configuration_calculation_to_system_ref', refSecSingConf)
+
+        ####################################################################################################################################################################################################################################
+
+
+        #### DYNAMICS FRAME INFORMATION IN section_frame_sequece ###########################################################################################################################################################################
+        ####################################################################################################################################################################################################################################
+
+        skipThermo = logFileOpen()                          # bool var telling if an output log file is open
+        var, thermo_style = readLoggedThermoOutput()        # collecting the read thermodynamic output
+        frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()  # frame and simulation time length
+
+        #### THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
+
+        if thermo_style == 'multi' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
+
+            with o(p, 'section_frame_sequence'):
+                frames_count = readFrames()
+                pe = readPotEnergy()
+                ke, temp = readKinEnergy()
+                press = readPressure()
+                vol = readVolume()
+
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+                # p.addValue('number_of_frames_in_sequence', frames_count-1)
+                p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+                p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
+                p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+                p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
+                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                p.addArrayValues('frame_sequence_pressure', press*toPress)
+                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+
+        else:
+            pass
+
+
+        #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
+
+        if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog import pickNOMADVarsCustom
+
+
+            with o(p, 'section_frame_sequence'):
+
+                ke, pe, press, temp = pickNOMADVarsCustom()
+
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+
+                if pe:
+                    pe = np.asarray(pe)
+                    p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
+                    p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
+
+                if ke:
+                    ke = np.asarray(ke)
+                    p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
+                    p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
+
+                if temp:
+                    temp = np.asarray(temp)
+                    p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                    p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+
+                if press:
+                    press = np.asarray(press)
+                    p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                    p.addArrayValues('frame_sequence_pressure', press*toPress)
+
+        else:
+            pass
+
+
+        #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
+
+        if thermo_style == 'one' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
+            from LAMMPSParserLog import pickNOMADVarsOne
+
+
+            with o(p, 'section_frame_sequence'):
+
+                press, temp = pickNOMADVarsOne()
+                temp = np.asarray(temp)
+                press = np.asarray(press)
+
+                p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
+                p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
+
+                p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
+                p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
+                p.addArrayValues('frame_sequence_temperature', temp*toTemp)
+                p.addArrayValues('frame_sequence_pressure', press*toPress)
+                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+
+        else:
+            pass
+
 
 
 

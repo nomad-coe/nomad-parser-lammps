@@ -26,8 +26,8 @@ else:
 def trajFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skipTraj = True
     if traj and stepsPrintFrame == stepsPrintThermo: # also checks if the thermo and trajectory output settings are consistent  <=== NOTA BENE
-        skipTraj = False
-
+        skipTraj = False                             # FOR NOW, I PARSE THE TRAJ ONLY IF THERMO OUTPUTS AND MD FRAMES ARE PRINTED
+                                                     # WITH THE SAME FREQUENCY
     return skipTraj
 
 skipTraj = trajFileOpen()
