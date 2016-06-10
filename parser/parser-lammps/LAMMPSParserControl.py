@@ -585,7 +585,11 @@ def parse(fName):
         #### BASIC SAMPLING INFORMATION IN section_topology ################################################################################################################################################################################
         ####################################################################################################################################################################################################################################
 
-        with o(p, 'section_sampling_method'):
+        refToSamp = []
+        with o(p, 'section_sampling_method') as gid:
+
+            refToSamp.append(gid)
+
             ensemble, sampling = readEnsemble()
             target_t, thermo_tau, langevin_gamma, target_p, baro_tau = readTPSettings()
             int_type, tstep, steps = readIntegratorSettings()
@@ -1072,7 +1076,8 @@ def parse(fName):
                 p.addArrayValues('frame_sequence_temperature', temp*toTemp)
                 p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
                 p.addArrayValues('frame_sequence_pressure', press*toPress)
-                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_local_frames_ref', np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_to_sampling_ref', np.asarray(refToSamp))
 
         else:
             pass
@@ -1090,7 +1095,8 @@ def parse(fName):
 
                 p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
                 p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_local_frames_ref', np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_to_sampling_ref', np.asarray(refToSamp))
 
                 if pe:
                     pe = np.asarray(pe)
@@ -1135,7 +1141,8 @@ def parse(fName):
                 p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
                 p.addArrayValues('frame_sequence_temperature', temp*toTemp)
                 p.addArrayValues('frame_sequence_pressure', press*toPress)
-                p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_local_frames_ref', np.asarray(refToFrame))
+                p.addArrayValues('frame_sequence_to_sampling_ref', np.asarray(refToSamp))
 
         else:
             pass
