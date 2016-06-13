@@ -103,7 +103,7 @@ def parse(fName):
             # collecting covalent bond definitions
             bond_dict, bondTypeList, bond_interaction_atoms  = assignBonds(updateAtomTypes)
             bond_dict = sorted(bond_dict.items(), key=operator.itemgetter(0))
-            list_of_bonds = readBonds()
+            list_of_bonds = readBonds(bondFunctional)
             list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
             bd_types = len(bond_dict)
             ###
@@ -111,7 +111,7 @@ def parse(fName):
             # collecting bond angles definitions
             angle_dict, angleTypeList, angle_interaction_atoms  = assignAngles(updateAtomTypes)
             angle_dict = sorted(angle_dict.items(), key=operator.itemgetter(0))
-            list_of_angles = readAngles()
+            list_of_angles = readAngles(angleFunctional)
             list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
             ag_types = len(angle_dict)
             ###
@@ -119,7 +119,7 @@ def parse(fName):
             # collecting dihedral angles definitions
             dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = assignDihedrals(updateAtomTypes)
             dihedral_dict = sorted(dihedral_dict.items(), key=operator.itemgetter(0))
-            list_of_dihedrals = readDihedrals()
+            list_of_dihedrals = readDihedrals(dihedralFunctional)
             list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
             dh_types = len(dihedral_dict)
             ###
@@ -205,6 +205,7 @@ def parse(fName):
 
                         bondParameters = dict()
                         bondParameters.update({list_of_bonds[i][0] : list_of_bonds[i][1]})
+
                         p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', bondParameters)  # interaction parameters for the functional
 
@@ -247,6 +248,7 @@ def parse(fName):
 
                         angleParameters = dict()
                         angleParameters.update({list_of_angles[i][0] : list_of_angles[i][1]})
+
                         p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
                         p.addValue('interaction_parameters', angleParameters)  # interaction parameters for the functional
 

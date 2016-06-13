@@ -1,6 +1,6 @@
 import fnmatch
 import os, sys
-import numpy as np
+from LAMMPSParserUnitConversion import unitConversion
 
 
 #examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
@@ -62,6 +62,33 @@ storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR 
 ################################
 
 ################################################################################################################################
+
+def readUnits():  # HERE I READ THE UNITS STYLE
+
+    units_filter = filter(lambda x: fnmatch.fnmatch(x, '*units*'), storeInput)
+
+    units = []
+    for line in units_filter:
+            line_split = line.split()
+            unitsKey  = line_split[0]
+            unitsType = line_split[1]
+
+    units = [unitsKey, unitsType]
+
+    unitsDict = { unitsKey : unitsType }
+
+    return (unitsDict, unitsType)
+
+unitsDict, unitsType = readUnits()
+
+#########################################################################################################################################################
+# LOAD UNIT CONVERSION
+
+toMass,toDistance,toTime,toEnergy,toVelocity,toForce,toTorque,toTemp,toPress,toDynVisc,toCharge,toDipole,toElField,toDensity = unitConversion(unitsType)
+toRadians = 0.0174533
+
+#########################################################################################################################################################
+
 
 def readLogFileName():   ### here I pick the name of the log file storing the logged thermodynamic information
 
@@ -273,12 +300,6 @@ int_type, tstep, steps = readIntegratorSettings()
 
 ################################################################################################################################
 
-#cacchio = updateAtomicTypes()
-
-#print cacchio
-
-################################################################################################################################
-
 def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
     lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
@@ -342,90 +363,216 @@ def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
 
 ########################################################################################################################
 
-def readBonds():   # HERE WE COLLECT BONDS COEFFICIENTS
+def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
 
     bond_filt = filter(lambda x: x.startswith("bond_coeff"), storeInput)
 
     list_of_bonds={}
     for line in bond_filt:
         line_split = line.split()
-        index1 = int(line_split[1])
-        index2 = float(line_split[2])
-        index3 = float(line_split[3])
 
-    # creat a list
-        bond_coeff = [index1, index2, index3]
 
-    # create a dictionary
+        if bondFunctional == "harmonic":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*(toEnergy/(toDistance)**2)
+            index3 = float(line_split[3])*toDistance
 
-    #index1 = 'Bond ' + str(index1)
+            bond = [ index2, index3 ]
+            bond_dict = {index1 : bond }
+            list_of_bonds.update(bond_dict)
 
-        #bond = { 'Force Constant' : index2, 'Equilibrium Length' : index3 }
-        bond = [ index2, index3 ]
-        bond_dict = {index1 : bond }
-        list_of_bonds.update(bond_dict)
-    #list_of_bonds = { "Covalent bonds [Force constant, Lenght]" : list_of_bonds }
 
-    #print bond_list
+        if bondFunctional == "class2":   # COMPASS
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toDistance
+            index3 = float(line_split[3])*(toEnergy/(toDistance)**2)
+            index4 = float(line_split[4])*(toEnergy/(toDistance)**3)
+            index5 = float(line_split[5])*(toEnergy/(toDistance)**4)
+
+            bond = [ index2, index3, index4, index5 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
+
+        if bondFunctional == "nonlinear":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toDistance
+            index4 = float(line_split[4])*toDistance
+
+            bond = [ index2, index3, index4 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
+
+        if bondFunctional == "morse":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*(1/toDistance)
+            index4 = float(line_split[4])*toDistance
+
+            bond = [ index2, index3, index4 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
 
     return list_of_bonds
 
 
 ########################################################################################################################
 
-def readAngles():
+def readAngles(angleFunctional):
 
     angle_filt = filter(lambda x: x.startswith("angle_coeff"), storeInput)
 
     list_of_angles={}
     for line in angle_filt:
         line_split = line.split()
-        index1 = int(line_split[1])
-        index2 = float(line_split[2])
-        index3 = float(line_split[3])
 
-    # creat a list
-        angle_coeff = [index1, index2, index3]
 
-    # create a dictionary
+        if angleFunctional == "harmonic":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toRadians
 
-    #index1 = 'Angle ' + str(index1)
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
 
-        #angle = { 'Force Constant' : index2, 'Equilibrium Angle' : index3 }
-        angle = [ index2, index3 ]
-        angle_dict = {index1 : angle }
-        list_of_angles.update(angle_dict)
-    #list_of_angles = { "Bond angles [Force constant, Rest angle]" : list_of_angles }
+
+        if angleFunctional == "class2":   # COMPASS
+            pass
+
+
+        if angleFunctional == "charmm":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toRadians
+            index4 = float(line_split[4])*(toEnergy/(toDistance)**2)
+            index5 = float(line_split[5])*toDistance
+
+            angle = [ index2, index3, index4, index5 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+
+            angle = [ index2 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/delta":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toRadians
+
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/periodic":   # DREIDING
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = int(line_split[3])
+            index4 = int(line_split[4])
+
+            angle = [ index2, index3, index4 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/squared":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toRadians
+
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
     return list_of_angles
 
 
 ########################################################################################################################
 
-def readDihedrals():
+def readDihedrals(dihedralFunctional):
 
     dihedral_filt = filter(lambda x: x.startswith("dihedral_coeff"), storeInput)
 
     list_of_dihedrals={}
     for line in dihedral_filt:
         line_split = line.split()
-        index1 = int(line_split[1])
-        index2 = float(line_split[2])
-        index3 = float(line_split[3])
-        index4 = float(line_split[4])
-        index5 = float(line_split[5])
 
-    # creat a list
-        dihedral_coeff = [index1, index2, index3, index4, index5]
 
-    # create a dictionary
+        if dihedralFunctional == "harmonic":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = int(line_split[3])
+            index4 = int(line_split[4])
 
-    #index1 = 'Dihedral ' + str(index1)
+            dihedral = [ index2, index3, index4 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
 
-        #dihedral = { 'Fourier Coefficients' : [ index2, index3, index4, index5 ] }
-        dihedral = [ index2, index3, index4, index5 ]
-        dihedral_dict = {index1 : dihedral }
-        list_of_dihedrals.update(dihedral_dict)
-    #list_of_dihedrals = { "Dihedral parameters" : list_of_dihedrals }
+
+        if dihedralFunctional == "class2":   # COMPASS
+            pass
+
+
+        if dihedralFunctional == "multi/harmonic":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toEnergy
+            index4 = float(line_split[4])*toEnergy
+            index5 = float(line_split[5])*toEnergy
+            index6 = float(line_split[6])*toEnergy
+
+            dihedral = [ index2, index3, index4, index5, index6 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "charmm":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = int(line_split[3])
+            index4 = float(line_split[4])*toRadians
+            index5 = float(line_split[5])
+
+            dihedral = [ index2, index3, index4, index5 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "opls":   # OPLS aa
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toEnergy
+            index4 = float(line_split[4])*toEnergy
+            index5 = float(line_split[5])*toEnergy
+
+            dihedral = [ index2, index3, index4, index5 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "helix":
+            index1 = int(line_split[1])
+            index2 = float(line_split[2])*toEnergy
+            index3 = float(line_split[3])*toEnergy
+            index4 = float(line_split[4])*toEnergy
+
+            dihedral = [ index2, index3, index4 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
     return list_of_dihedrals
 
 
@@ -454,27 +601,6 @@ def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT A
     var = [i for i in var if not i.startswith('f_') and not i.startswith('v_') and not i.startswith('c_')]
 
     return (var, thermo_style)
-
-
-################################################################################################################################
-
-def readUnits():  # HERE I READ THE UNITS STYLE
-
-    units_filter = filter(lambda x: fnmatch.fnmatch(x, '*units*'), storeInput)
-
-    units = []
-    for line in units_filter:
-            line_split = line.split()
-            unitsKey  = line_split[0]
-            unitsType = line_split[1]
-
-    units = [unitsKey, unitsType]
-
-    unitsDict = { unitsKey : unitsType }
-
-    return (unitsDict, unitsType)
-
-unitsDict, unitsType = readUnits()
 
 
 ################################################################################################################################
