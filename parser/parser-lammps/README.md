@@ -4,3 +4,4 @@
 - LAMMPSParserLog.py --> Subparser for the LAMMPS log file
 - LAMMPSParserTraj.py --> Subparser for LAMMPS (ASCII) trajectory files of format 'lammpstrj', 'xyz' and 'atom'
 - LAMMPSParserMDTraj.py --> Subparser for binary trajectory files of format 'dcd' and 'xtc' 
+- LAMMPSParserUnitConversion.py --> Stores LAMMPS unit conversion costants 
