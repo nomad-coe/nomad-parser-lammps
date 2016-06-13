@@ -313,6 +313,7 @@ def parse(fName):
                     for i in range(lj_types):
                         int_index_store.append(ljs_dict[i][1])
                         int_param_store.append(list_of_ljs[i][1])
+                        # int_param_store.append([list_of_ljs[i][1][0]*toEnergy, list_of_ljs[i][1][1]*toDistance])
 
                     interaction_atom_to_atom_type_ref = []
                     if all(isinstance(elem, list) for elem in int_index_store) == False:
@@ -731,12 +732,35 @@ def parse(fName):
             atomPosInit.append(storeAtPos)
 
 
-        H = 0
-        C = 0
-        N = 0
-        O = 0
-        P = 0
-        S = 0
+        H  = 0
+        C  = 0
+        N  = 0
+        O  = 0
+        P  = 0
+        S  = 0
+        He = 0
+        Ne = 0
+        Ar = 0
+        B  = 0
+        F  = 0
+        Cl = 0
+        Br = 0
+        Na = 0
+        K  = 0
+        Al = 0
+        Si = 0
+        Ti = 0
+        V  = 0
+        Cr = 0
+        Mn = 0
+        Fe = 0
+        Co = 0
+        Ni = 0
+        Cu = 0
+        Zn = 0
+        Ag = 0
+        Au = 0
+
         for i, at in enumerate(atomAtLabel):  # converting atomic number to atom_labels
             if at == 1:
                 H += 1
@@ -752,11 +776,76 @@ def parse(fName):
                 atomAtLabel[i] = 'O' + '  ' + str(O) # oxygen
             if at == 9:
                 P += 1
-                atomAtLabel[i] = 'P' + '  ' + str(P) # phospho
+                atomAtLabel[i] = 'P' + '  ' + str(P) # phosphorus
             if at == 16:
                 S += 1
                 atomAtLabel[i] = 'S' + '  ' + str(S) # sulfur
-
+            if at == 2:
+                He += 1
+                atomAtLabel[i] = 'He' + '  ' + str(He) # helium
+            if at == 10:
+                Ne += 1
+                atomAtLabel[i] = 'Ne' + '  ' + str(Ne) # neon
+            if at == 18:
+                Ar += 1
+                atomAtLabel[i] = 'Ar' + '  ' + str(Ar) # argon
+            if at == 5:
+                B += 1
+                atomAtLabel[i] = 'B' + '  ' + str(B) # boron
+            if at == 9:
+                F += 1
+                atomAtLabel[i] = 'F' + '  ' + str(F) # fluorine
+            if at == 17:
+                Cl += 1
+                atomAtLabel[i] = 'Cl' + '  ' + str(Cl) # chlorine
+            if at == 35:
+                Br += 1
+                atomAtLabel[i] = 'Br' + '  ' + str(Br) # bromine
+            if at == 11:
+                Na += 1
+                atomAtLabel[i] = 'Na' + '  ' + str(Na) # sodium
+            if at == 19:
+                K += 1
+                atomAtLabel[i] = 'K' + '  ' + str(K) # potassium
+            if at == 13:
+                Al += 1
+                atomAtLabel[i] = 'Al' + '  ' + str(Al) # aluminium
+            if at == 14:
+                Si += 1
+                atomAtLabel[i] = 'Si' + '  ' + str(Si) # silicon
+            if at == 22:
+                Ti += 1
+                atomAtLabel[i] = 'Ti' + '  ' + str(Ti) # titanium
+            if at == 23:
+                V += 1
+                atomAtLabel[i] = 'V' + '  ' + str(V) # vanadium
+            if at == 24:
+                Cr += 1
+                atomAtLabel[i] = 'Cr' + '  ' + str(Cr) # chromium
+            if at == 25:
+                Mn += 1
+                atomAtLabel[i] = 'Mn' + '  ' + str(Mn) # manganese
+            if at == 26:
+                Fe += 1
+                atomAtLabel[i] = 'Fe' + '  ' + str(Fe) # iron
+            if at == 27:
+                Co += 1
+                atomAtLabel[i] = 'Co' + '  ' + str(Co) # cobalt
+            if at == 28:
+                Ni += 1
+                atomAtLabel[i] = 'Ni' + '  ' + str(Ni) # nickel
+            if at == 29:
+                Cu += 1
+                atomAtLabel[i] = 'Cu' + '  ' + str(Cu) # copper
+            if at == 30:
+                Zn += 1
+                atomAtLabel[i] = 'Zn' + '  ' + str(Zn) # zinc
+            if at == 47:
+                Ag += 1
+                atomAtLabel[i] = 'Ag' + '  ' + str(Ag) # silver
+            if at == 79:
+                Au += 1
+                atomAtLabel[i] = 'Au' + '  ' + str(Au) # gold
 
 
         #### INITIAL CONFIGURATION TO BACKEND (ONLY IF A TRAJECTORY IS NOT FOUND)
@@ -980,7 +1069,7 @@ def parse(fName):
                     with o(p,'section_system'):
 
                         temp_simulation_cell = list()
-                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ]
+                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ] ### dcd uses nanometers
                         p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
 
                         temp_atom_positions = list()
@@ -1018,7 +1107,7 @@ def parse(fName):
                     with o(p,'section_system'):
 
                         temp_simulation_cell = list()
-                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ]
+                        temp_simulation_cell = [ [ dim*(1e-9) for dim in box ] for box in MDTrajSimulationCell[i] ] ### xtc uses nanometers
                         p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
 
                         temp_atom_positions = list()
