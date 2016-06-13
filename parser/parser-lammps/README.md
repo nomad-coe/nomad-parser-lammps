@@ -1,0 +1,6 @@
+- LAMMPSParserControl.py --> Main parser, collecting and sending to the backend all that is parsed by the ancillary subparser 
+- LAMMPSParserInput.py --> Subparser for the LAMMPS input file (where, tipically, the simulation parameters are set)
+- LAMMPSParserData.py --> Subparser for the LAMMPS topology file
+- LAMMPSParserLog.py --> Subparser for the LAMMPS log file
+- LAMMPSParserTraj.py --> Subparser for LAMMPS (ASCII) trajectory files of format 'lammpstrj', 'xyz' and 'atom'
+- LAMMPSParserMDTraj.py --> Subparser for binary trajectory files of format 'dcd' and 'xtc' 
