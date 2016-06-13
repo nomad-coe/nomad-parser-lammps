@@ -26,3 +26,10 @@ LAMMPS input/output files can be parsed with:
 
 ## Test Files
 Example input/output files of LAMMPS can be found in the directory test/examples.
+
+    - /methane/                 : NVT simulation on pure CH4 with different logging styles (see input file name)
+    - /methane_MD_traj/         : NVT simulation on pure CH4 with different trajectory styles (see input file name)
+    - /hexane_cyclohexane/      : NVT simulation on a binary (equimolar mixture)
+    - /1_methyl_naphthalene/    : NVT simualtion on pure 1-methylnaphthalene (no trajectory)    
+
+
