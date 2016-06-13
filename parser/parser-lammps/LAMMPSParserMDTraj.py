@@ -2,16 +2,16 @@ import os, sys
 import mdtraj as md
 
 
-def MDTrajParser(fNameTraj):
+def MDTrajParser(fNameTraj,trajDumpStyle):
 
     skipMDtraj = False
-    if fNameTraj and (fNameTraj.endswith("atom") or fNameTraj.endswith("xyz") or fNameTraj.endswith("lammpstrj")):  ## these trajectory styles are handled by LAMMPSParserTraj.py
+    if fNameTraj and (trajDumpStyle == "atom" or trajDumpStyle == "xyz" or trajDumpStyle == "lammpstrj"):  ## these trajectory styles are handled by LAMMPSParserTraj.py
         skipMDtraj = True
 
     if fNameTraj and skipMDtraj == False:
 
         ### LOADING TRAJECTORY AND TOPOLOGY
-        mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
+        mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb') ### top.pdb is a pdb topology for the current system, created within LAMMPSParserData.py
         mdTopology = md.load_topology('top.pdb')
         ###
 

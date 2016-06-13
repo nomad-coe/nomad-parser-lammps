@@ -1053,7 +1053,7 @@ def parse(fName):
 
 ########################################################################################################################
 
-        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj)  ### load trajectory data extracted by MDTraj
+        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj,trajDumpStyle)  ### load trajectory data extracted by MDTraj
 
 ########################################################################################################################
 
