@@ -1,18 +1,23 @@
 import fnmatch
 import os, sys, copy, tempfile
-from LAMMPSParserInput import readDumpFileName
+from LAMMPSParserInput import readDataFileName, readDumpFileName
 
+fNameData = readDataFileName()
 fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
 
 examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
 #examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
-# FIRST I FIND THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
-for file in os.listdir(examplesPath):
-    if fnmatch.fnmatch(file, '*data.*'):
-       n = file
+# FIRST I FIND THE LAMMPS TOPOLOGY DATA FILE
+if fNameData:
+    lines = open(examplesPath + '/' + fNameData).readlines()
 
-lines = open(examplesPath + '/' + n).readlines()
+else:
+    for file in os.listdir(examplesPath):
+        if fnmatch.fnmatch(file, '*data.*'):
+            n = file
+
+        lines = open(examplesPath + '/' + n).readlines()
 
 
 ########################################################################################################################

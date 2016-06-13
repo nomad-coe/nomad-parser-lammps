@@ -63,7 +63,7 @@ storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR 
 
 ################################################################################################################################
 
-def readLogFileName():
+def readLogFileName():   ### here I pick the name of the log file storing the logged thermodynamic information
 
     log_filter = filter(lambda x: x.startswith("log"), storeInput)
 
@@ -79,7 +79,8 @@ def readLogFileName():
     return logFileName
 
 
-def readDumpFileName():
+def readDumpFileName():   ### NOTA BENE: we might have more that one dump file (for now we consider just one,
+                          ### which is the trajectiory file)
 
     dump_filter = filter(lambda x: x.startswith("dump "), storeInput)
 
@@ -94,6 +95,19 @@ def readDumpFileName():
         trajDumpStyle   = line_split[3]
 
     return (dumpFileName, stepsPrintFrame, trajDumpStyle)
+
+
+def readDataFileName():   ### here I pick the name of the LAMMPS topology data file
+
+    data_filter = filter(lambda x: x.startswith("read_data "), storeInput)
+
+    dataFileName = None
+    for line in data_filter:
+        line_split = line.split()
+
+        dataFileName = line_split[1]
+
+    return (dataFileName)
 
 ################################################################################################################################
 

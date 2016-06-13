@@ -3,7 +3,7 @@ units real
 boundary p p p
 atom_style full
 
-read_restart naph_min.restart
+read_data data.1_methyl_naphthalene
 
 kspace_style pppm 1.0e-6 
 

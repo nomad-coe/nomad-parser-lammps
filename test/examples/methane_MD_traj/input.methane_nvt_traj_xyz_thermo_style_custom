@@ -3,7 +3,7 @@ units real
 boundary p p p
 atom_style full
 
-read_restart 64xmethane-nvt.restart
+read_data data.64xmethane_from_restart
 
 # interaction styles
 pair_style lj/cut/coul/cut 12.0
