@@ -324,11 +324,8 @@ def parse(fName):
 
                     else:
                         for line in int_index_store:
-                            try:
-                                temp = map(lambda x:x-1, line)
-                                interaction_atom_to_atom_type_ref.append(temp)
-                            except TypeError:
-                                pass
+                            temp = map(lambda x:x-1, line)
+                            interaction_atom_to_atom_type_ref.append(temp)
 
                     # p.addValue('interaction_atoms', int_index_store)
                     p.addArrayValues('x_lammps_pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
@@ -556,12 +553,9 @@ def parse(fName):
 
                             for z in range(lj_types):
 
-                                try:
-                                    if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
-                                        int_index_store.append(ljs_dict[z][1])
-                                        int_param_store.append(list_of_ljs[z][1])
-                                except IndexError:
-                                    pass
+                                if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
+                                    int_index_store.append(ljs_dict[z][1])
+                                    int_param_store.append(list_of_ljs[z][1])
 
                             interaction_atom_to_atom_type_ref = []
                             if all(isinstance(elem, list) for elem in int_index_store) == False:

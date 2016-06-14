@@ -417,23 +417,20 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
             pass
 
 
-        if pairFunctional not in [supportedLJFunct, supportedGROMACSFunct, supportedCHARMMFunct]:
-
-            index += 1
-
-        # creat a list
-            lj_coeff = ['non supported pair style']
-            at_types.append(lj_coeff)
-
-        # create dictionaries
-            lj_pair = { index : ['non supported pair style'] }
-            ljs_dict.update(lj_pair)
-
-            lj_param = { index : ['non supported pair style']}
-            list_of_ljs.update(lj_param)
-
-
-            pass
+        # if pairFunctional not in [supportedLJFunct, supportedGROMACSFunct, supportedCHARMMFunct]:
+        #
+        #     index += 1
+        #
+        # # creat a list
+        #     lj_coeff = ['non supported pair style']
+        #     at_types.append(lj_coeff)
+        #
+        # # create dictionaries
+        #     lj_pair = { index : ['non supported pair style'] }
+        #     ljs_dict.update(lj_pair)
+        #
+        #     lj_param = { index : ['non supported pair style']}
+        #     list_of_ljs.update(lj_param)
 
 
     if updateAtomTypes:  # here I create pair styles including the new atom types (to account for atoms of the same type, but with different partial charges)
@@ -442,10 +439,14 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
             if line[0] != line[1]:
 
                 list_of_ljs.setdefault(line[1], [])
-                list_of_ljs[line[1]].append(list_of_ljs[line[0]][0])
+                try:
+                    list_of_ljs[line[1]].append(list_of_ljs[line[0]][0])
+                except KeyError:
+                    pass
+
                 try:
                     list_of_ljs[line[1]].append(list_of_ljs[line[0]][1])
-                except IndexError:
+                except KeyError:
                     pass
 
                 ljs_dict.setdefault(line[1], [])
