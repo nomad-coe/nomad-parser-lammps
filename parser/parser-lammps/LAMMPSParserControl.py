@@ -80,7 +80,7 @@ def parse(fName):
             mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0)) # ordering atomic partial charges
 
-            updateAtomTypes = []
+            updateAtomTypes = []  ### to account for atoms with the same type in the topology, but with different partial charges
             if new_mass_list:
                 for i in range(len(mass_list)):
                     updateAtomTypes.append([ new_mass_list[i][0], mass_list[i][0] ])
@@ -94,7 +94,8 @@ def parse(fName):
 
             # collecting list of force field functional styles
             list_of_styles = readStyles()
-            pairFunctional = list_of_styles.get('pair_style')
+            pairFunctionalAndCutOff = list_of_styles.get('pair_style')  ### pair interactions style LAMMPS name + cutoff
+            pairFunctional = pairFunctionalAndCutOff[0]                 ### pair interactions style LAMMPS name only
             bondFunctional = list_of_styles.get('bond_style')
             angleFunctional = list_of_styles.get('angle_style')
             dihedralFunctional = list_of_styles.get('dihedral_style')
@@ -125,7 +126,7 @@ def parse(fName):
             ###
 
             # collecting dispersion interactions ff terms
-            list_of_ljs, ljs_dict  = readPairCoeff(updateAtomTypes)
+            list_of_ljs, ljs_dict  = readPairCoeff(updateAtomTypes, pairFunctional)
             ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
             list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
@@ -306,8 +307,8 @@ def parse(fName):
                     p.addValue('x_lammps_number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
                     p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
 
-                    if pairFunctional:
-                        p.addValue('interaction_kind', str(pairFunctional))  # functional form of the interaction   TO BE CHECKED LATER
+                    if pairFunctionalAndCutOff:
+                        p.addValue('interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radius included)
 
                     int_index_store = []
                     int_param_store = []
@@ -323,8 +324,11 @@ def parse(fName):
 
                     else:
                         for line in int_index_store:
-                            temp = map(lambda x:x-1, line)
-                            interaction_atom_to_atom_type_ref.append(temp)
+                            try:
+                                temp = map(lambda x:x-1, line)
+                                interaction_atom_to_atom_type_ref.append(temp)
+                            except TypeError:
+                                pass
 
                     # p.addValue('interaction_atoms', int_index_store)
                     p.addArrayValues('x_lammps_pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
@@ -544,17 +548,20 @@ def parse(fName):
 
                         with o(p, 'section_molecule_interaction'):
 
-                            if pairFunctional:
-                                p.addValue('molecule_interaction_kind', str(pairFunctional))  # functional form of the interaction
+                            if pairFunctionalAndCutOff:
+                                p.addValue('molecule_interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radous included)
 
                             int_index_store = []
                             int_param_store = []
 
                             for z in range(lj_types):
 
-                                if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
-                                    int_index_store.append(ljs_dict[z][1])
-                                    int_param_store.append(list_of_ljs[z][1])
+                                try:
+                                    if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
+                                        int_index_store.append(ljs_dict[z][1])
+                                        int_param_store.append(list_of_ljs[z][1])
+                                except IndexError:
+                                    pass
 
                             interaction_atom_to_atom_type_ref = []
                             if all(isinstance(elem, list) for elem in int_index_store) == False:

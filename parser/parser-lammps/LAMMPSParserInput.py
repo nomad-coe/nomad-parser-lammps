@@ -51,9 +51,10 @@ for i in range(0, len(var_name)):
     storeInput = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in storeInput]
 
 storeInput = map(' '.join, storeInput)
-storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR COMMENT LINES
+storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR COMMENTED LINES
 
-#print storeInput
+
+
 
 ################################################################################################################################
 
@@ -81,6 +82,7 @@ def readUnits():  # HERE I READ THE UNITS STYLE
 
 unitsDict, unitsType = readUnits()
 
+
 #########################################################################################################################################################
 # LOAD UNIT CONVERSION
 
@@ -106,6 +108,8 @@ def readLogFileName():   ### here I pick the name of the log file storing the lo
     return logFileName
 
 
+################################################################################################################################
+
 def readDumpFileName():   ### NOTA BENE: we might have more that one dump file (for now we consider just one,
                           ### which is the trajectiory file)
 
@@ -124,6 +128,8 @@ def readDumpFileName():   ### NOTA BENE: we might have more that one dump file (
     return (dumpFileName, stepsPrintFrame, trajDumpStyle)
 
 
+################################################################################################################################
+
 def readDataFileName():   ### here I pick the name of the LAMMPS topology data file
 
     data_filter = filter(lambda x: x.startswith("read_data "), storeInput)
@@ -135,6 +141,7 @@ def readDataFileName():   ### here I pick the name of the LAMMPS topology data f
         dataFileName = line_split[1]
 
     return (dataFileName)
+
 
 ################################################################################################################################
 
@@ -230,6 +237,8 @@ def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT
 	return (ensemble, sampling)
 
 
+################################################################################################################################
+
 def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES ARE READ
 
     target_t       = 0
@@ -262,7 +271,6 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
             langevin_gamma = float(line_split[6])
 
     return (target_t, thermo_tau, langevin_gamma, target_p, baro_tau)
-
 
 
 ################################################################################################################################
@@ -298,9 +306,20 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
 
 int_type, tstep, steps = readIntegratorSettings()
 
+
 ################################################################################################################################
 
-def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
+def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
+
+    # this currently gather pair coefficients for pairFunctional reported in the list of strings below
+
+    supportedLJFunct      = ['lj/cut', 'lj/cut/coul/cut', 'lj/cut/coul/long', 'lj/cut/coul/debye',
+                             'lj/cut/coul/dsf', 'lj/cut/coul/msm', 'lj/cut/tip4p/cut', 'lj/cut/tip4p/long']
+
+    supportedCHARMMFunct  = ['lj/charmm/coul/charmm', 'lj/charmm/coul/charmm/implicit', 'lj/charmm/coul/long',
+                             'lj/charmm/coul/msm']
+
+    supportedGROMACSFunct = ['lj/gromacs', 'lj/gromacs/coul/gromacs']
 
     lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
 
@@ -311,53 +330,129 @@ def readPairCoeff(updateAtomTypes):  # HERE WE COLLECT PAIR COEFFICIENTS (LJ)
     for line in lj_filt:
         line_split = line.split()
 
-        index += 1
-        atom1 = int(line_split[1])
-        atom2 = int(line_split[2])
 
-        coeff = []
-        for i in range(3, len(line_split)):  # this reads several pair styles coeffs with explicit cutoff (not for ReaxFF)
-            if "#" in line_split[i]:
-                        break
+        if pairFunctional in supportedLJFunct:
+            index += 1
+            atom1 = int(line_split[1])   # pair atom type 1
+            atom2 = int(line_split[2])   # pair atom type 2
+            eps   = float(line_split[3])*toEnergy     # epsilon
+            sigma = float(line_split[4])*toDistance   # sigma
 
-            try:
-                param = float(line_split[i])
-                coeff.append(param)
-            except ValueError:
-                    param = line_split[i]
-                    coeff.append(param)
+            coeff = [eps, sigma]
 
-        #index3 = float(line_split[3])
-        #index4 = float(line_split[4])
+            for i in range(5, len(line_split)):  # if another float is present, it is the pair style cutoff(s) for this pair interaction
+                if "#" in line_split[i]:
+                            break
 
-    # creat a list
-        lj_coeff = [atom1, atom2, coeff]
-        at_types.append(lj_coeff)
+                try:
+                    rad = float(line_split[i])*toDistance
+                    coeff.append(rad)
+                except ValueError:
+                        pass
 
-    # create dictionaries
-        lj_pair = { index : [atom1, atom2] }
-        ljs_dict.update(lj_pair)
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types.append(lj_coeff)
 
-        lj_param = {index : coeff}
-        list_of_ljs.update(lj_param)
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
 
 
-    if updateAtomTypes:
+        if pairFunctional in supportedCHARMMFunct:
+            index += 1
+            atom1 = int(line_split[1])   # pair atom type 1
+            atom2 = int(line_split[2])   # pair atom type 2
+            eps   = float(line_split[3])*toEnergy     # epsilon
+            sigma = float(line_split[4])*toDistance   # sigma
+            eps14   = float(line_split[5])*toEnergy     # epsilon 1-4
+            sigma14 = float(line_split[6])*toDistance   # sigma   1-4
+
+            coeff = [eps, sigma, eps14, sigma14]
+
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
+
+
+        if pairFunctional in supportedGROMACSFunct:
+            index += 1
+            atom1 = int(line_split[1])   # pair atom type 1
+            atom2 = int(line_split[2])   # pair atom type 2
+            eps   = float(line_split[3])*toEnergy     # epsilon
+            sigma = float(line_split[4])*toDistance   # sigma
+            inner = float(line_split[5])*toDistance   # inner sigma
+            outer = float(line_split[6])*toDistance   # outer sigma
+
+            coeff = [eps, sigma, eps14, sigma14]
+
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
+
+
+        if pairFunctional not in [supportedLJFunct, supportedGROMACSFunct, supportedCHARMMFunct]:
+
+            index += 1
+
+        # creat a list
+            lj_coeff = ['non supported pair style']
+            at_types.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : ['non supported pair style'] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = { index : ['non supported pair style']}
+            list_of_ljs.update(lj_param)
+
+
+            pass
+
+
+    if updateAtomTypes:  # here I create pair styles including the new atom types (to account for atoms of the same type, but with different partial charges)
 
         for line in updateAtomTypes:
             if line[0] != line[1]:
 
                 list_of_ljs.setdefault(line[1], [])
                 list_of_ljs[line[1]].append(list_of_ljs[line[0]][0])
-                list_of_ljs[line[1]].append(list_of_ljs[line[0]][1])
+                try:
+                    list_of_ljs[line[1]].append(list_of_ljs[line[0]][1])
+                except IndexError:
+                    pass
 
                 ljs_dict.setdefault(line[1], [])
                 ljs_dict[line[1]].append(line[1])
                 ljs_dict[line[1]].append(line[1])
 
-    #print list_of_ljs, ljs_dict, updateAtomTypes, '#######'
 
-    #list_of_ljs = { "Pair coefficients" : list_of_ljs}
     return (list_of_ljs, ljs_dict)
 
 
@@ -627,6 +722,6 @@ def simulationTime():
 
     return (frame_length, time_length, stepsPrintThermo, integrationSteps)
 
-
+################################################################################################################################
 
 
