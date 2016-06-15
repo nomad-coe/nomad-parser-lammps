@@ -8,7 +8,8 @@ from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals
                               simulationTime, readDumpFileName, readUnits
 
 from LAMMPSParserData import readChargeAndMass, assignBonds, assignAngles, assignDihedrals, assignMolecules, \
-                              numberOfTopologyAtoms
+                             numberOfTopologyAtoms, readBondsFromData, readAnglesFromData, readDihedralsFromData, \
+                             readPairCoeffFromData
 
 from LAMMPSParserLog import logFileOpen
 
@@ -139,6 +140,31 @@ def parse(fName):
             lj_types = len(ljs_dict)
             ###
             ####################################################################################################################################################################################################################################
+
+            # FF DEFINITION CAN BE SET WITHIN THE LAMMPS TOPOLOGY (DATA) FILE
+
+            if not list_of_bonds:
+                list_of_bonds = readBondsFromData(bondFunctional)
+                list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
+
+
+            if not list_of_angles:
+                list_of_angles = readAnglesFromData(angleFunctional)
+                list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
+
+
+            if not list_of_dihedrals:
+                list_of_dihedrals = readDihedralsFromData(dihedralFunctional)
+                list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
+
+
+            if not list_of_ljs:
+                list_of_ljs, ljs_dict = readPairCoeffFromData(updateAtomTypes, pairFunctional)
+                ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
+                list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
+                lj_types = len(ljs_dict)
+
+
 
 
             #### BASIC TOPOLOGY INFORMATION IN section_topology ################################################################################################################################################################################
@@ -965,7 +991,10 @@ def parse(fName):
 
 ########################################################################################################################
 
-        MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj,trajDumpStyle)  ### load trajectory data extracted by MDTraj
+        if skipTraj == False:
+            MDTrajAtomPosition, MDTrajSimulationCell = MDTrajParser(fNameTraj,trajDumpStyle)  ### load trajectory data extracted by MDTraj
+        else:
+            os.remove('top.pdb')  # remove the temporary .pdb topology (required to load a traj file through MDTraj)
 
 ########################################################################################################################
 

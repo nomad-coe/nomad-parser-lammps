@@ -3,7 +3,6 @@ import os, sys
 from LAMMPSParserUnitConversion import unitConversion
 
 
-#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 ########################################################################################################################
 # FIRST I OPEN THE LAMMPS INPUT FILE TO READ UNITS STYLE AND THE LIST OF LOGGED THERMO VARIABLES
 ########################################################################################################################
@@ -433,7 +432,7 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
         #     list_of_ljs.update(lj_param)
 
 
-    if updateAtomTypes:  # here I create pair styles including the new atom types (to account for atoms of the same type, but with different partial charges)
+    if updateAtomTypes and lj_filt:  # here I create pair styles including the new atom types (to account for atoms of the same type, but with different partial charges)
 
         for line in updateAtomTypes:
             if line[0] != line[1]:

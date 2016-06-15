@@ -18,12 +18,14 @@ if fNameTraj:  # if the trajectory file name is defined within the input file, o
     try:
         traj = open(examplesPath + '/' + n).readlines()
     except IOError:
-        pass
+        traj = []
 else:
     traj = []
 
 def trajFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
-    skipTraj = True
+    if not traj:
+        skipTraj = True
+
     if traj and stepsPrintFrame == stepsPrintThermo: # also checks if the thermo and trajectory output settings are consistent  <=== NOTA BENE
         skipTraj = False                             # FOR NOW, I PARSE THE TRAJ ONLY IF THERMO OUTPUTS AND MD FRAMES ARE PRINTED
                                                      # WITH THE SAME FREQUENCY

@@ -4,7 +4,6 @@ import numpy as np
 from LAMMPSParserInput import readLoggedThermoOutput, readLogFileName
 
 examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
-#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
 ########################################################################################################################
 ########################################################################################################################
@@ -23,6 +22,9 @@ if logFileName:  # if the output log file name is defined within the input file,
     except IOError:
         pass
 
+########################################################################################################################
+########################################################################################################################
+###  THE CODE BELOW TEST SPECIFIC ONLY (CAN BE NEGLECTED/COMMENTED)
 
 if sys.argv[1].endswith("1_methyl_naphthalene"):
     extFile = "naph_298_396_20ns"
@@ -39,14 +41,15 @@ if sys.argv[1].endswith("one"):
 if sys.argv[1].endswith("custom"):
     extFile = "-thermo_style_custom"
 
-########################################################################################################################
-########################################################################################################################
-# HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
 
+# HERE THE THERMO OUTPUT LOG FILE IS READ AND STORED *IF FOUND*
 for file in os.listdir(examplesPath):
     if file.endswith(extFile):
         n = file
-        storedOutput = open(examplesPath + '/' + n).readlines()    # storing the output log file in the list "storedOutput"
+        storedOutput = open(examplesPath + '/' + n).readlines() # storing the output log file in the list "storedOutput"
+
+########################################################################################################################
+########################################################################################################################
 
 def logFileOpen():  # skip section_frame_sequence if an output log file is not found, i.e., storedOutput = None
     skipThermo = True
@@ -60,9 +63,11 @@ skip = logFileOpen()
 var, thermo_style = readLoggedThermoOutput()   # var = list of output varibles defined when thermo_style = custom
                                                # thermo_style =  output style read in the lammps input file
 
+
+
 ########################################################################################################################
 ########################################################################################################################
-# NAME CONVENTION (AS IN LAMMPS)
+# THERMO VARIABLE NAME CONVENTION (AS IN LAMMPS)
 
 # ke    = Kinetic Energy    (defined in section_frame_sequence)
 # pe    = Potential Energy  (defined in section_frame_sequence)

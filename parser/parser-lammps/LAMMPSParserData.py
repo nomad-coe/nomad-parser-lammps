@@ -1,6 +1,8 @@
 import fnmatch
 import os, sys, copy, tempfile
-from LAMMPSParserInput import readDataFileName, readDumpFileName
+from LAMMPSParserInput import readDataFileName, readDumpFileName, readUnits
+from LAMMPSParserUnitConversion import unitConversion
+
 
 fNameData = readDataFileName()                                 ### reading topology data file name from LAMMPS input
 fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName() ### reading topology data file name from LAMMPS input
@@ -56,6 +58,16 @@ for line in data:
             bd_types = int(line[0])  # NUMBER OF BOND TYPES
 
 for line in data:
+    if "angle" in line:
+        if "types" in line:
+            ag_types = int(line[0])  # NUMBER OF ANGLE TYPES
+
+for line in data:
+    if "dihedral" in line:
+        if "types" in line:
+            dh_types = int(line[0])  # NUMBER OF DIHEDRAL TYPES
+
+for line in data:
     if "bonds" in line:
         if len(line)==2:
             bd_count = int(line[0])  # NUMBER OF BONDS
@@ -109,6 +121,14 @@ for i in range(0, len(data)):
             dihedral_list.append(dh)
 dihedral_list.sort(key=lambda x: int(x[0]))
             
+#########################################################################################################################################################
+# LOAD UNIT CONVERSION
+
+unitsDict, unitsType = readUnits()
+toMass,toDistance,toTime,toEnergy,toVelocity,toForce,toTorque,toTemp,toPress,toDynVisc,toCharge,toDipole,toElField,toDensity = unitConversion(unitsType)
+toRadians = 0.0174533  # multiply to convert deg to rad
+
+#########################################################################################################################################################
 
 ########################################################################################################################
 # CREATE A .pdb TOPOLOGY TO BE FED TO MDTraj  (a topology file is required to read binary trajectory files)
@@ -299,6 +319,392 @@ def readChargeAndMass():  ### here we record atomic masses and partial charges
     return (charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list, atomLabelling)
 
 #print topo_list_new
+
+
+
+########################################################################################################################
+def readBondsFromData(bondFunctional):
+
+    bond_list = []    #  LIST STORING BOND PARAMETERS
+    for i in range(0, len(data)):
+        if "Bond" in data[i] and "Coeffs" in data[i]:
+
+            for j in range(0, bd_types):
+                bd = data[i+j+1]
+                bond_list.append(bd)
+
+    bond_list.sort(key=lambda x: int(x[0]))
+
+
+    list_of_bonds={}
+    for line in bond_list:
+
+        if bondFunctional == "harmonic":
+            index1 = int(line[0])
+            index2 = float(line[1])*(toEnergy/(toDistance)**2)
+            index3 = float(line[2])*toDistance
+
+            bond = [ index2, index3 ]
+            bond_dict = {index1 : bond }
+            list_of_bonds.update(bond_dict)
+
+
+        if bondFunctional == "class2":   # COMPASS
+            index1 = int(line[0])
+            index2 = float(line[1])*toDistance
+            index3 = float(line[2])*(toEnergy/(toDistance)**2)
+            index4 = float(line[3])*(toEnergy/(toDistance)**3)
+            index5 = float(line[4])*(toEnergy/(toDistance)**4)
+
+            bond = [ index2, index3, index4, index5 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
+
+        if bondFunctional == "nonlinear":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toDistance
+            index4 = float(line[3])*toDistance
+
+            bond = [ index2, index3, index4 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
+
+        if bondFunctional == "morse":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*(1/toDistance)
+            index4 = float(line[3])*toDistance
+
+            bond = [ index2, index3, index4 ]
+            bond_dict = {index1 : bond}
+            list_of_bonds.update(bond_dict)
+
+
+    return list_of_bonds
+
+
+
+########################################################################################################################
+def readAnglesFromData(angleFunctional):
+
+    angle_list = []    #  LIST STORING ANGLE PARAMETERS
+    for i in range(0, len(data)):
+        if "Angle" in data[i] and "Coeffs" in data[i]:
+
+            for j in range(0, ag_types):
+                ag = data[i+j+1]
+                angle_list.append(ag)
+
+    angle_list.sort(key=lambda x: int(x[0]))
+
+
+    list_of_angles={}
+    for line in angle_list:
+
+
+        if angleFunctional == "harmonic":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toRadians
+
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "class2":   # COMPASS
+            pass
+
+
+        if angleFunctional == "charmm":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toRadians
+            index4 = float(line[3])*(toEnergy/(toDistance)**2)
+            index5 = float(line[4])*toDistance
+
+            angle = [ index2, index3, index4, index5 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+
+            angle = [ index2 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/delta":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toRadians
+
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/periodic":   # DREIDING
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = int(line[2])
+            index4 = int(line[3])
+
+            angle = [ index2, index3, index4 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+        if angleFunctional == "cosine/squared":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toRadians
+
+            angle = [ index2, index3 ]
+            angle_dict = {index1 : angle }
+            list_of_angles.update(angle_dict)
+
+
+    return list_of_angles
+
+
+
+########################################################################################################################
+def readDihedralsFromData(dihedralFunctional):
+
+    dihedral_list = []    #  LIST STORING DIHEDRAL PARAMETERS
+    for i in range(0, len(data)):
+        if "Dihedral" in data[i] and "Coeffs" in data[i]:
+
+            for j in range(0, dh_types):
+                dh = data[i+j+1]
+                dihedral_list.append(dh)
+
+    dihedral_list.sort(key=lambda x: int(x[0]))
+
+
+    list_of_dihedrals={}
+    for line in dihedral_list:
+
+
+        if dihedralFunctional == "harmonic":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = int(line[2])
+            index4 = int(line[3])
+
+            dihedral = [ index2, index3, index4 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "class2":   # COMPASS
+            pass
+
+
+        if dihedralFunctional == "multi/harmonic":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toEnergy
+            index4 = float(line[3])*toEnergy
+            index5 = float(line[4])*toEnergy
+            index6 = float(line[5])*toEnergy
+
+            dihedral = [ index2, index3, index4, index5, index6 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "charmm":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = int(line[2])
+            index4 = float(line[3])*toRadians
+            index5 = float(line[4])
+
+            dihedral = [ index2, index3, index4, index5 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "opls":   # OPLS aa
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toEnergy
+            index4 = float(line[3])*toEnergy
+            index5 = float(line[4])*toEnergy
+
+            dihedral = [ index2, index3, index4, index5 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+        if dihedralFunctional == "helix":
+            index1 = int(line[0])
+            index2 = float(line[1])*toEnergy
+            index3 = float(line[2])*toEnergy
+            index4 = float(line[3])*toEnergy
+
+            dihedral = [ index2, index3, index4 ]
+            dihedral_dict = {index1 : dihedral }
+            list_of_dihedrals.update(dihedral_dict)
+
+
+    return list_of_dihedrals
+
+
+
+########################################################################################################################
+def readPairCoeffFromData(updateAtomTypes, pairFunctional):
+
+    lj_list = []    #  LIST STORING ALL PAIR INTERACTION PARAMETERS
+    for i in range(0, len(data)):
+        if "Pair" in data[i] and "Coeffs" in data[i]:
+
+            for j in range(0, at_types):
+                lj = data[i+j+1]
+                lj_list.append(lj)
+
+
+    lj_list.sort(key=lambda x: int(x[0]))
+
+
+    # this currently gather pair coefficients for pairFunctional reported in the list of strings below
+
+    supportedLJFunct      = ['lj/cut', 'lj/cut/coul/cut', 'lj/cut/coul/long', 'lj/cut/coul/debye',
+                             'lj/cut/coul/dsf', 'lj/cut/coul/msm', 'lj/cut/tip4p/cut', 'lj/cut/tip4p/long']
+
+    supportedCHARMMFunct  = ['lj/charmm/coul/charmm', 'lj/charmm/coul/charmm/implicit', 'lj/charmm/coul/long',
+                             'lj/charmm/coul/msm']
+
+    supportedGROMACSFunct = ['lj/gromacs', 'lj/gromacs/coul/gromacs']
+
+
+    list_of_ljs  = {}
+    ljs_dict     = {}
+    at_types_lj  = []
+    index       = 0
+    for line in lj_list:
+
+
+        if pairFunctional in supportedLJFunct:
+            index += 1
+            atom1 = int(line[0])   # pair atom type 1
+            atom2 = int(line[0])   # pair atom type 2
+            eps   = float(line[1])*toEnergy     # epsilon
+            sigma = float(line[2])*toDistance   # sigma
+
+            coeff = [eps, sigma]
+
+            for i in range(4, len(line)):  # if another float is present, it is the pair style cutoff(s) for this pair interaction
+                if "#" in line[i]:
+                            break
+
+                try:
+                    rad = float(line[i])*toDistance
+                    coeff.append(rad)
+                except ValueError:
+                        pass
+
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types_lj.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
+
+
+        if pairFunctional in supportedCHARMMFunct:
+            index += 1
+            atom1 = int(line[0])   # pair atom type 1
+            atom2 = int(line[0])   # pair atom type 2
+            eps   = float(line[2])*toEnergy     # epsilon
+            sigma = float(line[3])*toDistance   # sigma
+            eps14   = float(line[4])*toEnergy     # epsilon 1-4
+            sigma14 = float(line[5])*toDistance   # sigma   1-4
+
+            coeff = [eps, sigma, eps14, sigma14]
+
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types_lj.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
+
+
+        if pairFunctional in supportedGROMACSFunct:
+            index += 1
+            atom1 = int(line[0])   # pair atom type 1
+            atom2 = int(line[0])   # pair atom type 2
+            eps   = float(line[2])*toEnergy     # epsilon
+            sigma = float(line[3])*toDistance   # sigma
+            inner = float(line[4])*toDistance   # inner sigma
+            outer = float(line[5])*toDistance   # outer sigma
+
+            coeff = [eps, sigma, inner, outer]
+
+        # creat a list
+            lj_coeff = [atom1, atom2, coeff]
+            at_types_lj.append(lj_coeff)
+
+        # create dictionaries
+            lj_pair = { index : [atom1, atom2] }
+            ljs_dict.update(lj_pair)
+
+            lj_param = {index : coeff}
+            list_of_ljs.update(lj_param)
+
+        else:
+            pass
+
+
+
+    if updateAtomTypes:  # here I create pair styles including the new atom types (to account for atoms of the same type, but with different partial charges)
+
+        for line in updateAtomTypes:
+            if line[0] != line[1]:
+
+                list_of_ljs.setdefault(line[1], [])
+                try:
+                    list_of_ljs[line[1]].append(list_of_ljs[line[0]][0])
+                except KeyError:
+                    pass
+
+                try:
+                    list_of_ljs[line[1]].append(list_of_ljs[line[0]][1])
+                except KeyError:
+                    pass
+
+                ljs_dict.setdefault(line[1], [])
+                ljs_dict[line[1]].append(line[1])
+                ljs_dict[line[1]].append(line[1])
+
+
+
+    return (list_of_ljs, ljs_dict)
+
+
 
 ########################################################################################################################
 def assignBonds(updateAtomTypes):  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
