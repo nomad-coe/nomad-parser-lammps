@@ -141,7 +141,8 @@ def parse(fName):
             ###
             ####################################################################################################################################################################################################################################
 
-            # FF DEFINITION CAN BE SET WITHIN THE LAMMPS TOPOLOGY (DATA) FILE
+            # FF DEFINITION CAN BE SET WITHIN THE LAMMPS TOPOLOGY (DATA) FILE, here we collect the FF parameters from the .data file
+            # (if they are not provided in the input file)
 
             if not list_of_bonds:
                 list_of_bonds = readBondsFromData(bondFunctional)
@@ -163,8 +164,6 @@ def parse(fName):
                 ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
                 list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
                 lj_types = len(ljs_dict)
-
-
 
 
             #### BASIC TOPOLOGY INFORMATION IN section_topology ################################################################################################################################################################################

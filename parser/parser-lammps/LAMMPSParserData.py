@@ -631,10 +631,10 @@ def readPairCoeffFromData(updateAtomTypes, pairFunctional):
             index += 1
             atom1 = int(line[0])   # pair atom type 1
             atom2 = int(line[0])   # pair atom type 2
-            eps   = float(line[2])*toEnergy     # epsilon
-            sigma = float(line[3])*toDistance   # sigma
-            eps14   = float(line[4])*toEnergy     # epsilon 1-4
-            sigma14 = float(line[5])*toDistance   # sigma   1-4
+            eps   = float(line[1])*toEnergy     # epsilon
+            sigma = float(line[2])*toDistance   # sigma
+            eps14   = float(line[3])*toEnergy     # epsilon 1-4
+            sigma14 = float(line[4])*toDistance   # sigma   1-4
 
             coeff = [eps, sigma, eps14, sigma14]
 
@@ -657,10 +657,10 @@ def readPairCoeffFromData(updateAtomTypes, pairFunctional):
             index += 1
             atom1 = int(line[0])   # pair atom type 1
             atom2 = int(line[0])   # pair atom type 2
-            eps   = float(line[2])*toEnergy     # epsilon
-            sigma = float(line[3])*toDistance   # sigma
-            inner = float(line[4])*toDistance   # inner sigma
-            outer = float(line[5])*toDistance   # outer sigma
+            eps   = float(line[1])*toEnergy     # epsilon
+            sigma = float(line[2])*toDistance   # sigma
+            inner = float(line[3])*toDistance   # inner sigma
+            outer = float(line[4])*toDistance   # outer sigma
 
             coeff = [eps, sigma, inner, outer]
 
