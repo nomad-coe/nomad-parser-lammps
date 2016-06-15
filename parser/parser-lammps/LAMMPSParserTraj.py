@@ -1,5 +1,4 @@
 import numpy as np
-import math as m
 import os, sys
 
 from LAMMPSParserInput import readDumpFileName, simulationTime
@@ -52,13 +51,6 @@ if trajDumpStyle == 'custom' and skipTraj == False:
             if line != []:
                 pass
                 trajTotal.append(line)
-
-
-        # for i in range(len(trajTotal)):  # atom index and type converted to int
-        #     try:
-        #         trajTotal[i][:2] = map(int, trajTotal[i][:2])
-        #     except ValueError:
-        #         pass
 
 
         nofLinesPerFrame = len(trajTotal)/(nofFrames+1)

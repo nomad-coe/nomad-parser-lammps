@@ -87,7 +87,7 @@ unitsDict, unitsType = readUnits()
 # LOAD UNIT CONVERSION
 
 toMass,toDistance,toTime,toEnergy,toVelocity,toForce,toTorque,toTemp,toPress,toDynVisc,toCharge,toDipole,toElField,toDensity = unitConversion(unitsType)
-toRadians = 0.0174533
+toRadians = 0.0174533  # multiply to convert deg to rad
 
 #########################################################################################################################################################
 
@@ -166,7 +166,7 @@ def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, D
     # create a dictionary
             styles_dict = { index1 : index2 }
 
-        elif len(line_split)>2 and line_split[0] != "thermo_style":  # this reads lj/cut, lj/class2, lj/charmm, lj/gromacs, etc. with cutoff
+        elif len(line_split)>2 and line_split[0] != "thermo_style":  # this reads lj/cut, lj/class2, lj/charmm, lj/gromacs, etc. with cutoff/relevant parameters
 
             index1 = str(line_split[0])
             index2 = str(line_split[1])
@@ -400,7 +400,7 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
             inner = float(line_split[5])*toDistance   # inner sigma
             outer = float(line_split[6])*toDistance   # outer sigma
 
-            coeff = [eps, sigma, eps14, sigma14]
+            coeff = [eps, sigma, inner, outer]
 
         # creat a list
             lj_coeff = [atom1, atom2, coeff]
@@ -712,8 +712,8 @@ def simulationTime():
 
         if unitsType == "real":
             time_length = integrationSteps * tstep
-            #time_length = str(time_length) + " ns"
-            #time_length = { "Simulation time" : time_length }
+            # time_length = str(time_length) + " ns"
+            # time_length = { "Simulation time" : time_length }
 
     for line in frame_filt:
         line_split = line.split()

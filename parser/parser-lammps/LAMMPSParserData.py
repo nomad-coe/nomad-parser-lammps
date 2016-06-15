@@ -2,11 +2,10 @@ import fnmatch
 import os, sys, copy, tempfile
 from LAMMPSParserInput import readDataFileName, readDumpFileName
 
-fNameData = readDataFileName()
-fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName()
+fNameData = readDataFileName()                                 ### reading topology data file name from LAMMPS input
+fNameTraj, stepsPrintFrame, trajDumpStyle = readDumpFileName() ### reading topology data file name from LAMMPS input
 
 examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the LAMMPS calculation's directory
-#examplesPath = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../test/examples/methane"))
 
 # FIRST I FIND THE LAMMPS TOPOLOGY DATA FILE
 if fNameData:
@@ -112,23 +111,8 @@ dihedral_list.sort(key=lambda x: int(x[0]))
             
 
 ########################################################################################################################
-# CREATE A .pdb TOPOLOGY TO BE FED TO MDTraj
+# CREATE A .pdb TOPOLOGY TO BE FED TO MDTraj  (a topology file is required to read binary trajectory files)
 
-# noNumb =  re.compile(r'[#A-Za-z]+')
-# topology = []    #  LIST STORING ATOMIC CHARGES AND COORDINATES
-# for i in range(at_count):
-#
-#     topo = topo_list[i]
-#     topo_up = []
-#     for el in topo:
-#
-#         if re.match(noNumb, el) is None:
-#             exc = el
-#             topo_up.append(exc)
-#     topology.append(topo_up)
-
-
-# os.remove('top.pdb')
 with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
     for line in topo_list:
         atID = line[0]
@@ -140,11 +124,6 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
 
         pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.3f'), format(atY, '.3f'), format(atZ, '.3f')))
     os.link(pdb.name, 'top.pdb')
-# os.remove('top.pdb')
-
-# mdTrajectory =  md.load(os.path.dirname(os.path.abspath(sys.argv[1])) + '/' + fNameTraj, top='top.pdb')
-
-# mdTopology = md.load_topology('top.pdb')
 
 
 ########################################################################################################################
@@ -161,7 +140,7 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
 
 # topo_list_new = copy.deepcopy(topo_list)
 
-def readChargeAndMass():
+def readChargeAndMass():  ### here we record atomic masses and partial charges
 
     charge_dict   = {}
     charge_list   = []
@@ -196,7 +175,7 @@ def readChargeAndMass():
                     mass = data[i+j+1]
                     index = int(mass[0])
                     val   = float(mass[1])
-                    val1  = int(val/2)     # REQUIRES DOUBLE CHECK
+                    val1  = int(val/2)     # REQUIRES DOUBLE CHECK  (calculates atomic number for labelling purposes)
 
                     # create list
                     store = [index, val]
@@ -229,7 +208,6 @@ def readChargeAndMass():
 
         #### A SINGLE ATOM TYPE MIGHT HAVE MORE THAN ONE CHARGE (E.G. CARBON IN CH3, CH2, CH, ...)
         #### WITH THE CODE BELOW, WE CREATE A NEW ATOM TYPE WHENEVER A SINGLE ATOM TYPE HAS MORE THAN ONE ASSOCIATED PARTIAL CHARGE
-    #if len(mass_list) != len(charge_list):  #
     if switch == False:
 
         for i in range(0, len(data)):
@@ -817,7 +795,6 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
     return (moleculeTypeInfo, moleculeInfo, moleculeInfoResolved)
 
-#moleculeInfo, moleculeInfoResolved = assignMolecules()
 
 
 

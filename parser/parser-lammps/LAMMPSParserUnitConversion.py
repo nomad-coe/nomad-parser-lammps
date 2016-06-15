@@ -1,3 +1,7 @@
+#  List of unit conversion coefficient for all LAMMPS units styles
+#
+#  Multiply relevant parsed values by "toProperty" to convert to NOMAD units
+#
 def unitConversion(unitsType):
 
     if unitsType == 'real':

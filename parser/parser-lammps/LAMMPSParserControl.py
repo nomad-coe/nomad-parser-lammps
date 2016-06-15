@@ -1,7 +1,6 @@
 import setup_paths
 import numpy as np
-import math, copy
-import operator
+import operator, os
 from contextlib import contextmanager
 
 from LAMMPSParserInput import readEnsemble, readBonds, readAngles, readDihedrals, readPairCoeff, readStyles, \
@@ -21,7 +20,6 @@ from LAMMPSParserUnitConversion import unitConversion
 
 from nomadcore.local_meta_info import loadJsonFile, InfoKindEl
 from nomadcore.parser_backend import JsonParseEventsWriterBackend
-import re, os, sys, json, logging
 
 
 
@@ -81,6 +79,7 @@ def parse(fName):
             charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0)) # ordering atomic partial charges
 
             updateAtomTypes = []  ### to account for atoms with the same type in the topology, but with different partial charges
+                                  ### see function readChargeAndMass in LAMMPSParserData
             if new_mass_list:
                 for i in range(len(mass_list)):
                     updateAtomTypes.append([ new_mass_list[i][0], mass_list[i][0] ])
@@ -89,6 +88,14 @@ def parse(fName):
             ###
 
             # collecting information defining different molecules
+            # LEGEND:
+            # moleculeTypeInfo     --> for each molecule type we store [ molecule type index, atom type each atom in the molecule,
+            #                                                            absolute atom index for the first occurence of this molecule type in the topology ]
+            # moleculeInfo         --> for each molecule we store      [ absoulute molecule index, molecule type, absolute molecular atom index within the topology,
+            #                                                            molecular atom index within the molecule ]
+            # moleculeInfoResolved --> for each topology atom we store [ absolute atom index within the topology, molecule index,
+            #                                                            molecule type index, molecular atom index within the molecule ]
+
             moleculeTypeInfo, moleculeInfo, moleculeInfoResolved = assignMolecules()
             ###
 
@@ -316,7 +323,6 @@ def parse(fName):
                     for i in range(lj_types):
                         int_index_store.append(ljs_dict[i][1])
                         int_param_store.append(list_of_ljs[i][1])
-                        # int_param_store.append([list_of_ljs[i][1][0]*toEnergy, list_of_ljs[i][1][1]*toDistance])
 
                     interaction_atom_to_atom_type_ref = []
                     if all(isinstance(elem, list) for elem in int_index_store) == False:
@@ -617,105 +623,8 @@ def parse(fName):
                 p.addValue('x_lammps_thermostat_target_temperature', target_t*toTemp)
                 p.addValue('x_lammps_langevin_gamma', langevin_gamma*toTime)
 
-        ####################################################################################################################################################################################################################################
+        ########################################################################################################################################################################################################################################
 
-
-        # #### DYNAMICS FRAME INFORMATION IN section_frame_sequece ###########################################################################################################################################################################
-        # ####################################################################################################################################################################################################################################
-        #
-        # skipThermo = logFileOpen()                          # bool var telling if an output log file is open
-        # var, thermo_style = readLoggedThermoOutput()        # collecting the read thermodynamic output
-        # frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()  # frame and simulation time length
-        #
-        # #### THERMO OUTPUTS FOR thermo_style = multi TO THE BACKEND
-        #
-        # if thermo_style == 'multi' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-        #     from LAMMPSParserLog   import readFrames, readPotEnergy, readKinEnergy, readPressure, readVolume
-        #
-        #     with o(p, 'section_frame_sequence'):
-        #         frames_count = readFrames()
-        #         pe = readPotEnergy()
-        #         ke, temp = readKinEnergy()
-        #         press = readPressure()
-        #         vol = readVolume()
-        #
-        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-        #         # p.addValue('number_of_frames_in_sequence', frames_count-1)
-        #         p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
-        #         p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
-        #         p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
-        #         p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
-        #         p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-        #         p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-        #         p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-        #         p.addArrayValues('frame_sequence_pressure', press*toPress)
-        #         p.addArrayValues('frame_sequence_local_frames_ref',np.asarray(refToFrame))
-        #
-        # else:
-        #     pass
-        #
-        #
-        # #### THERMO OUTPUTS FOR thermo_style = custom TO THE BACKEND
-        #
-        # if thermo_style == 'custom' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-        #     from LAMMPSParserLog import pickNOMADVarsCustom
-        #
-        #
-        #     with o(p, 'section_frame_sequence'):
-        #
-        #         ke, pe, press, temp = pickNOMADVarsCustom()
-        #
-        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-        #
-        #         if pe:
-        #             pe = np.asarray(pe)
-        #             p.addValue('frame_sequence_potential_energy_stats', [pe.mean()*toEnergy, pe.std()*toEnergy])
-        #             p.addArrayValues('frame_sequence_potential_energy', pe*toEnergy)
-        #
-        #         if ke:
-        #             ke = np.asarray(ke)
-        #             p.addValue('frame_sequence_kinetic_energy_stats', [ke.mean()*toEnergy, ke.std()*toEnergy])
-        #             p.addArrayValues('frame_sequence_kinetic_energy', ke*toEnergy)
-        #
-        #         if temp:
-        #             temp = np.asarray(temp)
-        #             p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-        #             p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-        #
-        #         if press:
-        #             press = np.asarray(press)
-        #             p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-        #             p.addArrayValues('frame_sequence_pressure', press*toPress)
-        #
-        # else:
-        #     pass
-        #
-        #
-        # #### THERMO OUTPUTS FOR thermo_style = one TO THE BACKEND
-        #
-        # if thermo_style == 'one' and skipThermo == False:   # Open section_frame_sequence only if an output log file is found
-        #     from LAMMPSParserLog import pickNOMADVarsOne
-        #
-        #
-        #     with o(p, 'section_frame_sequence'):
-        #
-        #         press, temp = pickNOMADVarsOne()
-        #         temp = np.asarray(temp)
-        #         press = np.asarray(press)
-        #
-        #         p.addValue('number_of_frames_in_sequence', int(simulation_length / frame_length))
-        #         p.addValue('frame_sequence_time', [frame_length*toTime, simulation_length*toTime])
-        #
-        #         p.addValue('frame_sequence_temperature_stats', [temp.mean()*toTemp, temp.std()*toTemp])
-        #         p.addValue('frame_sequence_pressure_stats', [press.mean()*toPress, press.std()*toPress])
-        #         p.addArrayValues('frame_sequence_temperature', temp*toTemp)
-        #         p.addArrayValues('frame_sequence_pressure', press*toPress)
-        #
-        # else:
-        #     pass
-        #
 
         #### SYSTEM INFORMATION TO section_system ##############################################################################################################################################################################################
         ########################################################################################################################################################################################################################################

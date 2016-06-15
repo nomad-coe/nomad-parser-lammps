@@ -1,6 +1,7 @@
 import os, sys
 import mdtraj as md
 
+# the python module MDTraj is used to parse binary trajectory file formats (e.g., dcd, xtc)
 
 def MDTrajParser(fNameTraj,trajDumpStyle):
 
