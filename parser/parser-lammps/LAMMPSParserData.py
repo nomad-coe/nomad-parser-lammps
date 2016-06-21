@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import fnmatch
 import os, sys, copy, tempfile
 from LAMMPSParserInput import readDataFileName, readDumpFileName, readUnits
@@ -26,7 +30,7 @@ else:
 data = []
 for line in lines:
     line = line.strip('\n' + '').split(' ')
-    line = filter(None, line)
+    line = [_f for _f in line if _f]
 
         # If line is just empty
     if line != []:
@@ -724,7 +728,7 @@ def assignBonds(updateAtomTypes):  # ASSIGNING COVALENT BOND TO ITS ATOM PAIR
             bond_ass_d.update(store)
 
     bond_pairs = []
-    for key, value in bond_ass_d.iteritems():
+    for key, value in bond_ass_d.items():
         temp = value
         bond_pairs.append(temp)
 
@@ -852,7 +856,7 @@ def assignAngles(updateAtomTypes):  # ASSIGNING ANGLE TO ITS ATOM TRIPLET
             angle_ass_d.update(store)
 
     angle_triplets = []
-    for key, value in angle_ass_d.iteritems():
+    for key, value in angle_ass_d.items():
         temp = value
         angle_triplets.append(temp)
 
@@ -972,7 +976,7 @@ def assignDihedrals(updateAtomTypes):  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
             dihedral_ass_d.update(store)
 
     dihedral_quartets = []
-    for key, value in dihedral_ass_d.iteritems():
+    for key, value in dihedral_ass_d.items():
         temp = value
         dihedral_quartets.append(temp)
 

@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import map
+from builtins import range
+from past.utils import old_div
 import numpy as np
 import os, sys
 
@@ -39,7 +43,7 @@ skipTraj = trajFileOpen()
 ########################################################################################################################
 if trajDumpStyle == 'custom' and skipTraj == False:
 
-    nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
+    nofFrames = integrationSteps // stepsPrintFrame  # number of frames in the trajectory file
 
     def readCustomTraj():
 
@@ -47,7 +51,7 @@ if trajDumpStyle == 'custom' and skipTraj == False:
         trajTotal = []
         for line in traj:
             line = line.strip('\n' + '').split(' ')
-            line = filter(None, line)
+            line = [_f for _f in line if _f]
 
             # If line is just empty
             if line != []:
@@ -55,9 +59,9 @@ if trajDumpStyle == 'custom' and skipTraj == False:
                 trajTotal.append(line)
 
 
-        nofLinesPerFrame = len(trajTotal)/(nofFrames+1)
+        nofLinesPerFrame = old_div(len(trajTotal),(nofFrames+1))
 
-        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in xrange(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
+        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in range(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
 
 
         frameHeader = []
@@ -74,7 +78,7 @@ if trajDumpStyle == 'custom' and skipTraj == False:
         for header in frameHeader:         # box boundaries to floating
             for line in header:
                 try:
-                    line[:2] = map(float, line[:2])
+                    line[:2] = list(map(float, line[:2]))
                 except ValueError:
                     pass
 
@@ -274,7 +278,7 @@ if trajDumpStyle == 'custom' and skipTraj == False:
 ########################################################################################################################
 if trajDumpStyle == 'atom' and skipTraj == False:
 
-    nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
+    nofFrames = integrationSteps // stepsPrintFrame  # number of frames in the trajectory file
 
     def readAtomTraj():
 
@@ -282,7 +286,7 @@ if trajDumpStyle == 'atom' and skipTraj == False:
         trajTotal = []
         for line in traj:
             line = line.strip('\n' + '').split(' ')
-            line = filter(None, line)
+            line = [_f for _f in line if _f]
 
             # If line is just empty
             if line != []:
@@ -290,9 +294,9 @@ if trajDumpStyle == 'atom' and skipTraj == False:
                 trajTotal.append(line)
 
 
-        nofLinesPerFrame = len(trajTotal)/(nofFrames+1)
+        nofLinesPerFrame = old_div(len(trajTotal),(nofFrames+1))
 
-        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in xrange(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
+        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in range(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
 
 
         frameHeader = []
@@ -309,7 +313,7 @@ if trajDumpStyle == 'atom' and skipTraj == False:
         for header in frameHeader:         # box boundaries to floating
             for line in header:
                 try:
-                    line[:2] = map(float, line[:2])
+                    line[:2] = [float(x) for x in line[:2]]
                 except ValueError:
                     pass
 
@@ -534,7 +538,7 @@ if trajDumpStyle == 'atom' and skipTraj == False:
 ########################################################################################################################
 if trajDumpStyle == 'xyz' and skipTraj == False:
 
-    nofFrames = integrationSteps/stepsPrintFrame  # number of frames in the trajectory file
+    nofFrames = integrationSteps // stepsPrintFrame  # number of frames in the trajectory file
 
     def readXyzTraj():
 
@@ -542,7 +546,7 @@ if trajDumpStyle == 'xyz' and skipTraj == False:
         trajTotal = []
         for line in traj:
             line = line.strip('\n' + '').split(' ')
-            line = filter(None, line)
+            line = [_f for _f in line if _f]
 
             # If line is just empty
             if line != []:
@@ -555,9 +559,9 @@ if trajDumpStyle == 'xyz' and skipTraj == False:
             atomPositionBool = True
 
 
-        nofLinesPerFrame = len(trajTotal)/(nofFrames+1)
+        nofLinesPerFrame = len(trajTotal) // (nofFrames+1)
 
-        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in xrange(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
+        trajByFrame = [ trajTotal[i:i + nofLinesPerFrame] for i in range(0, len(trajTotal), nofLinesPerFrame) ]  # stepsPrintFrame frame is stored in a list
 
 
         frameHeader = []
@@ -571,7 +575,7 @@ if trajDumpStyle == 'xyz' and skipTraj == False:
         for header in frameHeader:         # number of atoms and step number to integer
             for line in header:
                 try:
-                    line = map(int, line)
+                    line = [int(x) for x in line]
                 except ValueError:
                     pass
 

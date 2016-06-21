@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import setup_paths
 import numpy as np
 import operator, os
@@ -76,8 +80,8 @@ def parse(fName):
 
             # collecting atomic masses
             charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list, atomLabelling  = readChargeAndMass()
-            mass_dict = sorted(mass_dict.items(), key=operator.itemgetter(0))
-            charge_dict = sorted(charge_dict.items(), key=operator.itemgetter(0)) # ordering atomic partial charges
+            mass_dict = sorted(list(mass_dict.items()), key=operator.itemgetter(0))
+            charge_dict = sorted(list(charge_dict.items()), key=operator.itemgetter(0)) # ordering atomic partial charges
 
             updateAtomTypes = []  ### to account for atoms with the same type in the topology, but with different partial charges
                                   ### see function readChargeAndMass in LAMMPSParserData
@@ -111,32 +115,32 @@ def parse(fName):
 
             # collecting covalent bond definitions
             bond_dict, bondTypeList, bond_interaction_atoms  = assignBonds(updateAtomTypes)
-            bond_dict = sorted(bond_dict.items(), key=operator.itemgetter(0))
+            bond_dict = sorted(list(bond_dict.items()), key=operator.itemgetter(0))
             list_of_bonds = readBonds(bondFunctional)
-            list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
+            list_of_bonds = sorted(list(list_of_bonds.items()), key=operator.itemgetter(0))
             bd_types = len(bond_dict)
             ###
 
             # collecting bond angles definitions
             angle_dict, angleTypeList, angle_interaction_atoms  = assignAngles(updateAtomTypes)
-            angle_dict = sorted(angle_dict.items(), key=operator.itemgetter(0))
+            angle_dict = sorted(list(angle_dict.items()), key=operator.itemgetter(0))
             list_of_angles = readAngles(angleFunctional)
-            list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
+            list_of_angles = sorted(list(list_of_angles.items()), key=operator.itemgetter(0))
             ag_types = len(angle_dict)
             ###
 
             # collecting dihedral angles definitions
             dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = assignDihedrals(updateAtomTypes)
-            dihedral_dict = sorted(dihedral_dict.items(), key=operator.itemgetter(0))
+            dihedral_dict = sorted(list(dihedral_dict.items()), key=operator.itemgetter(0))
             list_of_dihedrals = readDihedrals(dihedralFunctional)
-            list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
+            list_of_dihedrals = sorted(list(list_of_dihedrals.items()), key=operator.itemgetter(0))
             dh_types = len(dihedral_dict)
             ###
 
             # collecting dispersion interactions ff terms
             list_of_ljs, ljs_dict  = readPairCoeff(updateAtomTypes, pairFunctional)
-            ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
-            list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
+            ljs_dict = sorted(list(ljs_dict.items()), key=operator.itemgetter(0))
+            list_of_ljs = sorted(list(list_of_ljs.items()), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
             ###
             ####################################################################################################################################################################################################################################
@@ -146,23 +150,23 @@ def parse(fName):
 
             if not list_of_bonds:
                 list_of_bonds = readBondsFromData(bondFunctional)
-                list_of_bonds = sorted(list_of_bonds.items(), key=operator.itemgetter(0))
+                list_of_bonds = sorted(list(list_of_bonds.items()), key=operator.itemgetter(0))
 
 
             if not list_of_angles:
                 list_of_angles = readAnglesFromData(angleFunctional)
-                list_of_angles = sorted(list_of_angles.items(), key=operator.itemgetter(0))
+                list_of_angles = sorted(list(list_of_angles.items()), key=operator.itemgetter(0))
 
 
             if not list_of_dihedrals:
                 list_of_dihedrals = readDihedralsFromData(dihedralFunctional)
-                list_of_dihedrals = sorted(list_of_dihedrals.items(), key=operator.itemgetter(0))
+                list_of_dihedrals = sorted(list(list_of_dihedrals.items()), key=operator.itemgetter(0))
 
 
             if not list_of_ljs:
                 list_of_ljs, ljs_dict = readPairCoeffFromData(updateAtomTypes, pairFunctional)
-                ljs_dict = sorted(ljs_dict.items(), key=operator.itemgetter(0))
-                list_of_ljs = sorted(list_of_ljs.items(), key=operator.itemgetter(0))
+                ljs_dict = sorted(list(ljs_dict.items()), key=operator.itemgetter(0))
+                list_of_ljs = sorted(list(list_of_ljs.items()), key=operator.itemgetter(0))
                 lj_types = len(ljs_dict)
 
 
@@ -233,7 +237,7 @@ def parse(fName):
 
                         else:
                             for line in int_index_store:
-                                temp = sorted(map(lambda x:x-1, line))
+                                temp = sorted([x-1 for x in line])
                                 interaction_atom_to_atom_type_ref.append(temp)
 
                         bondParameters = dict()
@@ -276,7 +280,7 @@ def parse(fName):
 
                         else:
                             for line in int_index_store:
-                                temp = map(lambda x:x-1, line)
+                                temp = [x-1 for x in line]
                                 interaction_atom_to_atom_type_ref.append(temp)
 
                         angleParameters = dict()
@@ -319,7 +323,7 @@ def parse(fName):
 
                         else:
                             for line in int_index_store:
-                                temp = map(lambda x:x-1, line)
+                                temp = [x-1 for x in line]
                                 interaction_atom_to_atom_type_ref.append(temp)
 
                         dihedralParameters = dict()
@@ -355,7 +359,7 @@ def parse(fName):
 
                     else:
                         for line in int_index_store:
-                            temp = map(lambda x:x-1, line)
+                            temp = [x-1 for x in line]
                             interaction_atom_to_atom_type_ref.append(temp)
 
                     # p.addValue('interaction_atoms', int_index_store)
@@ -438,7 +442,7 @@ def parse(fName):
 
                                         else:
                                             for line in int_index_store:
-                                                temp = sorted(map(lambda x:x-1, line))
+                                                temp = sorted([x-1 for x in line])
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
                                         moleculeBondParameters = dict()
@@ -496,7 +500,7 @@ def parse(fName):
 
                                         else:
                                             for line in int_index_store:
-                                                temp = map(lambda x:x-1, line)
+                                                temp = [x-1 for x in line]
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
                                         moleculeAngleParameters = dict()
@@ -559,7 +563,7 @@ def parse(fName):
 
                                         else:
                                             for line in int_index_store:
-                                                temp = map(lambda x:x-1, line)
+                                                temp = [x-1 for x in line]
                                                 molecule_interaction_atom_to_atom_type_ref.append(temp)
 
                                         moleculeDihedralParameters = dict()
@@ -594,7 +598,7 @@ def parse(fName):
 
                             else:
                                 for line in int_index_store:
-                                    temp = map(lambda x:x-1, line)
+                                    temp = [x-1 for x in line]
                                     interaction_atom_to_atom_type_ref.append(temp)
 
                             p.addValue('x_lammps_number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types

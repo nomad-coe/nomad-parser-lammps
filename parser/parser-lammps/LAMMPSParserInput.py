@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import map
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import fnmatch
 import os, sys
 from LAMMPSParserUnitConversion import unitConversion
@@ -19,7 +24,7 @@ lines = open(n).readlines()  # read LAMMPS input file
 storeInput = []
 for line in lines:
     line = line.strip('\n' + '').split(' ')
-    line = filter(None, line)
+    line = [_f for _f in line if _f]
 
     # If line is just empty
     if line != []:
@@ -49,7 +54,7 @@ for line in storeInput:
 for i in range(0, len(var_name)):
     storeInput = [[w.replace(var_name[i],str(var_value[i])) for w in line] for line in storeInput]
 
-storeInput = map(' '.join, storeInput)
+storeInput = [' '.join(x) for x in storeInput]
 storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR COMMENTED LINES
 
 
@@ -65,7 +70,7 @@ storeInput = [line for line in storeInput if not line.startswith('#')]  # CLEAR 
 
 def readUnits():  # HERE I READ THE UNITS STYLE
 
-    units_filter = filter(lambda x: fnmatch.fnmatch(x, '*units*'), storeInput)
+    units_filter = [x for x in storeInput if fnmatch.fnmatch(x, '*units*')]
 
     units = []
     for line in units_filter:
@@ -93,7 +98,7 @@ toRadians = 0.0174533  # multiply to convert deg to rad
 
 def readLogFileName():   ### here I pick the name of the log file storing the logged thermodynamic information
 
-    log_filter = filter(lambda x: x.startswith("log"), storeInput)
+    log_filter = [x for x in storeInput if x.startswith("log")]
 
     if not log_filter:
         logFileName = 'log.lammps'  # thermo output is put in the log.lammps file
@@ -112,7 +117,7 @@ def readLogFileName():   ### here I pick the name of the log file storing the lo
 def readDumpFileName():   ### NOTA BENE: we might have more that one dump file (for now we consider just one,
                           ### which is the trajectiory file)
 
-    dump_filter = filter(lambda x: x.startswith("dump "), storeInput)
+    dump_filter = [x for x in storeInput if x.startswith("dump ")]
 
     dumpFileName    = None
     stepsPrintFrame = 0
@@ -131,7 +136,7 @@ def readDumpFileName():   ### NOTA BENE: we might have more that one dump file (
 
 def readDataFileName():   ### here I pick the name of the LAMMPS topology data file
 
-    data_filter = filter(lambda x: x.startswith("read_data "), storeInput)
+    data_filter = [x for x in storeInput if x.startswith("read_data ")]
 
     dataFileName = None
     for line in data_filter:
@@ -146,9 +151,9 @@ def readDataFileName():   ### here I pick the name of the LAMMPS topology data f
 
 def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, DIHEDRALS, ELECTROSTATICS, PAIR STYLES)
 
-    specs_filter = filter(lambda x: fnmatch.fnmatch(x, '*_style*'), lines)
-    pm_filter    = filter(lambda x: x.startswith("pair_modify"), lines)
-    sb_filter    = filter(lambda x: x.startswith("special_bonds"), lines)
+    specs_filter = [x for x in lines if fnmatch.fnmatch(x, '*_style*')]
+    pm_filter    = [x for x in lines if x.startswith("pair_modify")]
+    sb_filter    = [x for x in lines if x.startswith("special_bonds")]
 
     list_of_styles = {}
     styles_dict    = {}
@@ -209,7 +214,7 @@ def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, D
 
 def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT ALGORITHM
 
-	ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
+	ensemble_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'fix*')]
 
 	for line in ensemble_filter:
 		line_split = line.split()
@@ -246,7 +251,7 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
     baro_tau       = 0
     langevin_gamma = 0
 
-    ensemble_filter = filter(lambda x: fnmatch.fnmatch(x, 'fix*'), storeInput)
+    ensemble_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'fix*')]
 
     for line in ensemble_filter:
         line_split = line.split()
@@ -276,7 +281,7 @@ def readTPSettings():  # HERE THERMOSTAT/BAROSTAT TARGETS AND RELAXATION TIMES A
 
 def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STEP, NUMBER OF STEPS, ...)
 
-    int_filter = filter(lambda x: fnmatch.fnmatch(x, 'run_style*'), storeInput)
+    int_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'run_style*')]
 
     if int_filter:
         for line in int_filter:
@@ -286,14 +291,14 @@ def readIntegratorSettings():  # HERE I READ INTEGRATOR SETTINGS (TYPE, TIME STE
         int_type = "verlet"  # if no run_style command, the integrator is standard Verlet
 
 
-    run_filt = filter(lambda x: x.startswith("run"), storeInput)  # OK FOR A SINGLE RUN INPUT SCRIPT
+    run_filt = [x for x in storeInput if x.startswith("run")]  # OK FOR A SINGLE RUN INPUT SCRIPT
 
     for line in run_filt:
         line_split = line.split()
         steps = int(line_split[1])
 
 
-    ts_filter = filter(lambda x: fnmatch.fnmatch(x, 'timestep*'), storeInput)
+    ts_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'timestep*')]
 
     for line in ts_filter:
         line_split = line.split()
@@ -320,7 +325,7 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
 
     supportedGROMACSFunct = ['lj/gromacs', 'lj/gromacs/coul/gromacs']
 
-    lj_filt = filter(lambda x: x.startswith("pair_coeff"), storeInput)
+    lj_filt = [x for x in storeInput if x.startswith("pair_coeff")]
 
     list_of_ljs = {}
     ljs_dict     = {}
@@ -460,7 +465,7 @@ def readPairCoeff(updateAtomTypes, pairFunctional):  # HERE WE COLLECT PAIR COEF
 
 def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
 
-    bond_filt = filter(lambda x: x.startswith("bond_coeff"), storeInput)
+    bond_filt = [x for x in storeInput if x.startswith("bond_coeff")]
 
     list_of_bonds={}
     for line in bond_filt:
@@ -469,7 +474,7 @@ def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
 
         if bondFunctional == "harmonic":
             index1 = int(line_split[1])
-            index2 = float(line_split[2])*(toEnergy/(toDistance)**2)
+            index2 = float(line_split[2])*(old_div(toEnergy,(toDistance)**2))
             index3 = float(line_split[3])*toDistance
 
             bond = [ index2, index3 ]
@@ -480,9 +485,9 @@ def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
         if bondFunctional == "class2":   # COMPASS
             index1 = int(line_split[1])
             index2 = float(line_split[2])*toDistance
-            index3 = float(line_split[3])*(toEnergy/(toDistance)**2)
-            index4 = float(line_split[4])*(toEnergy/(toDistance)**3)
-            index5 = float(line_split[5])*(toEnergy/(toDistance)**4)
+            index3 = float(line_split[3])*(old_div(toEnergy,(toDistance)**2))
+            index4 = float(line_split[4])*(old_div(toEnergy,(toDistance)**3))
+            index5 = float(line_split[5])*(old_div(toEnergy,(toDistance)**4))
 
             bond = [ index2, index3, index4, index5 ]
             bond_dict = {index1 : bond}
@@ -503,7 +508,7 @@ def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
         if bondFunctional == "morse":
             index1 = int(line_split[1])
             index2 = float(line_split[2])*toEnergy
-            index3 = float(line_split[3])*(1/toDistance)
+            index3 = float(line_split[3])*(old_div(1,toDistance))
             index4 = float(line_split[4])*toDistance
 
             bond = [ index2, index3, index4 ]
@@ -518,7 +523,7 @@ def readBonds(bondFunctional):   # HERE WE COLLECT BONDS COEFFICIENTS
 
 def readAngles(angleFunctional):
 
-    angle_filt = filter(lambda x: x.startswith("angle_coeff"), storeInput)
+    angle_filt = [x for x in storeInput if x.startswith("angle_coeff")]
 
     list_of_angles={}
     for line in angle_filt:
@@ -543,7 +548,7 @@ def readAngles(angleFunctional):
             index1 = int(line_split[1])
             index2 = float(line_split[2])*toEnergy
             index3 = float(line_split[3])*toRadians
-            index4 = float(line_split[4])*(toEnergy/(toDistance)**2)
+            index4 = float(line_split[4])*(old_div(toEnergy,(toDistance)**2))
             index5 = float(line_split[5])*toDistance
 
             angle = [ index2, index3, index4, index5 ]
@@ -598,7 +603,7 @@ def readAngles(angleFunctional):
 
 def readDihedrals(dihedralFunctional):
 
-    dihedral_filt = filter(lambda x: x.startswith("dihedral_coeff"), storeInput)
+    dihedral_filt = [x for x in storeInput if x.startswith("dihedral_coeff")]
 
     list_of_dihedrals={}
     for line in dihedral_filt:
@@ -675,7 +680,7 @@ def readDihedrals(dihedralFunctional):
 
 def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT ARE LOGGED (excludind user-defined ones)
 
-    logvars_filter = filter(lambda x: fnmatch.fnmatch(x, 'thermo_style*'), storeInput)
+    logvars_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'thermo_style*')]
 
     var          = []
     thermo_style = str
@@ -702,8 +707,8 @@ def readLoggedThermoOutput():  # HERE I READ THE LIST OF THERMO VARIABLES THAT A
 
 def simulationTime():
 
-    run_filt   = filter(lambda x: x.startswith("run"), storeInput)
-    frame_filt = filter(lambda  x: x.startswith("thermo "), storeInput)
+    run_filt   = [x for x in storeInput if x.startswith("run")]
+    frame_filt = [x for x in storeInput if x.startswith("thermo ")]
 
     for line in run_filt:
         line_split = line.split()

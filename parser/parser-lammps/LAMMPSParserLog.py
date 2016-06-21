@@ -1,3 +1,5 @@
+from builtins import map
+from builtins import range
 import fnmatch
 import os, sys
 import numpy as np
@@ -95,7 +97,7 @@ if thermo_style == 'multi' and skip == False:
 
     def readFrames():   # reading frames' time step
 
-        frame_filter = filter(lambda x: fnmatch.fnmatch(x, '---------------- Step*'), storedOutput)
+        frame_filter = [x for x in storedOutput if fnmatch.fnmatch(x, '---------------- Step*')]
 
         frames = []
         for line in frame_filter:
@@ -111,7 +113,7 @@ if thermo_style == 'multi' and skip == False:
 
     def readPotEnergy():    # reading frames' potential energy
 
-        pe_filter = filter(lambda x: fnmatch.fnmatch(x, 'PotEng*'), storedOutput)
+        pe_filter = [x for x in storedOutput if fnmatch.fnmatch(x, 'PotEng*')]
 
         pe = []
         for line in pe_filter:
@@ -126,7 +128,7 @@ if thermo_style == 'multi' and skip == False:
 
     def readKinEnergy():    # reading frames' kinetic energy
 
-        ke_filter = filter(lambda x: fnmatch.fnmatch(x, 'TotEng*'), storedOutput)
+        ke_filter = [x for x in storedOutput if fnmatch.fnmatch(x, 'TotEng*')]
 
         ke = []
         temp  = []
@@ -145,7 +147,7 @@ if thermo_style == 'multi' and skip == False:
 
     def readPressure():     # reading frames' pressure
 
-        press_filter = filter(lambda x: fnmatch.fnmatch(x, 'E_coul*'), storedOutput)
+        press_filter = [x for x in storedOutput if fnmatch.fnmatch(x, 'E_coul*')]
 
         press = []
         for line in press_filter:
@@ -160,7 +162,7 @@ if thermo_style == 'multi' and skip == False:
 
     def readVolume():       # reading frames' simulation box volume
 
-        vol_filter = filter(lambda x: fnmatch.fnmatch(x, 'Volume*'), storedOutput)
+        vol_filter = [x for x in storedOutput if fnmatch.fnmatch(x, 'Volume*')]
 
         if vol_filter:
 
@@ -188,7 +190,7 @@ if thermo_style == 'custom' and skip == False:
     data = []
     for line in storedOutput:
         line = line.strip('\n' + '').split(' ')
-        line = filter(None, line)
+        line = [_f for _f in line if _f]
 
         # If line is just empty
         if line != []:
@@ -218,7 +220,7 @@ if thermo_style == 'custom' and skip == False:
 
 
     for i in range(0, len(logged)):
-        logged[i] = map(float, logged[i])
+        logged[i] = list(map(float, logged[i]))
 
     logged = np.array(logged)
 
@@ -256,7 +258,7 @@ if thermo_style == 'one' and skip == False:
     data = []
     for line in storedOutput:
         line = line.strip('\n' + '').split(' ')
-        line = filter(None, line)
+        line = [_f for _f in line if _f]
 
         # If line is just empty
         if line != []:
@@ -286,7 +288,7 @@ if thermo_style == 'one' and skip == False:
 
 
     for i in range(0, len(logged)):
-        logged[i] = map(float, logged[i])
+        logged[i] = list(map(float, logged[i]))
 
     logged = np.array(logged)
 
