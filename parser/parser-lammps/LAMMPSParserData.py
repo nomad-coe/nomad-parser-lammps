@@ -15,14 +15,14 @@ examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the L
 
 # FIRST I FIND THE LAMMPS TOPOLOGY DATA FILE
 if fNameData:
-    lines = open(examplesPath + '/' + fNameData).readlines()
+    lines = open(examplesPath + '/' + fNameData, encoding = 'latin-1').readlines()
 
 else:
     for file in os.listdir(examplesPath):
         if fnmatch.fnmatch(file, '*data.*'):
             n = file
 
-        lines = open(examplesPath + '/' + n).readlines()
+        lines = open(examplesPath + '/' + n, encoding = 'latin-1').readlines()
 
 
 ########################################################################################################################
@@ -146,7 +146,7 @@ with tempfile.NamedTemporaryFile(dir=os.path.dirname('top.pdb')) as pdb:
         atY  = float(line[5])
         atZ  = float(line[6])
 
-        pdb.write('%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.3f'), format(atY, '.3f'), format(atZ, '.3f')))
+        pdb.write((u'%-6s %4s %2s %5s %1s %3s %11s %7s %7s \n' % ('ATOM', atID, atTy, 'RES', 'X', '1', format(atX, '.3f'), format(atY, '.3f'), format(atZ, '.3f'))).encode("ascii"))
     os.link(pdb.name, 'top.pdb')
 
 
@@ -225,7 +225,7 @@ def readChargeAndMass():  ### here we record atomic masses and partial charges
             xyz_file.append(xyz_line)
             atomLabelling.append(xyz_line)
 
-        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
@@ -307,7 +307,7 @@ def readChargeAndMass():  ### here we record atomic masses and partial charges
             xyz_file.append(xyz_line)
             atomLabelling.append(xyz_line)
 
-        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
@@ -1146,7 +1146,7 @@ def assignMolecules():  # FINDING INDIVIDUAL MOLECULES FROM BONDING PATTERN
 
 
         atomIndexToTopology = atomIndexInMolecule
-        nextMolecule += len(atomIndexToTopology)/2 ######## NOTA BENE ## I will start from this  to find the next molecule in the list "store"
+        nextMolecule += len(atomIndexToTopology) // 2 ######## NOTA BENE ## I will start from this  to find the next molecule in the list "store"
         #print nextMolecule
 
         atomIndexInMolecule = sorted(list(set(atomIndexInMolecule)))  # clear duplicates and return the list of atom indexes in the molecule

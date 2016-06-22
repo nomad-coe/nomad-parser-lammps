@@ -214,13 +214,13 @@ def readStyles():  # HERE WE COLLECT CALCULATIONS STYLES (ATOM, BONDS, ANGLES, D
 
 def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT ALGORITHM
 
-	ensemble_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'fix*')]
+        ensemble_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'fix*')]
 
-	for line in ensemble_filter:
-		line_split = line.split()
+        for line in ensemble_filter:
+                line_split = line.split()
 
-		if line_split[3] == "langevin":
-			sampling = "langevin_dynamics"
+                if line_split[3] == "langevin":
+                        sampling = "langevin_dynamics"
 
         if line_split[3] == "nve":
             sampling = "molecular_dynamics"
@@ -238,7 +238,7 @@ def readEnsemble():  # HERE I READ THE INTEGRATION TYPE AND POTENTIAL CONSTRAINT
             sampling = "molecular_dynamics"
             ensemble = "NPH"
 
-	return (ensemble, sampling)
+        return (ensemble, sampling)
 
 
 ################################################################################################################################
@@ -728,5 +728,3 @@ def simulationTime():
     return (frame_length, time_length, stepsPrintThermo, integrationSteps)
 
 ################################################################################################################################
-
-

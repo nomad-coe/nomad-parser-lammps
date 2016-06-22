@@ -20,7 +20,7 @@ examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the L
 if fNameTraj:  # if the trajectory file name is defined within the input file, open that file
     n = fNameTraj
     try:
-        traj = open(examplesPath + '/' + n).readlines()
+        traj = open(examplesPath + '/' + n, encoding='latin-1').readlines()
     except IOError:
         traj = []
 else:
