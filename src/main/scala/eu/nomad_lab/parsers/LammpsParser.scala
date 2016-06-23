@@ -22,7 +22,7 @@ object LammpsParser extends SimpleExternalParserGenerator(
   ),
   mainFileTypes = Seq("text/.*"),
   mainFileRe = """\s*boundary\s*[a-z]+\s*[a-z]+\s*[a-z]+\s*""".r,
-  cmd = Seq(DefaultPythonInterpreter.python2Exe(), "${envDir}/parsers/lammps/parser/parser-lammps/LAMMPSParserControl.py",
+  cmd = Seq(DefaultPythonInterpreter.pythonExe(), "${envDir}/parsers/lammps/parser/parser-lammps/LAMMPSParserControl.py",
     "${mainFilePath}"),
   resList = Seq(
     "parser-lammps/LAMMPSParserControl.py",
