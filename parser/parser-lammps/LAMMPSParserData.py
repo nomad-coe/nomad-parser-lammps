@@ -227,7 +227,8 @@ def readChargeAndMass():  ### here we record atomic masses and partial charges
             xyz_file.append(xyz_line)
             atomLabelling.append(xyz_line)
 
-        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
+        #with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
@@ -309,7 +310,8 @@ def readChargeAndMass():  ### here we record atomic masses and partial charges
             xyz_file.append(xyz_line)
             atomLabelling.append(xyz_line)
 
-        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
+        #with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w', encoding = 'latin-1') as xyz:
+        with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), 'w') as xyz:
             xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
