@@ -22,7 +22,8 @@ else:
         if fnmatch.fnmatch(file, '*data.*'):
             n = file
 
-        lines = open(examplesPath + '/' + n, encoding = 'latin-1').readlines()
+        lines = open(examplesPath + '/' + n).readlines()
+        #lines = open(examplesPath + '/' + n, encoding = 'latin-1').readlines()
 
 
 ########################################################################################################################
