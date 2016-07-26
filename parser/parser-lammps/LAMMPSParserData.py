@@ -15,7 +15,8 @@ examplesPath = os.path.dirname(os.path.abspath(sys.argv[1]))  # address of the L
 
 # FIRST I FIND THE LAMMPS TOPOLOGY DATA FILE
 if fNameData:
-    lines = open(examplesPath + '/' + fNameData, encoding = 'latin-1').readlines()
+    lines = open(examplesPath + '/' + fNameData).readlines()
+    #lines = open(examplesPath + '/' + fNameData, encoding = 'latin-1').readlines()
 
 else:
     for file in os.listdir(examplesPath):
