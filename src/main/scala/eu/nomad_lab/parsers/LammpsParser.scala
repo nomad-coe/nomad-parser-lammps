@@ -21,18 +21,19 @@ object LammpsParser extends SimpleExternalParserGenerator(
       )) :: Nil
   ),
   mainFileTypes = Seq("text/.*"),
-  mainFileRe = """\s*boundary\s*[a-z]+\s*[a-z]+\s*[a-z]+\s*""".r,
-  cmd = Seq(DefaultPythonInterpreter.pythonExe(), "${envDir}/parsers/lammps/parser/parser-lammps/LAMMPSParserControl.py",
+  mainFileRe = """LAMMPS\s*\(.+\)\s""".r,
+  cmd = Seq(DefaultPythonInterpreter.pythonExe(), "${envDir}/parsers/lammps/parser/parser-lammps/interface.py",
     "${mainFilePath}"),
   resList = Seq(
-    "parser-lammps/LAMMPSParserControl.py",
-    "parser-lammps/LAMMPSParserData.py",
-    "parser-lammps/LAMMPSParserInput.py",
-    "parser-lammps/LAMMPSParserLog.py",
-    "parser-lammps/LAMMPSParserTraj.py",
-    "parser-lammps/LAMMPSParserMDTraj.py",
-    "parser-lammps/LAMMPSParserUnitConversion.py",
+    "parser-lammps/interface.py",
     "parser-lammps/setup_paths.py",
+    "parser-lammps/LammpsCommon.py",
+    "parser-lammps/LammpsInputParser.py",
+    "parser-lammps/LammpsParser.py",
+    "parser-lammps/LammpsTrjParser.py",
+    "parser-lammps/LammpsDataParser.py",
+    "parser-lammps/LammpsLogParser.py",
+    "parser-lammps/LammpsVariables.py",
     "nomad_meta_info/public.nomadmetainfo.json",
     "nomad_meta_info/common.nomadmetainfo.json",
     "nomad_meta_info/meta_types.nomadmetainfo.json",
@@ -43,3 +44,4 @@ object LammpsParser extends SimpleExternalParserGenerator(
     "nomad_meta_info" -> "nomad-meta-info/meta_info/nomad_meta_info"
   ) ++ DefaultPythonInterpreter.commonDirMapping()
 )
+
