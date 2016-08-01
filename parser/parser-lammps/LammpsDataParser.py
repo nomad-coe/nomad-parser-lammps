@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import operator
+import copy
 
 # Python 2 compability
 from io import open
@@ -19,13 +20,9 @@ from re import escape as esc
 
 
 class sformat(object):
-    float = r"[-+]?\d*\.\d+"
+    float = r"[-+]?\d*\.?[0-9]*([Ee][+-]?[0-9]+)?"
     int = r"[-+]?\d+"
 
-nformat = {
-    'float': r"[-+]?\d*\.\d+",
-    'int': r"[-+]?\d+"
-}
 
 
 
@@ -251,7 +248,7 @@ class LammpsDataParserContext(object):
 
 
         # collecting dihedral angles definitions
-        dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = self.assignDihedrals(dihedral_list, updateAtomTypes)
+        dihedral_dict, dihedralTypeList, dihedral_interaction_atoms  = self.assignDihedrals(topo_list, dihedral_list, updateAtomTypes)
         dihedral_dict = sorted(list(dihedral_dict.items()), key=operator.itemgetter(0))
         dh_types = len(dihedral_dict)
         ###
@@ -942,7 +939,7 @@ class LammpsDataParserContext(object):
     #angle_dict, angleTypeList, angle_interaction_atoms = assignAngles()
 
         ########################################################################################################################
-    def assignDihedrals(self, dihedral_list, updateAtomTypes):  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
+    def assignDihedrals(self, topo_list, dihedral_list, updateAtomTypes):  # ASSIGNING DIHEDRAL TO ITS ATOM QUARTET
 
         dihedral_ass_d = {}
         dihedral_ass = []
@@ -1404,60 +1401,60 @@ def build_LammpsDataFileSimpleMatcher():
     which allows nice formating of nested SimpleMatchers in python.
 
     HEADERS = set([
-        'atoms',
-        'bonds',
-        'angles',
-        'dihedrals',
-        'impropers',
-        'atom types',
-        'bond types',
-        'angle types',
-        'dihedral types',
-        'improper types',
-        'extra bond per atom',
-        'extra angle per atom',
-        'extra dihedral per atom',
-        'extra improper per atom',
-        'extra special per atom',
-        'ellipsoids',
-        'lines',
-        'triangles',
-        'bodies',
-        'xlo xhi',
-        'ylo yhi',
-        'zlo zhi',
-        'xy xz yz',
+        //'atoms',
+        //'bonds',
+        //'angles',
+        //'dihedrals',
+        //'impropers',
+        //'atom types',
+        //'bond types',
+        //'angle types',
+        //'dihedral types',
+        //'improper types',
+        //'extra bond per atom',
+        //'extra angle per atom',
+        //'extra dihedral per atom',
+        //'extra improper per atom',
+        //'extra special per atom',
+        //'ellipsoids',
+        //'lines',
+        //'triangles',
+        //'bodies',
+        //'xlo xhi',
+        //'ylo yhi',
+        //'zlo zhi',
+        //'xy xz yz',
     ])
 
 
     # Sections will all start with one of these words
     # and run until the next section title
     SECTIONS = set([
-        'Atoms',  # Molecular topology sections
-        'Velocities',
-        'Masses',
-        'Ellipsoids',
-        'Lines',
-        'Triangles',
-        'Bodies',
-        'Bonds',  # Forcefield sections
-        'Angles',
-        'Dihedrals',
-        'Impropers',
-        'Pair',
-        'Pair LJCoeffs',
-        'Bond Coeffs',
-        'Angle Coeffs',
-        'Dihedral Coeffs',
-        'Improper Coeffs',
-        'BondBond Coeffs',  # Class 2 FF sections
-        'BondAngle Coeffs',
-        'MiddleBondTorsion Coeffs',
-        'EndBondTorsion Coeffs',
-        'AngleTorsion Coeffs',
-        'AngleAngleTorsion Coeffs',
-        'BondBond13 Coeffs',
-        'AngleAngle Coeffs',
+        //'Atoms',  # Molecular topology sections
+        //'Velocities',
+        //'Masses',
+        //'Ellipsoids',
+        //'Lines',
+        //'Triangles',
+        //'Bodies',
+        //'Bonds',  # Forcefield sections
+        //'Angles',
+        //'Dihedrals',
+        //'Impropers',
+        //'Pair',
+        //'Pair LJCoeffs',
+        //'Bond Coeffs',
+        //'Angle Coeffs',
+        //'Dihedral Coeffs',
+        //'Improper Coeffs',
+        //'BondBond Coeffs',  # Class 2 FF sections
+        //'BondAngle Coeffs',
+        //'MiddleBondTorsion Coeffs',
+        //'EndBondTorsion Coeffs',
+        //'AngleTorsion Coeffs',
+        //'AngleAngleTorsion Coeffs',
+        //'BondBond13 Coeffs',
+        //'AngleAngle Coeffs',
     ])
 
 
@@ -1466,143 +1463,350 @@ def build_LammpsDataFileSimpleMatcher():
     """
     atoms = SM(
         name='lammps-data-list-of-atoms',
-        startReStr=r"\sAtoms",
-        # sections=['section_topology'],
+        startReStr=r"\s*Atoms",
+        repeats=True,
         subMatchers=[
             SM(
-                r"(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+                r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
                 repeats=True
             )
         ])
+
+    velocities = SM(
+        name='lammps-data-list-of-velocities',
+        startReStr=r"\s*Velocities",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+            #     repeats=True
+            # )
+        ])
+
     masses = SM(
         name='lammps-data-list-of-masses',
-        startReStr=r"\sMasses",
-        # sections=['section_topology'],
+        startReStr=r"\s*Masses",
+        repeats=True,
         subMatchers=[
             SM(
-                r"\s(?P<x_lammps_masses_store>{0}\s{1})".format(sformat.int, sformat.float),
+                r"\s*(?P<x_lammps_masses_store>{0}\s{1})".format(sformat.int, sformat.float),
                 repeats=True,
             )
         ])
 
+    ellipsoids = SM(
+        name='lammps-data-list-of-ellipsoids',
+        startReStr=r"\s*Ellipsoids",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+            #     repeats=True
+            # )
+        ])
+
+
+
+    lines = SM(
+        name='lammps-data-list-of-lines',
+        startReStr=r"\s*Lines",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+            #     repeats=True
+            # )
+        ])
+
+    triangles = SM(
+        name='lammps-data-list-of-triangles',
+        startReStr=r"\s*Triangles",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+            #     repeats=True
+            # )
+        ])
+
+    bodies = SM(
+        name='lammps-data-list-of-bodies',
+        startReStr=r"\s*Bodies",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_topo_list_store>{0}\s{0}\s{0}\s{1}\s{1}\s{1}\s{1})".format(sformat.int, sformat.float),
+            #     repeats=True
+            # )
+        ])
+
     bonds = SM(
         name='lammps-data-list-of-bonds',
-        startReStr=r"\sBonds",
-        # sections=['section_topology'],
+        startReStr=r"\s*Bonds",
+        repeats=True,
         subMatchers=[
            SM(
-               r"(?P<x_lammps_data_bond_list_store>{0}\s{0}\s{0}\s{0})".format(sformat.int),
+               r"\s*(?P<x_lammps_data_bond_list_store>{0}\s{0}\s{0}\s{0})".format(sformat.int),
                repeats=True
            )
         ])
 
     angles = SM(
         name='lammps-data-list-of-bonds',
-        startReStr=r"\sAngles",
-        # sections=['section_topology'],
+        startReStr=r"\s*Angles",
+        repeats=True,
         subMatchers=[
             SM(
-                r"(?P<x_lammps_data_angle_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+                r"\s*(?P<x_lammps_data_angle_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
                 repeats=True
             )
         ])
 
     dihedrals = SM(
         name='lammps-data-list-of-bonds',
-        startReStr=r"\Dihedrals",
-        # sections=['section_topology'],
+        startReStr=r"\s*Dihedrals",
+        repeats=True,
         subMatchers=[
             SM(
-                r"(?P<x_lammps_data_dihedral_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+                r"\s*(?P<x_lammps_data_dihedral_list_store>{0}\s{0}\s{0}\s{0}(\s{0})+)".format(sformat.int),
                 repeats=True
             )
         ])
 
+
+
+
+
+
+    impropers = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Impropers",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    pair = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Pair",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    pair_ljcoeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Pair LJCoeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    bond_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Bond Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    angle_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Angle Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
     dihedral_coeffs = SM(
         name='lammps-data-list-of-bonds',
-        startReStr=r"\Dihedrals",
-        # sections=['section_topology'],
+        startReStr=r"\s*Dihedral Coeffs",
+        repeats=True,
         subMatchers=[
             SM(
-                r"(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+                r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
                 repeats=True
             )
         ])
 
-    header = SM(
-        name='lammps-data-header',
-        startReStr="",
-        forwardMatch=True,
-        # sections=['section_topology'],
+    improper_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*Improper Coeffs",
+        repeats=True,
         subMatchers=[
-            # NUMBER OF ATOMS (at_count)
-            SM(r"\s*(?P<number_of_topology_atoms>{0})\satoms".format(sformat.int)),
-            # NUMBER OF BONDS (bd_count)
-            SM(r"\s(?P<x_lammps_data_bd_count_store>{0})\sbond".format(sformat.int)),
-            # NUMBER OF ANGLES (ag_count)
-            SM(r"\s(?P<x_lammps_data_ag_count_store>{0})\sangles".format(sformat.int)),
-            # NUMBER OF DIHEDRALS (dh_count)
-            SM(r"\s(?P<x_lammps_data_dh_count_store>{0})\sdihedrals".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\simpropers".format(sformat.int)),
-            # NUMBER OF ATOM TYPES
-            SM(r"\s(?P<x_lammps_data_at_types_store>{0})\satom types".format(sformat.int)),
-            # NUMBER OF BOND TYPES
-            SM(r"\s(?P<x_lammps_data_bd_types_store>{0})\sbond types".format(sformat.int)),
-            # NUMBER OF ANGLE TYPES (ag_types)
-            SM(r"\s(?P<x_lammps_dummy>{0})\sangle types".format(sformat.int)),
-            # NUMBER OF DIHEDRAL TYPES (dh_types)
-            SM(r"\s(?P<x_lammps_dummy>{0})\sdihedral types".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\smproper types ".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sextra bond per atom".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sextra angle per atom".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sextra dihedral per atom".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sextra improper per atom ".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sextra special per atom ".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sellipsoids".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\slines".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\striangles".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sbodies".format(sformat.int)),
-            SM(r"\s(?P<x_lammps_dummy>{0}\s{0})\s*xlo xhi".format(sformat.float)),
-            SM(r"\s(?P<x_lammps_dummy>{0}\s{0})\s*ylo yhi".format(sformat.float)),
-            SM(r"\s(?P<x_lammps_dummy>{0}\s{0})\s*zlo zhi".format(sformat.float)),
-            SM(r"\s(?P<x_lammps_dummy>{0})\sxy xz yz".format(sformat.int)),
-
-        ]
-    )
-
-    body = SM(
-        name='data-body',
-        forwardMatch=False,
-        startReStr="",
-        subFlags=SM.SubFlags.Unordered,
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    bondbond_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*BondBond Coeffs",
+        repeats=True,
         subMatchers=[
-            atoms,
-            masses,
-            bonds,
-            angles,
-            dihedrals,
-            dihedral_coeffs
-        ]
-    )
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    bondangle_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*BondAngle Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    middlebondtorsion_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*MiddleBondTorsion Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    endbondtorsion_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*EndBondTorsion Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    angletorsion_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*AngleTorsion Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    angleangletorsion_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*AngleAngleTorsion Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    bondbond13_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*BondBond13 Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+    angleangle_coeffs = SM(
+        name='lammps-data-list-of-bonds',
+        startReStr=r"\s*AngleAngle Coeffs",
+        repeats=True,
+        subMatchers=[
+            # SM(
+            #     r"\s*(?P<x_lammps_data_dihedral_coeff_list_store>{0}\s{0}\s{0}\s{0}\s{0})".format(sformat.int),
+            #     repeats=True
+            # )
+        ])
+
+
+
 
 
     return SM(
-        name = 'root1',
-        startReStr = r"",
-        sections = ['section_run'],
-        forwardMatch = True,
-        weak = True,
-        subMatchers = [
-            SM(
-                name = 'root2',
-                startReStr = "",
-                sections = ['section_topology'],
-                forwardMatch=False,  # The first line of the header is always skipped
-                weak = True,
+        name='root1',
+        startReStr="",
+        sections=['section_run'],
+        forwardMatch=True,
+        weak=True,
+        subMatchers=[
+            SM( name='root2',
+                startReStr="",
+                sections=['section_topology'],
+                forwardMatch=True,  # The first line of the header is always skipped
+                weak=True,
+                # repeats=True,
                 # The search is done unordered since the keywords do not appear in a specific order.
+                subFlags=SM.SubFlags.Unordered,
                 subMatchers=[
-                    header,
-                    body
+                    # NUMBER OF ATOMS (at_count)
+                    SM(r"\s*(?P<number_of_topology_atoms>{0})\satoms".format(sformat.int), repeats=True),
+                    # NUMBER OF BONDS (bd_count)
+                    SM(r"\s*(?P<x_lammps_data_bd_count_store>{0})\s*bonds".format(sformat.int), repeats=True),
+                    # NUMBER OF ANGLES (ag_count)
+                    SM(r"\s*(?P<x_lammps_data_ag_count_store>{0})\sangles".format(sformat.int), repeats=True),
+                    # NUMBER OF DIHEDRALS (dh_count)
+                    SM(r"\s*(?P<x_lammps_data_dh_count_store>{0})\sdihedrals".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\simpropers".format(sformat.int), repeats=True),
+                    # NUMBER OF ATOM TYPES
+                    SM(r"\s*(?P<x_lammps_data_at_types_store>{0})\satom types".format(sformat.int), repeats=True),
+                    # NUMBER OF BOND TYPES
+                    SM(r"\s*(?P<x_lammps_data_bd_types_store>{0})\sbond types".format(sformat.int), repeats=True),
+                    # # NUMBER OF ANGLE TYPES (ag_types)
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sangle types".format(sformat.int), repeats=True),
+                    # # NUMBER OF DIHEDRAL TYPES (dh_types)
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sdihedral types".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\simproper types ".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sextra bond per atom".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sextra angle per atom".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sextra dihedral per atom".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sextra improper per atom ".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sextra special per atom ".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sellipsoids".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\slines".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\striangles".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sbodies".format(sformat.int), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0}\s{0})\s*xlo\sxhi".format(sformat.float), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0}\s{0})\s*ylo yhi".format(sformat.float), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0}\s{0})\s*zlo zhi".format(sformat.float), repeats=True),
+                    SM(r"\s*(?P<x_lammps_dummy>{0})\sxy xz yz".format(sformat.int), repeats=True),
+                      atoms,
+                    velocities,
+                    ellipsoids,
+                    lines,
+                    triangles,
+                    bodies,
+                    masses,
+                    bonds,
+                    angles,
+                    dihedrals,
+                    impropers,
+                    pair,
+                    pair_ljcoeffs,
+                    bond_coeffs,
+                    angle_coeffs,
+                    dihedral_coeffs,
+                    improper_coeffs,
+                    bondbond_coeffs,
+                    bondangle_coeffs,
+                    middlebondtorsion_coeffs,
+                    endbondtorsion_coeffs,
+                    angletorsion_coeffs,
+                    angleangletorsion_coeffs,
+                    bondbond13_coeffs,
+                    angleangle_coeffs,
+
                 ]
             )
         ]
