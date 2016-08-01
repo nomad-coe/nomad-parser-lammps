@@ -608,12 +608,12 @@ class LammpsDataParserContext(object):
                 xyz_file.append(xyz_line)
                 atomLabelling.append(xyz_line)
 
-            mode = 'w'
-            if sys.version_info.major < 3:
-                mode += 'b'
-
-            with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), mode) as xyz:
-                xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
+            # mode = 'w'
+            # if sys.version_info.major < 3:
+            #     mode += 'b'
+            #
+            # with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), mode) as xyz:
+            #     xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
 
         #### A SINGLE ATOM TYPE MIGHT HAVE MORE THAN ONE CHARGE (E.G. CARBON IN CH3, CH2, CH, ...)
@@ -693,12 +693,12 @@ class LammpsDataParserContext(object):
                 xyz_file.append(xyz_line)
                 atomLabelling.append(xyz_line)
             
-            mode = 'w'
-            if sys.version_info.major < 3:
-                mode += 'b'
-            
-            with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), mode) as xyz:
-                xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
+            # mode = 'w'
+            # if sys.version_info.major < 3:
+            #     mode += 'b'
+            #
+            # with open(os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), 'generated_from_data_file.xyz')), mode) as xyz:
+            #     xyz.writelines('  '.join(str(j) for j in i) + '\n' for i in xyz_file)    # WRITE XYZ ATOMIC NUMBER AND COORDINATES
 
         return charge_dict, charge_list, mass_dict, mass_list, mass_xyz, new_mass_list, atomLabelling
 

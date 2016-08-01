@@ -1264,7 +1264,6 @@ class LammpsMainParser(MainHierarchicalParser):
         '''
 
         line = parser.fIn.readline()
-        
 
         filename = line.split()[1]
         dir_name = os.path.dirname(os.path.abspath(self.fName))
@@ -1274,7 +1273,7 @@ class LammpsMainParser(MainHierarchicalParser):
         parser.fIn.fIn.close()
 
         # owerwrite and open the file reader of the new log file
-        parser.fIn = PushbackLineFile(open(f_name,'r'))
+        parser.fIn = PushbackLineFile(open(f_name, 'r'))
 
         return None
 
