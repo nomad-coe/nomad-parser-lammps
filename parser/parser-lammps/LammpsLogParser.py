@@ -207,8 +207,10 @@ class LammpsMainParser(MainHierarchicalParser):
                adHoc=lambda parser: self.adHoc_bond_style(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>angle_style)", forwardMatch=True,
                adHoc=lambda parser: self.adHoc_angle_style(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_style)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>improper_style)", ),
+            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_style)", forwardMatch=True,
+               adHoc=lambda parser: self.adHoc_dihedral_style(parser)),
+            SM(r"\s*(?P<x_lammps_dummy_text>improper_style)", forwardMatch=True,
+               adHoc=lambda parser: self.adHoc_improper_style(parser)),
 
             # Atom definition
             # There are 3 ways to define atoms in LAMMPS. Read them in from a data or restart file via the read_data
@@ -267,21 +269,21 @@ class LammpsMainParser(MainHierarchicalParser):
             SM(r"\s*(?P<x_lammps_dummy_text>velocity)", ),
 
             # settings_force_field_coefficients
-            SM(r"\s*(?P<x_lammps_dummy_text>pair_coeff)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>pair_coeff)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_pair_coeff(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>bond_coeff)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>bond_coeff)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_bond_coeff(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>angle_coeff)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>angle_coeff)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_angle_coeff(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_coeff)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_coeff)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_dihedral_coeff(parser) ),
             SM(r"\s*(?P<x_lammps_dummy_text>improper_coeff)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>kspace_style)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>kspace_modify)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>dielectric)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>special_bonds)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>special_bonds)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_special_bonds(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>pair_modify)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>pair_modify)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_pair_modify(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>pair_write)", ),
 
@@ -690,7 +692,7 @@ class LammpsMainParser(MainHierarchicalParser):
                     if bondFunctional:
                         p.addValue('interaction_kind', dihedralFunctional)  # functional form of the interaction
 
-                    int_index_store = dihedral_dict[i][1]
+                    int_index_store = self.dataSuperContext.dihedral_dict[i][1]
                     interaction_atom_to_atom_type_ref = []
 
                     if all(isinstance(elem, list) for elem in int_index_store) == False:
@@ -886,18 +888,18 @@ class LammpsMainParser(MainHierarchicalParser):
                     store = []
                     molecule_interaction_atoms = []
                     molecule_interaction_type  = []
-                    for h in dihedralTypeList:
-                        for k in dihedralTypeList:
+                    for h in self.dataSuperContext.dihedralTypeList:
+                        for k in self.dataSuperContext.dihedralTypeList:
 
                             store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex, x[4] - toMoleculeAtomIndex]
-                                        for x in dihedral_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2]
+                                        for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2]
                                         and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
                             # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
 
                         molecule_interaction_atoms.append(store)
 
-                    for l in dihedralTypeList:
-                        store1  = [ x[0] for x in dihedral_interaction_atoms if x[0]==l
+                    for l in self.dataSuperContext.dihedralTypeList:
+                        store1  = [ x[0] for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==l
                                     and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
                         molecule_interaction_type.append(store1)
 
@@ -906,7 +908,7 @@ class LammpsMainParser(MainHierarchicalParser):
                     # print molecule_interaction_type,  '#######'
                     # print molecule_interaction_atoms, '#######'
 
-                    for dihedral in dihedralTypeList:
+                    for dihedral in self.dataSuperContext.dihedralTypeList:
                         if dihedral in molecule_interaction_type:
 
                             with o(p, 'section_molecule_interaction'):
@@ -919,7 +921,7 @@ class LammpsMainParser(MainHierarchicalParser):
                                     p.addValue('molecule_interaction_kind', dihedralFunctional)
 
 
-                                int_index_store = dihedral_dict[dihedral-1][1]
+                                int_index_store = self.dataSuperContext.dihedral_dict[dihedral-1][1]
                                 molecule_interaction_atom_to_atom_type_ref = []
 
                                 # print int_index_store, '######'
@@ -1297,6 +1299,16 @@ class LammpsMainParser(MainHierarchicalParser):
         self.specs_filter.append(line)
         return None
 
+    def adHoc_dihedral_style(self, parser):
+        line = parser.fIn.readline()
+        self.specs_filter.append(line)
+        return None
+    def adHoc_improper_style(self, parser):
+        line = parser.fIn.readline()
+        self.specs_filter.append(line)
+        return None
+
+
     def adHoc_thermo_style(self, parser):
         line = parser.fIn.readline()
         self.specs_filter.append(line)
@@ -1611,6 +1623,24 @@ class LammpsMainParser(MainHierarchicalParser):
     ########################################################################################################################
 
     def readDihedrals(self, dihedralFunctional):
+
+        toMass     = self.converter.ratioMass
+        toDistance = self.converter.ratioDistance
+        toTime     = self.converter.ratioTime
+        toEnergy   = self.converter.ratioEnergy
+        toVelocity = self.converter.ratioVelocity
+        toForce    = self.converter.ratioForce
+        toTorque   = self.converter.ratioTorque
+        toTemp     = self.converter.ratioTemp
+        toPress    = self.converter.ratioPress
+        toDVisc    = self.converter.ratioDVisc
+        toCharge   = self.converter.ratioCharge
+        toDipole   = self.converter.ratioDipole
+        toEField   = self.converter.ratioEField
+        toDensity  = self.converter.ratioDensity
+
+        toRadians = 0.0174533  # multiply to convert deg to rad
+
 
         dihedral_filt = self.dihedral_coeff
         # dihedral_filt = [x for x in storeInput if x.startswith("dihedral_coeff")]
