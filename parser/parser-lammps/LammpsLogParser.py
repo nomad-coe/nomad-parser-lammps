@@ -430,7 +430,7 @@ class LammpsMainParser(MainHierarchicalParser):
     def compile_data_parser(self):
         """Instantiate superContext and construct parser for external data file.
         """
-        self.dataSuperContext = LammpsDataParser.LammpsDataParserContext(False)
+        self.dataSuperContext = LammpsDataParser.LammpsDataParserContext(converter=self.converter, writeMetaData=False)
         self.dataParser = AncillaryParser(
             fileDescription=LammpsDataParser.build_LammpsDataFileSimpleMatcher(),
             parser=self.parser,

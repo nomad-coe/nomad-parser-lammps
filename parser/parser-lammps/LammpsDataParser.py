@@ -51,11 +51,12 @@ class LammpsDataParserContext(object):
         section: The cached values and sections that were found in the section that is closed.
     """
 
-    def __init__(self, writeMetaData=True):
+    def __init__(self, converter, writeMetaData=True):
         """Args:
             writeMetaData: Determines if metadata is written or stored in class attributes.
         """
         self.parser = None
+        self.converter = converter
         self.writeMetaData = writeMetaData
 
     def startedParsing(self, fInName, parser):
@@ -1069,6 +1070,22 @@ class LammpsDataParserContext(object):
     ########################################################################################################################
     def readBondsFromData(self, bond_list, bondFunctional):
 
+        toMass     = self.converter.ratioMass
+        toDistance = self.converter.ratioDistance
+        toTime     = self.converter.ratioTime
+        toEnergy   = self.converter.ratioEnergy
+        toVelocity = self.converter.ratioVelocity
+        toForce    = self.converter.ratioForce
+        toTorque   = self.converter.ratioTorque
+        toTemp     = self.converter.ratioTemp
+        toPress    = self.converter.ratioPress
+        toDVisc    = self.converter.ratioDVisc
+        toCharge   = self.converter.ratioCharge
+        toDipole   = self.converter.ratioDipole
+        toEField   = self.converter.ratioEField
+        toDensity  = self.converter.ratioDensity
+
+
         list_of_bonds={}
         for line in bond_list:
 
@@ -1121,6 +1138,24 @@ class LammpsDataParserContext(object):
 
     ########################################################################################################################
     def readAnglesFromData(self, angle_list, angleFunctional):
+
+        toMass     = self.converter.ratioMass
+        toDistance = self.converter.ratioDistance
+        toTime     = self.converter.ratioTime
+        toEnergy   = self.converter.ratioEnergy
+        toVelocity = self.converter.ratioVelocity
+        toForce    = self.converter.ratioForce
+        toTorque   = self.converter.ratioTorque
+        toTemp     = self.converter.ratioTemp
+        toPress    = self.converter.ratioPress
+        toDVisc    = self.converter.ratioDVisc
+        toCharge   = self.converter.ratioCharge
+        toDipole   = self.converter.ratioDipole
+        toEField   = self.converter.ratioEField
+        toDensity  = self.converter.ratioDensity
+
+        toRadians = 0.0174533  # multiply to convert deg to rad
+
 
         list_of_angles={}
         for line in angle_list:
@@ -1190,6 +1225,23 @@ class LammpsDataParserContext(object):
 
     ########################################################################################################################
     def readDihedralsFromData(self, dihedral_list, dihedralFunctional):
+
+        toMass     = self.converter.ratioMass
+        toDistance = self.converter.ratioDistance
+        toTime     = self.converter.ratioTime
+        toEnergy   = self.converter.ratioEnergy
+        toVelocity = self.converter.ratioVelocity
+        toForce    = self.converter.ratioForce
+        toTorque   = self.converter.ratioTorque
+        toTemp     = self.converter.ratioTemp
+        toPress    = self.converter.ratioPress
+        toDVisc    = self.converter.ratioDVisc
+        toCharge   = self.converter.ratioCharge
+        toDipole   = self.converter.ratioDipole
+        toEField   = self.converter.ratioEField
+        toDensity  = self.converter.ratioDensity
+
+        toRadians = 0.0174533  # multiply to convert deg to rad
 
         list_of_dihedrals={}
         for line in dihedral_list:
@@ -1263,6 +1315,22 @@ class LammpsDataParserContext(object):
 
     ########################################################################################################################
     def readPairCoeffFromData(self, lj_list, updateAtomTypes, pairFunctional):
+
+        toMass     = self.converter.ratioMass
+        toDistance = self.converter.ratioDistance
+        toTime     = self.converter.ratioTime
+        toEnergy   = self.converter.ratioEnergy
+        toVelocity = self.converter.ratioVelocity
+        toForce    = self.converter.ratioForce
+        toTorque   = self.converter.ratioTorque
+        toTemp     = self.converter.ratioTemp
+        toPress    = self.converter.ratioPress
+        toDVisc    = self.converter.ratioDVisc
+        toCharge   = self.converter.ratioCharge
+        toDipole   = self.converter.ratioDipole
+        toEField   = self.converter.ratioEField
+        toDensity  = self.converter.ratioDensity
+
 
         # this currently gather pair coefficients for pairFunctional reported in the list of strings below
 
