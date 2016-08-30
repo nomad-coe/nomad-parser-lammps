@@ -1,0 +1,39 @@
+LAMMPS (14 May 2016)
+label       loop
+variable    a loop 5
+print       "A = $a"
+A = 1
+
+if          "$a > 2" then "jump in.test.variable break"
+
+next        a
+jump        in.test.variable loop
+variable    a loop 5
+print       "A = $a"
+A = 2
+
+if          "$a > 2" then "jump in.test.variable break"
+
+next        a
+jump        in.test.variable loop
+variable    a loop 5
+print       "A = $a"
+A = 3
+
+if          "$a > 2" then "jump in.test.variable break"
+jump in.test.variable break
+variable    a delete
+
+print	"END 1"
+END 1
+
+print	"START: getenv"
+START: getenv
+variable a getenv USER
+print "getenv: ${a}"
+getenv: fekad
+
+variable a delete
+print "END: getenv"
+END: getenv
+Total wall time: 0:00:00

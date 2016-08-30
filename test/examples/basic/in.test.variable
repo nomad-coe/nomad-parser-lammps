@@ -1,0 +1,20 @@
+label       loop
+variable    a loop 5
+print       "A = $a"
+
+if          "$a > 2" then "jump in.test.variable break"
+
+next        a
+jump        in.test.variable loop
+
+label       break
+variable    a delete
+
+print	"END 1"
+
+print	"START: getenv"
+variable a getenv USER
+print "getenv: ${a}"
+
+variable a delete
+print "END: getenv"
