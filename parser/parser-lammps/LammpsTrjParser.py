@@ -1,4 +1,3 @@
-# encoding=utf8
 import setup_paths
 
 import logging
@@ -108,32 +107,7 @@ class LammpsTrjParserContext(object):
 
 
 
-    def onClose_section_dos(self, backend, gIndex, section):
-        """Trigger called when section_dos is closed.
 
-        Store the parsed values and write them if writeMetaData is True.
-        """
-        # extract energies
-        dos_energies = section['fhi_aims_dos_energy']
-        if dos_energies is not None:
-            pass
-            # self.dos_energies = np.asarray(dos_energies)
-        # extract dos values
-        dos_values = []
-        if section['fhi_aims_dos_value_string'] is not None:
-            for string in section['fhi_aims_dos_value_string']:
-                strings = string.split()
-                dos_values.append(map(float, strings))
-        if dos_values:
-            # need to transpose array since its shape is [number_of_spin_channels,n_dos_values] in the metadata
-            pass
-            # self.dos_values = np.transpose(np.asarray(dos_values))
-        # write metadata only if values were found for both quantities
-        if self.writeMetaData:
-            if dos_energies is not None and dos_values:
-                pass
-                # backend.addArrayValues('dos_energies', self.dos_energies)
-                # backend.addArrayValues('dos_values', self.dos_values)
 
     def onClose_section_run(self, backend, gIndex, section):
 
