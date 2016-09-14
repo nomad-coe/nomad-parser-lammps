@@ -383,15 +383,12 @@ class LammpsTrjParserContext(object):
 
 
 def build_LammpsTrjFileSimpleMatcher():
-    """Builds the SimpleMatcher to parse the DOS file of FHI-aims.
-
-    SimpleMatchers are called with 'SM (' as this string has length 4,
-    which allows nice formating of nested SimpleMatchers in python.
+    """Builds the SimpleMatcher to parse the TRJ file of Lammps.
 
 
 
     Returns:
-       SimpleMatcher that parses DOS file of FHI-aims.
+       SimpleMatcher that parses TRJ file of Lammps.
     """
     # Define the output parsing tree for this version
     r_float = "[-+]?\d*\.\d+"  # Regex for a floating point value
@@ -424,7 +421,7 @@ def build_LammpsTrjFileSimpleMatcher():
         name = "lampps-trj-box-bound",
         startReStr=r"ITEM:\sBOX\sBOUNDS\s(?P<x_lammps_trj_box_bound_store>{0}\s{0}\s{0})".format(r_word),
         subMatchers=[
-            SM(r"(?P<x_lammps_trj_box_bounds_store>[\s\d.-]+)".format(r_int, r_float), repeats=True)
+            SM(r"(?P<x_lammps_trj_box_bounds_store>[\s\d.eE-]+)".format(r_int, r_float), repeats=True)
         ],
     )
 
@@ -433,7 +430,7 @@ def build_LammpsTrjFileSimpleMatcher():
         name = "lampps-trj-box-bound",
         startReStr=r"ITEM:\sATOMS\s(?P<x_lammps_trj_variables_store>{0})+".format(r_words),
         subMatchers=[
-            SM(r"(?P<x_lammps_trj_atoms_store>[\s\d.-]+)".format(r_int, r_float), repeats=True)
+            SM(r"(?P<x_lammps_trj_atoms_store>[\s\deE.-]+)".format(r_int, r_float), repeats=True)
         ],
     )
 

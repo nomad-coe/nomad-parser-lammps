@@ -1193,23 +1193,23 @@ class LammpsMainParser(MainHierarchicalParser):
         # frame_length, simulation_length, stepsPrintThermo, integrationSteps = simulationTime()
 
         # read the trajectory from the lammpstrj file if it is presented
-        # self.dump_file = self.dump[0].split()[5]
-        # if self.dump_file is not None:
-        #     self.compile_trj_parser()
-        #
-        #     dir_name = os.path.dirname(os.path.abspath(self.fName))
-        #     f_name = os.path.normpath(os.path.join(dir_name, self.dump_file))
-        #
-        #     try:
-        #         with open(f_name) as fIn:
-        #             # construct parser for TRJ file if not present
-        #             if self.trjSuperContext is None or self.trjParser is None:
-        #                 self.compile_trj_parser()
-        #             # parse TRJ file
-        #             self.trjParser.parseFile(fIn)
-        #             pass
-        #     except IOError:
-        #         logger.error("TRJ file parsing unsuccessful. Could not find %s file in directory '%s'." % (self.data_file, dir_name))
+        self.dump_file = self.dump[0].split()[5]
+        if self.dump_file is not None:
+            self.compile_trj_parser()
+
+            dir_name = os.path.dirname(os.path.abspath(self.fName))
+            f_name = os.path.normpath(os.path.join(dir_name, self.dump_file))
+
+            try:
+                with open(f_name) as fIn:
+                    # construct parser for TRJ file if not present
+                    if self.trjSuperContext is None or self.trjParser is None:
+                        self.compile_trj_parser()
+                    # parse TRJ file
+                    self.trjParser.parseFile(fIn)
+                    pass
+            except IOError:
+                logger.error("TRJ file parsing unsuccessful. Could not find %s file in directory '%s'." % (self.data_file, dir_name))
 
 
         # make sure that all file is closed properly
