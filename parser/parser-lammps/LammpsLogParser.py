@@ -499,7 +499,7 @@ class LammpsMainParser(MainHierarchicalParser):
                     # construct parser for DATA file if not present
                     if self.dataSuperContext is None or self.dataParser is None:
                         self.compile_data_parser()
-                    # parse DOS file
+                    # parse Data file
                     self.dataParser.parseFile(fIn)
             except IOError:
                 logger.error("DATA file parsing unsuccessful. Could not find %s file in directory '%s'." % (self.data_file, dir_name))
@@ -1209,7 +1209,7 @@ class LammpsMainParser(MainHierarchicalParser):
                     self.trjParser.parseFile(fIn)
                     pass
             except IOError:
-                logger.error("TRJ file parsing unsuccessful. Could not find %s file in directory '%s'." % (self.data_file, dir_name))
+                logger.error("TRJ file parsing unsuccessful. Could not find %s file in directory '%s' (%s)." % (self.dump_file, dir_name, f_name))
 
 
         # make sure that all file is closed properly

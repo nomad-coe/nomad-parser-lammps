@@ -46,16 +46,16 @@ object LammpsParserSpec2 extends Specification {
 //   }
 // }
 //
-object LammpsParserSpec4 extends Specification {
-  "LammpsParserTest4" >> {
-    "test with json-events 4" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/log.hexane_cyclohexane_nvt", "json-events") must_== ParseResult.ParseSuccess
-    }
-    "test with json 4" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/log.hexane_cyclohexane_nvt", "json") must_== ParseResult.ParseSuccess
-    }
-  }
-}
+//object LammpsParserSpec4 extends Specification {
+//  "LammpsParserTest4" >> {
+//    "test with json-events 4" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/log.hexane_cyclohexane_nvt", "json-events") must_== ParseResult.ParseSuccess
+//    }
+//    "test with json 4" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/hexane_cyclohexane/log.hexane_cyclohexane_nvt", "json") must_== ParseResult.ParseSuccess
+//    }
+//  }
+//}
 //
 //object LammpsParserSpec5 extends Specification {
 //  "LammpsParserTest5" >> {
@@ -89,14 +89,14 @@ object LammpsParserSpec4 extends Specification {
 //    }
 //  }
 //}
-//
-//object LammpsParserSpec8 extends Specification {
-//  "LammpsParserTest8" >> {
-//    "test with json-events 8" >> {
-//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
-//    }
-//    "test with json 8" >> {
-//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
-//    }
-//  }
-//}
+
+object LammpsParserSpec8 extends Specification {
+  "LammpsParserTest8" >> {
+    "test with json-events 8" >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
+    }
+    "test with json 8" >> {
+      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
+    }
+  }
+}
