@@ -45,7 +45,7 @@ object LammpsParserSpec2 extends Specification {
 //     }
 //   }
 // }
-
+//
 object LammpsParserSpec4 extends Specification {
   "LammpsParserTest4" >> {
     "test with json-events 4" >> {
@@ -56,26 +56,47 @@ object LammpsParserSpec4 extends Specification {
     }
   }
 }
-
-object LammpsParserSpec5 extends Specification {
-  "LammpsParserTest5" >> {
-    "test with json-events 5" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_dcd_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
-    }
-    "test with json 5" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_dcd_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
-    }
-  }
-}
-
-object LammpsParserSpec6 extends Specification {
-  "LammpsParserTest6" >> {
-    "test with json-events 6" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xtc_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
-    }
-    "test with json 6" >> {
-      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xtc_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
-    }
-  }
-}
-
+//
+//object LammpsParserSpec5 extends Specification {
+//  "LammpsParserTest5" >> {
+//    "test with json-events 5" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_atom_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
+//    }
+//    "test with json 5" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_atom_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
+//    }
+//  }
+//}
+//
+//object LammpsParserSpec6 extends Specification {
+//  "LammpsParserTest6" >> {
+//    "test with json-events 6" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_atom_unscaled_image_flags_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
+//    }
+//    "test with json 6" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_atom_unscaled_image_flags_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
+//    }
+//  }
+//}
+//
+//object LammpsParserSpec7 extends Specification {
+//  "LammpsParserTest7" >> {
+//    "test with json-events 7" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_lammpstrj_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
+//    }
+//    "test with json 7" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_lammpstrj_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
+//    }
+//  }
+//}
+//
+//object LammpsParserSpec8 extends Specification {
+//  "LammpsParserTest8" >> {
+//    "test with json-events 8" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json-events") must_== ParseResult.ParseSuccess
+//    }
+//    "test with json 8" >> {
+//      ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
+//    }
+//  }
+//}
