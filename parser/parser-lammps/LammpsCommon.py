@@ -52,7 +52,7 @@ class converter(object):
             # electric field = force/charge, where E* = E (4 pi perm0 sigma epsilon)^1/2 sigma / epsilon
             # density = mass/volume, where rho* = rho sigma^dim
             ########################################################################################################
-            # just for testing
+            # Conversion not supported!
             ########################################################################################################
             self.ratioMass     = 1
             self.ratioDistance = 1
