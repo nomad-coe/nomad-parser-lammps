@@ -426,6 +426,16 @@ class LammpsMainParser(MainHierarchicalParser):
         self.read_data = []
 
 
+    def compile_log_parser(self):
+        """Instantiate superContext and construct parser for external data file.
+        """
+        self.logParser = AncillaryParser(
+            fileDescription=self.build_LammpsLogFileSimpleMatcher(),
+            parser=self.parser,
+            cachingLevelForMetaName=self.get_cachingLevelForMetaName(),
+            superContext=self
+        )
+
 
     def compile_data_parser(self):
         """Instantiate superContext and construct parser for external data file.
@@ -450,15 +460,6 @@ class LammpsMainParser(MainHierarchicalParser):
         )
 
 
-    def compile_log_parser(self):
-        """Instantiate superContext and construct parser for external data file.
-        """
-        self.logParser = AncillaryParser(
-            fileDescription=self.build_LammpsLogFileSimpleMatcher(),
-            parser=self.parser,
-            cachingLevelForMetaName=self.get_cachingLevelForMetaName(),
-            superContext=self
-        )
 
     #===========================================================================
     # The functions that trigger when sections are closed
@@ -1265,15 +1266,30 @@ class LammpsMainParser(MainHierarchicalParser):
 
         line = parser.fIn.readline()
 
+        # self.compile_log_parser()
+
         filename = line.split()[1]
+
         dir_name = os.path.dirname(os.path.abspath(self.fName))
         f_name = os.path.normpath(os.path.join(dir_name, filename))
 
         # close the file reader of the actual log file
         parser.fIn.fIn.close()
 
-        # owerwrite and open the file reader of the new log file
-        parser.fIn = PushbackLineFile(open(f_name, 'r'))
+        try:
+
+            # owerwrite and open the file reader of the new log file
+            parser.fIn = PushbackLineFile(open(f_name, 'r'))
+
+        except IOError:
+            logger.error("LOG file parsing unsuccessful. Could not find %s file in directory '%s' (%s)." % (f_name, dir_name, f_name))
+
+
+
+        # dir_name = os.path.dirname(os.path.abspath(self.fName))
+        # f_name = os.path.normpath(os.path.join(dir_name, filename))
+
+
 
         return None
 
