@@ -13,6 +13,8 @@ from nomadcore.caching_backend import CachingLevel
 from nomadcore.simple_parser import SimpleMatcher as SM
 from nomadcore.simple_parser import mainFunction
 import nomadcore.ActivateLogging
+from contextlib import contextmanager
+
 
 from re import escape as esc
 
@@ -41,6 +43,11 @@ nformat = {
 logger = logging.getLogger(name="nomad.LammpsDataParser")
 
 
+@contextmanager # SECTIONS ARE CLOSED AUTOMATICALLY
+def open_section(p, name):
+    gid = p.openSection(name)
+    yield gid
+    p.closeSection(name, gid)
 
 
 
@@ -116,6 +123,7 @@ class LammpsTrjParserContext(object):
     def onClose_section_system(self, backend, gIndex, section):
 
         p = backend.superBackend
+        o = open_section
 
         toMass     = self.converter.ratioMass
         toDistance = self.converter.ratioDistance
@@ -132,224 +140,226 @@ class LammpsTrjParserContext(object):
         toEField   = self.converter.ratioEField
         toDensity  = self.converter.ratioDensity
 
+        with o(p, 'section_system'):
 
-        box_bound = section["x_lammps_trj_box_bound_store"][0]
-        boundary = list(map(lambda x: x == "pp", box_bound.split()))
 
-        self.pbcBool.append(boundary)
+            box_bound = section["x_lammps_trj_box_bound_store"][0]
+            boundary = list(map(lambda x: x == "pp", box_bound.split()))
 
+            self.pbcBool.append(boundary)
 
-        # Calculating simulation cell vectors frame by frame
-        simulationCelldata = []
-        for line in section['x_lammps_trj_box_bounds_store']:
-            simulationCelldata.append([float(x) for x in line.split()])
 
+            # Calculating simulation cell vectors frame by frame
+            simulationCelldata = []
+            for line in section['x_lammps_trj_box_bounds_store']:
+                simulationCelldata.append([float(x) for x in line.split()])
 
-        xx = [ simulationCelldata[0][0] - simulationCelldata[0][1], 0, 0 ]
-        yy = [ 0, simulationCelldata[1][0] - simulationCelldata[1][1], 0 ]
-        zz = [ 0, 0, simulationCelldata[2][0] - simulationCelldata[2][1] ]
-        simulationCellstore = [xx, yy, zz]
 
-        self.simulationCell.append(simulationCellstore)
-        temp_simulation_cell = [ [ dim*toDistance for dim in box ] for box in simulationCellstore ]
-        p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
+            xx = [ simulationCelldata[0][0] - simulationCelldata[0][1], 0, 0 ]
+            yy = [ 0, simulationCelldata[1][0] - simulationCelldata[1][1], 0 ]
+            zz = [ 0, 0, simulationCelldata[2][0] - simulationCelldata[2][1] ]
+            simulationCellstore = [xx, yy, zz]
 
-        variables = section['x_lammps_trj_variables_store'][0]
-        variables = variables.split()
+            self.simulationCell.append(simulationCellstore)
+            temp_simulation_cell = [ [ dim*toDistance for dim in box ] for box in simulationCellstore ]
+            p.addArrayValues('simulation_cell', np.array(temp_simulation_cell))
 
-        frameAtomInfo = []
-        for line in section["x_lammps_trj_atoms_store"]:
-            frameAtomInfo.append(line.split())
+            variables = section['x_lammps_trj_variables_store'][0]
+            variables = variables.split()
 
-        if 'id' in variables:
-            idInd = variables.index('id')
-            frameAtomInfo.sort(key=lambda x: int(x[idInd]))
+            frameAtomInfo = []
+            for line in section["x_lammps_trj_atoms_store"]:
+                frameAtomInfo.append(line.split())
 
+            if 'id' in variables:
+                idInd = variables.index('id')
+                frameAtomInfo.sort(key=lambda x: int(x[idInd]))
 
-        isAtomPosition = False
-        if 'x' in variables and 'y' in variables and 'z' in variables:     # if true, unwrapped coord are dumped
-            isAtomPosition = True
 
-        self.atomPositionBool.append(isAtomPosition)
+            isAtomPosition = False
+            if 'x' in variables and 'y' in variables and 'z' in variables:     # if true, unwrapped coord are dumped
+                isAtomPosition = True
 
+            self.atomPositionBool.append(isAtomPosition)
 
 
-        isAtomPositionScaled = False
-        if 'xs' in variables and 'ys' in variables and 'zs' in variables:  # if true, scaled coord are dumped
-            isAtomPositionScaled = True
 
-        self.atomPositionScaledBool.append(isAtomPositionScaled)
+            isAtomPositionScaled = False
+            if 'xs' in variables and 'ys' in variables and 'zs' in variables:  # if true, scaled coord are dumped
+                isAtomPositionScaled = True
 
-        isImageFlagIndex = False
-        if 'ix' in variables and 'iy' in variables and 'iz' in variables:  # if true, image flag indexes are dumped
-            isImageFlagIndex = True
+            self.atomPositionScaledBool.append(isAtomPositionScaled)
 
-        self.imageFlagIndexBool.append(isImageFlagIndex)
-        # self.imageFlagIndex = imageFlagIndex
+            isImageFlagIndex = False
+            if 'ix' in variables and 'iy' in variables and 'iz' in variables:  # if true, image flag indexes are dumped
+                isImageFlagIndex = True
 
+            self.imageFlagIndexBool.append(isImageFlagIndex)
+            # self.imageFlagIndex = imageFlagIndex
 
-        # Atom velocities
-        isAtomVelocity = False
-        if 'vx' in variables and 'vy' in variables and 'vz' in variables:  # if true, scaled coord are dumped
-            isAtomVelocity = True
 
-        # Atom forces
-        isAtomForces = False
-        if 'fx' in variables and 'fy' in variables and 'fz' in variables:  # if true, scaled coord are dumped
-            isAtomForces = True
+            # Atom velocities
+            isAtomVelocity = False
+            if 'vx' in variables and 'vy' in variables and 'vz' in variables:  # if true, scaled coord are dumped
+                isAtomVelocity = True
 
-        # Atom position (unwrapped)
-        if isAtomPosition == True:
+            # Atom forces
+            isAtomForces = False
+            if 'fx' in variables and 'fy' in variables and 'fz' in variables:  # if true, scaled coord are dumped
+                isAtomForces = True
 
-            xInd = variables.index('x')
-            yInd = variables.index('y')
-            zInd = variables.index('z')
+            # Atom position (unwrapped)
+            if isAtomPosition == True:
 
-            store_single =[]
-            frame = section["x_lammps_trj_atoms_store"]
-            for line in frame:
-                line = line.split()
-                if isImageFlagIndex:
-                    ixInd = variables.index('ix')
-                    iyInd = variables.index('iy')
-                    izInd = variables.index('iz')
+                xInd = variables.index('x')
+                yInd = variables.index('y')
+                zInd = variables.index('z')
 
-                    store = [float(line[xInd]) + int(line[ixInd]) * np.linalg.norm(simulationCellstore[0]),
-                             float(line[yInd]) + int(line[iyInd]) * np.linalg.norm(simulationCellstore[1]),
-                             float(line[zInd]) + int(line[izInd]) * np.linalg.norm(simulationCellstore[2])]
-                else:
-                    store = [float(line[xInd]), float(line[yInd]), float(line[zInd])]
+                store_single =[]
+                frame = section["x_lammps_trj_atoms_store"]
+                for line in frame:
+                    line = line.split()
+                    if isImageFlagIndex:
+                        ixInd = variables.index('ix')
+                        iyInd = variables.index('iy')
+                        izInd = variables.index('iz')
 
-                store_single.append(store)
+                        store = [float(line[xInd]) + int(line[ixInd]) * np.linalg.norm(simulationCellstore[0]),
+                                 float(line[yInd]) + int(line[iyInd]) * np.linalg.norm(simulationCellstore[1]),
+                                 float(line[zInd]) + int(line[izInd]) * np.linalg.norm(simulationCellstore[2])]
+                    else:
+                        store = [float(line[xInd]), float(line[yInd]), float(line[zInd])]
 
-            self.atomPosition.append(store_single)
+                    store_single.append(store)
 
-            temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in store_single ]
-            p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
-            # p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
+                self.atomPosition.append(store_single)
 
-        # else:
-        #     atomPosition = []
-        #     atomPositionBool = False
+                temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in store_single ]
+                p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
+                # p.addArrayValues('atom_labels', np.asarray(atomAtLabel))
 
+            # else:
+            #     atomPosition = []
+            #     atomPositionBool = False
 
-        # Atom position (scaled) [0, 1]
-        if isAtomPositionScaled == True:
 
-            xsInd = variables.index('xs')
-            ysInd = variables.index('ys')
-            zsInd = variables.index('zs')
+            # Atom position (scaled) [0, 1]
+            if isAtomPositionScaled == True:
 
-            atomPositionScaled = []
+                xsInd = variables.index('xs')
+                ysInd = variables.index('ys')
+                zsInd = variables.index('zs')
 
-            store_single_scaled =[]
+                atomPositionScaled = []
 
-            frame = section["x_lammps_trj_atoms_store"]
-            for line in frame:
-                line = line.split()
-                store = [float(line[xsInd]), float(line[ysInd]), float(line[zsInd])]
-                store_single_scaled.append(store)
+                store_single_scaled =[]
 
-            self.atomPositionScaled.append(store_single_scaled)
+                frame = section["x_lammps_trj_atoms_store"]
+                for line in frame:
+                    line = line.split()
+                    store = [float(line[xsInd]), float(line[ysInd]), float(line[zsInd])]
+                    store_single_scaled.append(store)
 
+                self.atomPositionScaled.append(store_single_scaled)
 
 
-        # Atom position (converted from scaled positions)
 
-            store = []
-            store_single = []
-            for atom in store_single_scaled:
+            # Atom position (converted from scaled positions)
 
-                x = atom[0] * np.linalg.norm(simulationCellstore[0]) + np.min(simulationCellstore[0])
-                y = atom[1] * np.linalg.norm(simulationCellstore[1]) + np.min(simulationCellstore[1])
-                z = atom[2] * np.linalg.norm(simulationCellstore[2]) + np.min(simulationCellstore[2])
-                store = [x, y, z]
-                store_single.append(store)
+                store = []
+                store_single = []
+                for atom in store_single_scaled:
 
-            self.atomPosition.append(store_single)
+                    x = atom[0] * np.linalg.norm(simulationCellstore[0]) + np.min(simulationCellstore[0])
+                    y = atom[1] * np.linalg.norm(simulationCellstore[1]) + np.min(simulationCellstore[1])
+                    z = atom[2] * np.linalg.norm(simulationCellstore[2]) + np.min(simulationCellstore[2])
+                    store = [x, y, z]
+                    store_single.append(store)
 
-            temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in store_single ]
-            p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
+                self.atomPosition.append(store_single)
 
-        # else:
-        #     atomPositionScaled = []
-        #     atomPositionScaledBool = False
-        #     atomPosition = []
-        #     atomPositionBool = False
+                temp_atom_positions = [ [ crd*toDistance for crd in atom ] for atom in store_single ]
+                p.addArrayValues('atom_positions', np.asarray(temp_atom_positions))
 
+            # else:
+            #     atomPositionScaled = []
+            #     atomPositionScaledBool = False
+            #     atomPosition = []
+            #     atomPositionBool = False
 
-        # Atom velocities
-        if isAtomVelocity == True:
 
-            vxInd = variables.index('vx')
-            vyInd = variables.index('vy')
-            vzInd = variables.index('vz')
+            # Atom velocities
+            if isAtomVelocity == True:
 
-            # atomVelocity = []
+                vxInd = variables.index('vx')
+                vyInd = variables.index('vy')
+                vzInd = variables.index('vz')
 
-            store_single_velocity =[]
+                # atomVelocity = []
 
-            frame = section["x_lammps_trj_atoms_store"]
-            for line in frame:
-                line = line.split()
-                store = [float(line[vxInd]), float(line[vyInd]), float(line[vzInd])]
-                store_single_velocity.append(store)
+                store_single_velocity =[]
 
-            self.atomVelocity.append(store_single_velocity)
-            temp_atom_velocities = [ [ vi*toVelocity for vi in atom ] for atom in store_single_velocity ]
-            p.addArrayValues('atom_velocities', np.asarray(temp_atom_velocities))
+                frame = section["x_lammps_trj_atoms_store"]
+                for line in frame:
+                    line = line.split()
+                    store = [float(line[vxInd]), float(line[vyInd]), float(line[vzInd])]
+                    store_single_velocity.append(store)
 
-        # Atom Forces
-        if isAtomForces == True:
+                self.atomVelocity.append(store_single_velocity)
+                temp_atom_velocities = [ [ vi*toVelocity for vi in atom ] for atom in store_single_velocity ]
+                p.addArrayValues('atom_velocities', np.asarray(temp_atom_velocities))
 
-            fxInd = variables.index('fx')
-            fyInd = variables.index('fy')
-            fzInd = variables.index('fz')
+            # Atom Forces
+            if isAtomForces == True:
 
-            # atomVelocity = []
+                fxInd = variables.index('fx')
+                fyInd = variables.index('fy')
+                fzInd = variables.index('fz')
 
-            store_single_forces =[]
+                # atomVelocity = []
 
-            frame = section["x_lammps_trj_atoms_store"]
-            for line in frame:
-                line = line.split()
-                store = [float(line[fxInd]), float(line[fyInd]), float(line[fzInd])]
-                store_single_forces.append(store)
+                store_single_forces =[]
 
-            self.atomVelocity.append(store_single_forces)
+                frame = section["x_lammps_trj_atoms_store"]
+                for line in frame:
+                    line = line.split()
+                    store = [float(line[fxInd]), float(line[fyInd]), float(line[fzInd])]
+                    store_single_forces.append(store)
 
+                self.atomVelocity.append(store_single_forces)
 
 
 
-            # atomForce = []
-            # for frame in frameAtomInfo:
-            #     store_1 = []
-            #     for line in frame:
-            #
-            #         if fxInd and fyInd and fzInd:
-            #             store = [ float(line[fxInd]), float(line[fyInd]), float(line[fzInd]) ]
-            #             store_1.append(store)
-            #
-            #     atomForce.append(store_1)
 
-        # self.atomPositionWrapped = atomPositionWrapped
-        # self.atomPositionWrappedBool  = atomPositionWrappedBool
+                # atomForce = []
+                # for frame in frameAtomInfo:
+                #     store_1 = []
+                #     for line in frame:
+                #
+                #         if fxInd and fyInd and fzInd:
+                #             store = [ float(line[fxInd]), float(line[fyInd]), float(line[fzInd]) ]
+                #             store_1.append(store)
+                #
+                #     atomForce.append(store_1)
 
+            # self.atomPositionWrapped = atomPositionWrapped
+            # self.atomPositionWrappedBool  = atomPositionWrappedBool
 
 
-        # return (simulationCell, atomPositionScaled, atomPositionScaledBool, atomPosition, atomPositionBool,
-        #             atomPositionWrapped, atomPositionWrappedBool , imageFlagIndex, imageFlagIndexBool )
 
+            # return (simulationCell, atomPositionScaled, atomPositionScaledBool, atomPosition, atomPositionBool,
+            #             atomPositionWrapped, atomPositionWrappedBool , imageFlagIndex, imageFlagIndexBool )
 
 
 
-            #
-        # xx = [ header[5][0] - header[5][1], 0, 0 ]
-        # yy = [ 0, header[6][0] - header[6][1], 0 ]
-        # zz = [ 0, 0, header[7][0] - header[7][1] ]
-        # store = [xx, yy, zz]
 
-    # self.simulationCell.append()
+                #
+            # xx = [ header[5][0] - header[5][1], 0, 0 ]
+            # yy = [ 0, header[6][0] - header[6][1], 0 ]
+            # zz = [ 0, 0, header[7][0] - header[7][1] ]
+            # store = [xx, yy, zz]
+
+        # self.simulationCell.append()
 
         pass
 
