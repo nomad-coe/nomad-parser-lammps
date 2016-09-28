@@ -424,7 +424,7 @@ class LammpsMainParser(MainHierarchicalParser):
         self.timestep = []
         self.dump = []
         self.read_data = []
-
+        self.data_file = None
 
     def compile_log_parser(self):
         """Instantiate superContext and construct parser for external data file.
@@ -506,485 +506,485 @@ class LammpsMainParser(MainHierarchicalParser):
                 logger.error("DATA file parsing unsuccessful. Could not find %s file in directory '%s'." % (self.data_file, dir_name))
 
 
-        list_of_bonds = self.readBonds(bondFunctional)
-        list_of_bonds = sorted(list(list_of_bonds.items()), key=operator.itemgetter(0))
-
-        list_of_angles = self.readAngles(angleFunctional)
-        list_of_angles = sorted(list(list_of_angles.items()), key=operator.itemgetter(0))
-
-        list_of_dihedrals = self.readDihedrals(dihedralFunctional)
-        list_of_dihedrals = sorted(list(list_of_dihedrals.items()), key=operator.itemgetter(0))
-
-        # collecting dispersion interactions ff terms
-        updateAtomTypes= self.dataSuperContext.updateAtomTypes
-        list_of_ljs, ljs_dict  = self.readPairCoeff(updateAtomTypes, pairFunctional)
-        ljs_dict = sorted(list(ljs_dict.items()), key=operator.itemgetter(0))
-        list_of_ljs = sorted(list(list_of_ljs.items()), key=operator.itemgetter(0))
-        lj_types = len(ljs_dict)
-
-        ####################################################################################################################################################################################################################################
-        # FF DEFINITION CAN BE SET WITHIN THE LAMMPS TOPOLOGY (DATA) FILE, here we collect the FF parameters from the .data file
-        # (if they are not provided in the input file)
-
-        if not list_of_bonds:
-            list_of_bonds = self.dataSuperContext.readBondsFromData(self.dataSuperContext.bond_list, bondFunctional)
+            list_of_bonds = self.readBonds(bondFunctional)
             list_of_bonds = sorted(list(list_of_bonds.items()), key=operator.itemgetter(0))
 
-
-        if not list_of_angles:
-            list_of_angles = self.dataSuperContext.readAnglesFromData(self.dataSuperContext.angle_list, angleFunctional)
+            list_of_angles = self.readAngles(angleFunctional)
             list_of_angles = sorted(list(list_of_angles.items()), key=operator.itemgetter(0))
 
-
-        if not list_of_dihedrals:
-            list_of_dihedrals = self.dataSuperContext.readDihedralsFromData(self.dataSuperContext.dihedral_list, dihedralFunctional)
+            list_of_dihedrals = self.readDihedrals(dihedralFunctional)
             list_of_dihedrals = sorted(list(list_of_dihedrals.items()), key=operator.itemgetter(0))
 
-
-        #########################################
-        ############### missing
-        #########################################
-        if not list_of_ljs:
-            list_of_ljs, ljs_dict = self.dataSuperContext.readPairCoeffFromData(self.dataSuperContext.lj_list, self.dataSuperContext.updateAtomTypes, pairFunctional)
+            # collecting dispersion interactions ff terms
+            updateAtomTypes= self.dataSuperContext.updateAtomTypes
+            list_of_ljs, ljs_dict  = self.readPairCoeff(updateAtomTypes, pairFunctional)
             ljs_dict = sorted(list(ljs_dict.items()), key=operator.itemgetter(0))
             list_of_ljs = sorted(list(list_of_ljs.items()), key=operator.itemgetter(0))
             lj_types = len(ljs_dict)
 
+            ####################################################################################################################################################################################################################################
+            # FF DEFINITION CAN BE SET WITHIN THE LAMMPS TOPOLOGY (DATA) FILE, here we collect the FF parameters from the .data file
+            # (if they are not provided in the input file)
+
+            if not list_of_bonds:
+                list_of_bonds = self.dataSuperContext.readBondsFromData(self.dataSuperContext.bond_list, bondFunctional)
+                list_of_bonds = sorted(list(list_of_bonds.items()), key=operator.itemgetter(0))
 
 
-        #### BASIC TOPOLOGY INFORMATION IN section_topology ################################################################################################################################################################################
-        ####################################################################################################################################################################################################################################
-        # number_of_topology_atoms = numberOfTopologyAtoms()
-        # p.addValue('number_of_topology_atoms', number_of_topology_atoms)  # backend add number of topology atoms
-
-        number_of_topology_atoms = self.dataSuperContext.at_count
-        atom_to_molecule = []
-        for i in range(number_of_topology_atoms):
-            atom_to_molecule.append([self.dataSuperContext.moleculeInfoResolved[i][1],
-                                     self.dataSuperContext.moleculeInfoResolved[i][3]])
-
-        atomic_number = []
-        for i in range(number_of_topology_atoms):
-            pass
-
-        p.addValue('number_of_topology_molecules', len(self.dataSuperContext.moleculeInfo))  # backend add number of topology molecules
-        p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
+            if not list_of_angles:
+                list_of_angles = self.dataSuperContext.readAnglesFromData(self.dataSuperContext.angle_list, angleFunctional)
+                list_of_angles = sorted(list(list_of_angles.items()), key=operator.itemgetter(0))
 
 
-        #### ATOM TYPE INFORMATION IN section_atom_type ####################################################################################################################################################################################
-        ####################################################################################################################################################################################################################################
-        at_types = len(self.dataSuperContext.mass_list)
-        for i in range(at_types):
+            if not list_of_dihedrals:
+                list_of_dihedrals = self.dataSuperContext.readDihedralsFromData(self.dataSuperContext.dihedral_list, dihedralFunctional)
+                list_of_dihedrals = sorted(list(list_of_dihedrals.items()), key=operator.itemgetter(0))
 
-            with o(p, 'section_atom_type'):
-                # p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
-                p.addValue('atom_type_name', str(self.dataSuperContext.mass_xyz[i])+' : '+str(i+1))  ### TO BE CHECKED LATER
-                p.addValue('atom_type_mass', self.converter.Mass(self.dataSuperContext.mass_list[i][1]))     # Atomic mass
-                p.addValue('atom_type_charge', self.converter.Charge(self.dataSuperContext.charge_dict[i][1])) # Atomic charge, either partial or ionic
+
+            #########################################
+            ############### missing
+            #########################################
+            if not list_of_ljs:
+                list_of_ljs, ljs_dict = self.dataSuperContext.readPairCoeffFromData(self.dataSuperContext.lj_list, self.dataSuperContext.updateAtomTypes, pairFunctional)
+                ljs_dict = sorted(list(ljs_dict.items()), key=operator.itemgetter(0))
+                list_of_ljs = sorted(list(list_of_ljs.items()), key=operator.itemgetter(0))
+                lj_types = len(ljs_dict)
+
+
+
+            #### BASIC TOPOLOGY INFORMATION IN section_topology ################################################################################################################################################################################
+            ####################################################################################################################################################################################################################################
+            # number_of_topology_atoms = numberOfTopologyAtoms()
+            # p.addValue('number_of_topology_atoms', number_of_topology_atoms)  # backend add number of topology atoms
+
+            number_of_topology_atoms = self.dataSuperContext.at_count
+            atom_to_molecule = []
+            for i in range(number_of_topology_atoms):
+                atom_to_molecule.append([self.dataSuperContext.moleculeInfoResolved[i][1],
+                                         self.dataSuperContext.moleculeInfoResolved[i][3]])
+
+            atomic_number = []
+            for i in range(number_of_topology_atoms):
                 pass
 
-                ####################################################################################################################################################################################################################################
+            p.addValue('number_of_topology_molecules', len(self.dataSuperContext.moleculeInfo))  # backend add number of topology molecules
+            p.addArrayValues('atom_to_molecule', np.asarray(atom_to_molecule))
 
-        ####################################################################################################################################################################################################################################
-        #### COVALENT BONDS INFORMATION IN section_interaction (number_of_atoms_per_interaction = 2) #######################################################################################################################################
-        ####################################################################################################################################################################################################################################
 
-        if self.dataSuperContext.bd_types:  #  COVALENT BONDS
+            #### ATOM TYPE INFORMATION IN section_atom_type ####################################################################################################################################################################################
+            ####################################################################################################################################################################################################################################
+            at_types = len(self.dataSuperContext.mass_list)
+            for i in range(at_types):
 
-            store = []
-            interaction_atoms = []
-            for i in self.dataSuperContext.bondTypeList:
-                for j in self.dataSuperContext.bondTypeList:
+                with o(p, 'section_atom_type'):
+                    # p.addValue('atom_type_name', [mass_xyz[i], i+1])  # Here atom_type_name is atomic number plus an integer index identifying the atom type
+                    p.addValue('atom_type_name', str(self.dataSuperContext.mass_xyz[i])+' : '+str(i+1))  ### TO BE CHECKED LATER
+                    p.addValue('atom_type_mass', self.converter.Mass(self.dataSuperContext.mass_list[i][1]))     # Atomic mass
+                    p.addValue('atom_type_charge', self.converter.Charge(self.dataSuperContext.charge_dict[i][1])) # Atomic charge, either partial or ionic
+                    pass
 
-                    store = [ [x[1], x[2]] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==i ]
-                interaction_atoms.append(store)
+                    ####################################################################################################################################################################################################################################
 
+            ####################################################################################################################################################################################################################################
+            #### COVALENT BONDS INFORMATION IN section_interaction (number_of_atoms_per_interaction = 2) #######################################################################################################################################
+            ####################################################################################################################################################################################################################################
 
-            for i in range(len(self.dataSuperContext.bondTypeList)):
+            if self.dataSuperContext.bd_types:  #  COVALENT BONDS
 
-                with o(p, 'section_interaction'):
-                    p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of bound pairs for a specific covalent bond
-                    p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of covalent bonds of this type
-                    p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (2 for covalent bonds)
+                store = []
+                interaction_atoms = []
+                for i in self.dataSuperContext.bondTypeList:
+                    for j in self.dataSuperContext.bondTypeList:
 
-                    if bondFunctional:
-                        p.addValue('interaction_kind', bondFunctional)  # functional form of the interaction
+                        store = [ [x[1], x[2]] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==i ]
+                    interaction_atoms.append(store)
 
-                    int_index_store = self.dataSuperContext.bond_dict[i][1]
-                    interaction_atom_to_atom_type_ref = []
 
-                    if all(isinstance(elem, list) for elem in int_index_store) == False:
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+                for i in range(len(self.dataSuperContext.bondTypeList)):
 
-                    else:
-                        for line in int_index_store:
-                            temp = sorted([x-1 for x in line])
-                            interaction_atom_to_atom_type_ref.append(temp)
+                    with o(p, 'section_interaction'):
+                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of bound pairs for a specific covalent bond
+                        p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of covalent bonds of this type
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (2 for covalent bonds)
 
-                    bondParameters = dict()
-                    bondParameters.update({list_of_bonds[i][0] : list_of_bonds[i][1]})
+                        if bondFunctional:
+                            p.addValue('interaction_kind', bondFunctional)  # functional form of the interaction
 
-                    p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                    p.addValue('interaction_parameters', bondParameters)  # interaction parameters for the functional
-
-
-        ####################################################################################################################################################################################################################################
-        #### BOND ANGLES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 3) ##########################################################################################################################################
-        ####################################################################################################################################################################################################################################
-        ag_types = self.dataSuperContext.ag_types
-        if ag_types:  # BOND ANGLES
-
-            store = []
-            interaction_atoms = []
-            for i in self.dataSuperContext.angleTypeList:
-                for j in self.dataSuperContext.angleTypeList:
-
-                    store = [ [x[1], x[2], x[3]] for x in self.dataSuperContext.angle_interaction_atoms if x[0]==i ]
-                interaction_atoms.append(store)
-
-            for i in range(len(self.dataSuperContext.angleTypeList)):
-
-                with o(p, 'section_interaction'):
-                    p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of triplets for a specific bond angle
-                    p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of bond angles of this type
-                    p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (3 for bond angles)
-
-                    if bondFunctional:
-                        p.addValue('interaction_kind', angleFunctional)  # functional form of the interaction
-
-                    int_index_store = self.dataSuperContext.angle_dict[i][1]
-                    interaction_atom_to_atom_type_ref = []
-
-                    if all(isinstance(elem, list) for elem in int_index_store) == False:
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
-
-                    else:
-                        for line in int_index_store:
-                            temp = [x-1 for x in line]
-                            interaction_atom_to_atom_type_ref.append(temp)
-
-                    angleParameters = dict()
-                    angleParameters.update({list_of_angles[i][0] : list_of_angles[i][1]})
-
-                    p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                    p.addValue('interaction_parameters', angleParameters)  # interaction parameters for the functional
-
-        ####################################################################################################################################################################################################################################
-        #### DIHEDRAL ANGLES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 4) ######################################################################################################################################
-        ####################################################################################################################################################################################################################################
-
-        if self.dataSuperContext.dh_types:  # DIHEDRAL ANGLES
-
-            store = []
-            interaction_atoms = []
-            for i in self.dataSuperContext.dihedralTypeList:
-                for j in self.dataSuperContext.dihedralTypeList:
-
-                    store = [ [x[1], x[2], x[3], x[4]] for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==i ]
-                interaction_atoms.append(store)
-
-            for i in range(len(self.dataSuperContext.dihedralTypeList)):
-
-                with o(p, 'section_interaction'):
-                    p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of quartets for a specific dihedral angle
-                    p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of dihedral angles of this type
-                    p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (4 for dihedral angles)
-
-                    if bondFunctional:
-                        p.addValue('interaction_kind', dihedralFunctional)  # functional form of the interaction
-
-                    int_index_store = self.dataSuperContext.dihedral_dict[i][1]
-                    interaction_atom_to_atom_type_ref = []
-
-                    if all(isinstance(elem, list) for elem in int_index_store) == False:
-                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
-
-                    else:
-                        for line in int_index_store:
-                            temp = [x-1 for x in line]
-                            interaction_atom_to_atom_type_ref.append(temp)
-
-                    dihedralParameters = dict()
-                    dihedralParameters.update({list_of_dihedrals[i][0] : list_of_dihedrals[i][1]})
-                    p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                    p.addValue('interaction_parameters', dihedralParameters)  # interaction parameters for the functional
-
-        ####################################################################################################################################################################################################################################
-        #### DISPERSIVE FORCES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 2) ####################################################################################################################################
-        ####################################################################################################################################################################################################################################
-
-        if lj_types:  # LJ-like interactions
-
-            with o(p, 'section_interaction'):
-
-                p.addValue('x_lammps_number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
-                p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
-
-                if pairFunctionalAndCutOff:
-                    p.addValue('interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radius included)
-
-                int_index_store = []
-                int_param_store = []
-
-                for i in range(lj_types):
-                    int_index_store.append(ljs_dict[i][1])
-                    int_param_store.append(list_of_ljs[i][1])
-
-                interaction_atom_to_atom_type_ref = []
-                if all(isinstance(elem, list) for elem in int_index_store) == False:
-                    interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
-
-                else:
-                    for line in int_index_store:
-                        temp = [x-1 for x in line]
-                        interaction_atom_to_atom_type_ref.append(temp)
-
-                # p.addValue('interaction_atoms', int_index_store)
-                p.addArrayValues('x_lammps_pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                p.addArrayValues('x_lammps_pair_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
-                pass
-
-        ####################################################################################################################################################################################################################################
-        #### MOLECULE TYPE INFORMATION IN section_molecule_type ############################################################################################################################################################################
-        ####################################################################################################################################################################################################################################
-        moleculeTypeInfo = self.dataSuperContext.moleculeTypeInfo
-        for i in range(len(moleculeTypeInfo)):
-
-            with o(p, 'section_molecule_type'):
-                # gindex = 0
-                p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
-                p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
-
-                p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray([x-1 for x in moleculeTypeInfo[i][1]]))
-
-
-                atom_in_molecule_name = []
-                for j in moleculeTypeInfo[i][1]:
-                    atom_in_molecule_name.append([ self.dataSuperContext.mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
-
-                p.addArrayValues('atom_in_molecule_name', np.asarray(atom_in_molecule_name))
-
-                atom_in_molecule_charge = []
-                for j in moleculeTypeInfo[i][1]:
-                    atom_in_molecule_charge.append(self.dataSuperContext.charge_list[j-1][1])
-
-                p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
-
-                ############################################################################################################################################################################################################################
-                #### COVALENT BONDS INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ######################################################################################################################
-
-                if self.dataSuperContext.bd_types:
-
-                    toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
-
-                    store = []
-                    molecule_interaction_atoms = []
-                    molecule_interaction_type  = []
-                    for h in self.dataSuperContext.bondTypeList:
-                        for k in self.dataSuperContext.bondTypeList:
-
-                            store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-                            # store   = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-
-                        molecule_interaction_atoms.append(store)
-
-                    for l in self.dataSuperContext.bondTypeList:
-                        store1  = [ x[0] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-                        molecule_interaction_type.append(store1)
-
-                    molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
-
-                    for bond in self.dataSuperContext.bondTypeList:
-                        if bond in molecule_interaction_type:
-
-                            with o(p, 'section_molecule_interaction'):
-
-                                p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[bond-1]))
-                                p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[bond-1]))
-                                p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
-
-                                if bondFunctional:
-                                    p.addValue('molecule_interaction_kind', bondFunctional)
-
-
-                                int_index_store = self.dataSuperContext.bond_dict[bond-1][1]
-
-                                molecule_interaction_atom_to_atom_type_ref = []
-                                if all(isinstance(elem, list) for elem in int_index_store) == False:
-                                    molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
-
-                                else:
-                                    for line in int_index_store:
-                                        temp = sorted([x-1 for x in line])
-                                        molecule_interaction_atom_to_atom_type_ref.append(temp)
-
-                                moleculeBondParameters = dict()
-                                moleculeBondParameters.update({list_of_bonds[bond-1][0] : list_of_bonds[bond-1][1]})
-                                p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                p.addValue('molecule_interaction_parameters', moleculeBondParameters)
-
-                ############################################################################################################################################################################################################################
-                #### BOND ANGLE INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 3) #########################################################################################################################
-
-                if ag_types:
-
-                    toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
-
-                    store = []
-                    molecule_interaction_atoms = []
-                    molecule_interaction_type  = []
-                    for h in self.dataSuperContext.angleTypeList:
-                        for k in self.dataSuperContext.angleTypeList:
-
-                            store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex] for x in self.dataSuperContext.angle_interaction_atoms
-                                        if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] ]
-                            # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-
-                        molecule_interaction_atoms.append(store)
-
-                    for l in self.dataSuperContext.angleTypeList:
-                        store1  = [ x[0] for x in self.dataSuperContext.angle_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-                        molecule_interaction_type.append(store1)
-
-                    molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
-
-                    for angle in self.dataSuperContext.angleTypeList:
-                        if angle in molecule_interaction_type:
-
-                            with o(p, 'section_molecule_interaction'):
-
-                                p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[angle-1]))
-                                p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[angle-1]))
-                                p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
-
-                                if bondFunctional:
-                                    p.addValue('molecule_interaction_kind', angleFunctional)
-
-
-                                int_index_store = self.dataSuperContext.angle_dict[angle-1][1]
-                                molecule_interaction_atom_to_atom_type_ref = []
-
-                                # print int_index_store, '######'
-
-                                if all(isinstance(elem, list) for elem in int_index_store) == False:
-                                    molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
-
-                                else:
-                                    for line in int_index_store:
-                                        temp = [x-1 for x in line]
-                                        molecule_interaction_atom_to_atom_type_ref.append(temp)
-
-                                moleculeAngleParameters = dict()
-                                moleculeAngleParameters.update({list_of_angles[angle-1][0] : list_of_angles[angle-1][1]})
-                                p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                p.addValue('molecule_interaction_parameters', moleculeAngleParameters)
-
-                ############################################################################################################################################################################################################################
-                #### DIHEDRAL ANGLE INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 4) ######################################################################################################################
-
-                if self.dataSuperContext.dh_types:
-
-                    toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
-
-                    store = []
-                    molecule_interaction_atoms = []
-                    molecule_interaction_type  = []
-                    for h in self.dataSuperContext.dihedralTypeList:
-                        for k in self.dataSuperContext.dihedralTypeList:
-
-                            store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex, x[4] - toMoleculeAtomIndex]
-                                        for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2]
-                                        and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
-                            # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
-
-                        molecule_interaction_atoms.append(store)
-
-                    for l in self.dataSuperContext.dihedralTypeList:
-                        store1  = [ x[0] for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==l
-                                    and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
-                        molecule_interaction_type.append(store1)
-
-                    molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
-
-                    # print molecule_interaction_type,  '#######'
-                    # print molecule_interaction_atoms, '#######'
-
-                    for dihedral in self.dataSuperContext.dihedralTypeList:
-                        if dihedral in molecule_interaction_type:
-
-                            with o(p, 'section_molecule_interaction'):
-
-                                p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[dihedral-1]))
-                                p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[dihedral-1]))
-                                p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
-
-                                if bondFunctional:
-                                    p.addValue('molecule_interaction_kind', dihedralFunctional)
-
-
-                                int_index_store = self.dataSuperContext.dihedral_dict[dihedral-1][1]
-                                molecule_interaction_atom_to_atom_type_ref = []
-
-                                # print int_index_store, '######'
-
-                                if all(isinstance(elem, list) for elem in int_index_store) == False:
-                                    molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
-
-                                else:
-                                    for line in int_index_store:
-                                        temp = [x-1 for x in line]
-                                        molecule_interaction_atom_to_atom_type_ref.append(temp)
-
-                                moleculeDihedralParameters = dict()
-                                moleculeDihedralParameters.update({list_of_dihedrals[dihedral-1][0] : list_of_dihedrals[dihedral-1][1]})
-                                p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                                p.addValue('molecule_interaction_parameters', moleculeDihedralParameters)
-
-                ############################################################################################################################################################################################################################
-                #### DISPERSIVE FORCES INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ###################################################################################################################
-
-                if lj_types:  # LJ-like interactions
-
-                    with o(p, 'section_molecule_interaction'):
-
-                        if pairFunctionalAndCutOff:
-                            p.addValue('molecule_interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radous included)
-
-                        int_index_store = []
-                        int_param_store = []
-
-                        for z in range(lj_types):
-
-                            if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
-                                int_index_store.append(ljs_dict[z][1])
-                                int_param_store.append(list_of_ljs[z][1])
-
+                        int_index_store = self.dataSuperContext.bond_dict[i][1]
                         interaction_atom_to_atom_type_ref = []
+
                         if all(isinstance(elem, list) for elem in int_index_store) == False:
                             interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                        else:
+                            for line in int_index_store:
+                                temp = sorted([x-1 for x in line])
+                                interaction_atom_to_atom_type_ref.append(temp)
+
+                        bondParameters = dict()
+                        bondParameters.update({list_of_bonds[i][0] : list_of_bonds[i][1]})
+
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addValue('interaction_parameters', bondParameters)  # interaction parameters for the functional
+
+
+            ####################################################################################################################################################################################################################################
+            #### BOND ANGLES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 3) ##########################################################################################################################################
+            ####################################################################################################################################################################################################################################
+            ag_types = self.dataSuperContext.ag_types
+            if ag_types:  # BOND ANGLES
+
+                store = []
+                interaction_atoms = []
+                for i in self.dataSuperContext.angleTypeList:
+                    for j in self.dataSuperContext.angleTypeList:
+
+                        store = [ [x[1], x[2], x[3]] for x in self.dataSuperContext.angle_interaction_atoms if x[0]==i ]
+                    interaction_atoms.append(store)
+
+                for i in range(len(self.dataSuperContext.angleTypeList)):
+
+                    with o(p, 'section_interaction'):
+                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of triplets for a specific bond angle
+                        p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of bond angles of this type
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (3 for bond angles)
+
+                        if bondFunctional:
+                            p.addValue('interaction_kind', angleFunctional)  # functional form of the interaction
+
+                        int_index_store = self.dataSuperContext.angle_dict[i][1]
+                        interaction_atom_to_atom_type_ref = []
+
+                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                            interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
 
                         else:
                             for line in int_index_store:
                                 temp = [x-1 for x in line]
                                 interaction_atom_to_atom_type_ref.append(temp)
 
-                        p.addValue('x_lammps_number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types
-                        p.addValue('number_of_atoms_per_molecule_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
-                        p.addArrayValues('x_lammps_pair_molecule_interaction_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
-                        p.addArrayValues('x_lammps_pair_molecule_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+                        angleParameters = dict()
+                        angleParameters.update({list_of_angles[i][0] : list_of_angles[i][1]})
 
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addValue('interaction_parameters', angleParameters)  # interaction parameters for the functional
+
+            ####################################################################################################################################################################################################################################
+            #### DIHEDRAL ANGLES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 4) ######################################################################################################################################
+            ####################################################################################################################################################################################################################################
+
+            if self.dataSuperContext.dh_types:  # DIHEDRAL ANGLES
+
+                store = []
+                interaction_atoms = []
+                for i in self.dataSuperContext.dihedralTypeList:
+                    for j in self.dataSuperContext.dihedralTypeList:
+
+                        store = [ [x[1], x[2], x[3], x[4]] for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==i ]
+                    interaction_atoms.append(store)
+
+                for i in range(len(self.dataSuperContext.dihedralTypeList)):
+
+                    with o(p, 'section_interaction'):
+                        p.addArrayValues('interaction_atoms', np.asarray(interaction_atoms[i]))     # atom indexes of quartets for a specific dihedral angle
+                        p.addValue('number_of_interactions', len(interaction_atoms[i]))             # number of dihedral angles of this type
+                        p.addValue('number_of_atoms_per_interaction', len(interaction_atoms[0][0])) # number of atoms involved (4 for dihedral angles)
+
+                        if bondFunctional:
+                            p.addValue('interaction_kind', dihedralFunctional)  # functional form of the interaction
+
+                        int_index_store = self.dataSuperContext.dihedral_dict[i][1]
+                        interaction_atom_to_atom_type_ref = []
+
+                        if all(isinstance(elem, list) for elem in int_index_store) == False:
+                            interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                        else:
+                            for line in int_index_store:
+                                temp = [x-1 for x in line]
+                                interaction_atom_to_atom_type_ref.append(temp)
+
+                        dihedralParameters = dict()
+                        dihedralParameters.update({list_of_dihedrals[i][0] : list_of_dihedrals[i][1]})
+                        p.addArrayValues('x_lammps_interaction_atom_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                        p.addValue('interaction_parameters', dihedralParameters)  # interaction parameters for the functional
+
+            ####################################################################################################################################################################################################################################
+            #### DISPERSIVE FORCES INFORMATION IN section_interaction (number_of_atoms_per_interaction = 2) ####################################################################################################################################
+            ####################################################################################################################################################################################################################################
+
+            if lj_types:  # LJ-like interactions
+
+                with o(p, 'section_interaction'):
+
+                    p.addValue('x_lammps_number_of_defined_pair_interactions', lj_types)  # number of LJ interaction types
+                    p.addValue('number_of_atoms_per_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
+
+                    if pairFunctionalAndCutOff:
+                        p.addValue('interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radius included)
+
+                    int_index_store = []
+                    int_param_store = []
+
+                    for i in range(lj_types):
+                        int_index_store.append(ljs_dict[i][1])
+                        int_param_store.append(list_of_ljs[i][1])
+
+                    interaction_atom_to_atom_type_ref = []
+                    if all(isinstance(elem, list) for elem in int_index_store) == False:
+                        interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                    else:
+                        for line in int_index_store:
+                            temp = [x-1 for x in line]
+                            interaction_atom_to_atom_type_ref.append(temp)
+
+                    # p.addValue('interaction_atoms', int_index_store)
+                    p.addArrayValues('x_lammps_pair_interaction_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                    p.addArrayValues('x_lammps_pair_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
                     pass
 
-        ############################################################################################################################################################################################################################
-        #### MAPPING THE TOPOLOGY MOLECULES TO THE RELATIVE section_molecule type ##########################################################################################################################################################
+            ####################################################################################################################################################################################################################################
+            #### MOLECULE TYPE INFORMATION IN section_molecule_type ############################################################################################################################################################################
+            ####################################################################################################################################################################################################################################
+            moleculeTypeInfo = self.dataSuperContext.moleculeTypeInfo
+            for i in range(len(moleculeTypeInfo)):
 
-        molecule_to_molecule_type_map = []
-        for i in range(len(self.dataSuperContext.moleculeInfo)):
-            molecule_to_molecule_type_map.append(self.dataSuperContext.moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
+                with o(p, 'section_molecule_type'):
+                    # gindex = 0
+                    p.addValue('molecule_type_name', 'molecule'+'_'+str(moleculeTypeInfo[i][0]))
+                    p.addValue('number_of_atoms_in_molecule', len(moleculeTypeInfo[i][1]))
 
-        p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+                    p.addArrayValues('atom_in_molecule_to_atom_type_ref', np.asarray([x-1 for x in moleculeTypeInfo[i][1]]))
 
-        ####################################################################################################################################################################################################################################
+
+                    atom_in_molecule_name = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_name.append([ self.dataSuperContext.mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
+
+                    p.addArrayValues('atom_in_molecule_name', np.asarray(atom_in_molecule_name))
+
+                    atom_in_molecule_charge = []
+                    for j in moleculeTypeInfo[i][1]:
+                        atom_in_molecule_charge.append(self.dataSuperContext.charge_list[j-1][1])
+
+                    p.addValue('atom_in_molecule_charge', atom_in_molecule_charge)
+
+                    ############################################################################################################################################################################################################################
+                    #### COVALENT BONDS INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ######################################################################################################################
+
+                    if self.dataSuperContext.bd_types:
+
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
+                        for h in self.dataSuperContext.bondTypeList:
+                            for k in self.dataSuperContext.bondTypeList:
+
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
+                            molecule_interaction_atoms.append(store)
+
+                        for l in self.dataSuperContext.bondTypeList:
+                            store1  = [ x[0] for x in self.dataSuperContext.bond_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        for bond in self.dataSuperContext.bondTypeList:
+                            if bond in molecule_interaction_type:
+
+                                with o(p, 'section_molecule_interaction'):
+
+                                    p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[bond-1]))
+                                    p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[bond-1]))
+                                    p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                    if bondFunctional:
+                                        p.addValue('molecule_interaction_kind', bondFunctional)
+
+
+                                    int_index_store = self.dataSuperContext.bond_dict[bond-1][1]
+
+                                    molecule_interaction_atom_to_atom_type_ref = []
+                                    if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                        molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                                    else:
+                                        for line in int_index_store:
+                                            temp = sorted([x-1 for x in line])
+                                            molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                    moleculeBondParameters = dict()
+                                    moleculeBondParameters.update({list_of_bonds[bond-1][0] : list_of_bonds[bond-1][1]})
+                                    p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                    p.addValue('molecule_interaction_parameters', moleculeBondParameters)
+
+                    ############################################################################################################################################################################################################################
+                    #### BOND ANGLE INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 3) #########################################################################################################################
+
+                    if ag_types:
+
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
+                        for h in self.dataSuperContext.angleTypeList:
+                            for k in self.dataSuperContext.angleTypeList:
+
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex] for x in self.dataSuperContext.angle_interaction_atoms
+                                            if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
+                            molecule_interaction_atoms.append(store)
+
+                        for l in self.dataSuperContext.angleTypeList:
+                            store1  = [ x[0] for x in self.dataSuperContext.angle_interaction_atoms if x[0]==l and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        for angle in self.dataSuperContext.angleTypeList:
+                            if angle in molecule_interaction_type:
+
+                                with o(p, 'section_molecule_interaction'):
+
+                                    p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[angle-1]))
+                                    p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[angle-1]))
+                                    p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                    if bondFunctional:
+                                        p.addValue('molecule_interaction_kind', angleFunctional)
+
+
+                                    int_index_store = self.dataSuperContext.angle_dict[angle-1][1]
+                                    molecule_interaction_atom_to_atom_type_ref = []
+
+                                    # print int_index_store, '######'
+
+                                    if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                        molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1]
+
+                                    else:
+                                        for line in int_index_store:
+                                            temp = [x-1 for x in line]
+                                            molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                    moleculeAngleParameters = dict()
+                                    moleculeAngleParameters.update({list_of_angles[angle-1][0] : list_of_angles[angle-1][1]})
+                                    p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                    p.addValue('molecule_interaction_parameters', moleculeAngleParameters)
+
+                    ############################################################################################################################################################################################################################
+                    #### DIHEDRAL ANGLE INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 4) ######################################################################################################################
+
+                    if self.dataSuperContext.dh_types:
+
+                        toMoleculeAtomIndex  = min( moleculeTypeInfo[i][2] )
+
+                        store = []
+                        molecule_interaction_atoms = []
+                        molecule_interaction_type  = []
+                        for h in self.dataSuperContext.dihedralTypeList:
+                            for k in self.dataSuperContext.dihedralTypeList:
+
+                                store   = [ [x[1] - toMoleculeAtomIndex, x[2] - toMoleculeAtomIndex, x[3] - toMoleculeAtomIndex, x[4] - toMoleculeAtomIndex]
+                                            for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2]
+                                            and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
+                                # store   = [ [x[1], x[2], x[3]] for x in bond_interaction_atoms if x[0]==h and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] ]
+
+                            molecule_interaction_atoms.append(store)
+
+                        for l in self.dataSuperContext.dihedralTypeList:
+                            store1  = [ x[0] for x in self.dataSuperContext.dihedral_interaction_atoms if x[0]==l
+                                        and x[1] in moleculeTypeInfo[i][2] and x[2] in moleculeTypeInfo[i][2] and x[3] in moleculeTypeInfo[i][2] and x[4] in moleculeTypeInfo[i][2] ]
+                            molecule_interaction_type.append(store1)
+
+                        molecule_interaction_type = [ x for sublist in molecule_interaction_type for x in sublist ] # from list of lists to list
+
+                        # print molecule_interaction_type,  '#######'
+                        # print molecule_interaction_atoms, '#######'
+
+                        for dihedral in self.dataSuperContext.dihedralTypeList:
+                            if dihedral in molecule_interaction_type:
+
+                                with o(p, 'section_molecule_interaction'):
+
+                                    p.addArrayValues('molecule_interaction_atoms', np.asarray(molecule_interaction_atoms[dihedral-1]))
+                                    p.addValue('number_of_molecule_interactions', len(molecule_interaction_atoms[dihedral-1]))
+                                    p.addValue('number_of_atoms_per_molecule_interaction', len(molecule_interaction_atoms[0][0]))
+
+                                    if bondFunctional:
+                                        p.addValue('molecule_interaction_kind', dihedralFunctional)
+
+
+                                    int_index_store = self.dataSuperContext.dihedral_dict[dihedral-1][1]
+                                    molecule_interaction_atom_to_atom_type_ref = []
+
+                                    # print int_index_store, '######'
+
+                                    if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                        molecule_interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1, int_index_store[2]-1, int_index_store[3]-1]
+
+                                    else:
+                                        for line in int_index_store:
+                                            temp = [x-1 for x in line]
+                                            molecule_interaction_atom_to_atom_type_ref.append(temp)
+
+                                    moleculeDihedralParameters = dict()
+                                    moleculeDihedralParameters.update({list_of_dihedrals[dihedral-1][0] : list_of_dihedrals[dihedral-1][1]})
+                                    p.addArrayValues('x_lammps_molecule_interaction_atom_to_atom_type_ref', np.asarray(molecule_interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                                    p.addValue('molecule_interaction_parameters', moleculeDihedralParameters)
+
+                    ############################################################################################################################################################################################################################
+                    #### DISPERSIVE FORCES INFORMATION IN section_molecule_interaction (number_of_atoms_per_interaction = 2) ###################################################################################################################
+
+                    if lj_types:  # LJ-like interactions
+
+                        with o(p, 'section_molecule_interaction'):
+
+                            if pairFunctionalAndCutOff:
+                                p.addValue('molecule_interaction_kind', str(pairFunctionalAndCutOff))  # functional form of the interaction (cutoff radous included)
+
+                            int_index_store = []
+                            int_param_store = []
+
+                            for z in range(lj_types):
+
+                                if ljs_dict[z][1][0] and ljs_dict[z][1][1] in moleculeTypeInfo[i][1]:
+                                    int_index_store.append(ljs_dict[z][1])
+                                    int_param_store.append(list_of_ljs[z][1])
+
+                            interaction_atom_to_atom_type_ref = []
+                            if all(isinstance(elem, list) for elem in int_index_store) == False:
+                                interaction_atom_to_atom_type_ref = [int_index_store[0]-1, int_index_store[1]-1]
+
+                            else:
+                                for line in int_index_store:
+                                    temp = [x-1 for x in line]
+                                    interaction_atom_to_atom_type_ref.append(temp)
+
+                            p.addValue('x_lammps_number_of_defined_molecule_pair_interactions', lj_types)  # number of LJ interaction types
+                            p.addValue('number_of_atoms_per_molecule_interaction', len(ljs_dict[0][1]))  # = 2 for pair interactions
+                            p.addArrayValues('x_lammps_pair_molecule_interaction_to_atom_type_ref', np.asarray(interaction_atom_to_atom_type_ref))  # this points to the relative section_atom_type
+                            p.addArrayValues('x_lammps_pair_molecule_interaction_parameters', np.asarray(int_param_store))  # interaction parameters for the functional
+
+                        pass
+
+            ############################################################################################################################################################################################################################
+            #### MAPPING THE TOPOLOGY MOLECULES TO THE RELATIVE section_molecule type ##########################################################################################################################################################
+
+            molecule_to_molecule_type_map = []
+            for i in range(len(self.dataSuperContext.moleculeInfo)):
+                molecule_to_molecule_type_map.append(self.dataSuperContext.moleculeInfo[i][1]-1) # mapping molecules to the relative section_molecule_type
+
+            p.addArrayValues('molecule_to_molecule_type_map', np.asarray(molecule_to_molecule_type_map))
+
+            ####################################################################################################################################################################################################################################
 
 
 
