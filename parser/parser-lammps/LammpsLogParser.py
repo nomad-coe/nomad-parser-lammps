@@ -1264,25 +1264,28 @@ class LammpsMainParser(MainHierarchicalParser):
         '''Change the file reader according to the log file
         '''
 
-        line = parser.fIn.readline()
-
         # self.compile_log_parser()
 
+        line = parser.fIn.readline()
         filename = line.split()[1]
 
         dir_name = os.path.dirname(os.path.abspath(self.fName))
         f_name = os.path.normpath(os.path.join(dir_name, filename))
 
-        # close the file reader of the actual log file
-        parser.fIn.fIn.close()
-
         try:
 
-            # owerwrite and open the file reader of the new log file
-            parser.fIn = PushbackLineFile(open(f_name, 'r'))
+            fIn = open(f_name, 'r')
 
         except IOError:
             logger.error("LOG file parsing unsuccessful. Could not find %s file in directory '%s' (%s)." % (f_name, dir_name, f_name))
+            return None
+
+        # close the file reader of the actual log file
+        parser.fIn.fIn.close()
+
+        # owerwrite and open the file reader of the new log file
+        parser.fIn = PushbackLineFile(fIn)
+
 
 
 
@@ -1985,6 +1988,7 @@ class LammpsMainParser(MainHierarchicalParser):
         # run_filt = [x for x in storeInput if x.startswith("run")]  # OK FOR A SINGLE RUN INPUT SCRIPT
         run_filt = self.run
 
+        steps = 0
         for line in run_filt:
             line_split = line.split()
             steps = int(line_split[1])
