@@ -183,33 +183,33 @@ class LammpsMainParser(MainHierarchicalParser):
             # Set the dimensionality of the simulation. By default LAMMPS runs 3d simulations.
             SM(r"(?P<x_lammps_dummy_text>\s*dimension)", ),
 
-            SM(r"\s*boundary", forwardMatch=True,
+            SM(r"\s*boundary", forwardMatch=True, repeats=True,
                adHoc=lambda parser: parser.superContext.adHoc_boundary(parser)),
 
             SM(r"(?P<x_lammps_dummy_text>\s*newton)", ),
             SM(r"(?P<x_lammps_dummy_text>\s*processors)", ),
 
             # Units: lj, real, metal, si, cgs, electron, micro,nano
-            SM(r"\s*units\s\w+", forwardMatch=True,
+            SM(r"\s*units\s\w+", forwardMatch=True, repeats=True,
                adHoc=lambda parser: parser.superContext.adHoc_input_units(parser)),
 
             SM(r"(?P<x_lammps_dummy_text>\s*atom_modify)", ),
-            SM(r"(?P<x_lammps_dummy_text>\s*atom_style)", forwardMatch=True,
+            SM(r"(?P<x_lammps_dummy_text>\s*atom_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_atom_style(parser)
                ),
 
             # If force-field parameters appear in the files that will be read, these commands tell LAMMPS what kinds of
             # force fields are being used:
             # pair_style, bond_style, angle_style, dihedral_style, improper_style.
-            SM(r"\s*(?P<x_lammps_dummy_text>pair_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>pair_style)", forwardMatch=True,  repeats=True,
                adHoc=lambda parser: self.adHoc_pair_style(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>bond_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>bond_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_bond_style(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>angle_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>angle_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_angle_style(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>dihedral_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_dihedral_style(parser)),
-            SM(r"\s*(?P<x_lammps_dummy_text>improper_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>improper_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_improper_style(parser)),
 
             # Atom definition
@@ -220,7 +220,7 @@ class LammpsMainParser(MainHierarchicalParser):
             # lattice, region, create_box, create_atoms.
             # The entire set of atoms can be duplicated to make a larger simulation using the replicate command.
 
-            SM(r"\s*read_data\s", forwardMatch=True,
+            SM(r"\s*read_data\s", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_read_data(parser),
                subFlags=SM.SubFlags.Unordered,
                subMatchers=[
@@ -291,31 +291,31 @@ class LammpsMainParser(MainHierarchicalParser):
             SM(r"\s*(?P<x_lammps_dummy_text>neighbor)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>neigh_modify)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>group)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>timestep)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>timestep)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_timestep(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>reset_timestep)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>run_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>run_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_run_style(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>min_style)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>min_modify)", ),
 
             # settings_fixes
-            SM(r"\s*(?P<x_lammps_dummy_text>fix)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>fix)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_fix(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>fix_modify)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>unfix)", ),
 
             # settings_output_options
-            SM(r"\s*(?P<x_lammps_dummy_text>dump)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>dump)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_dump(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>dump image)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>dump_modify)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>dump movie)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>restart)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>thermo)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>thermo)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_thermo(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>thermo_modify)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>thermo_style)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>thermo_style)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_thermo_style(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>undump)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>write_data)", ),
@@ -350,7 +350,7 @@ class LammpsMainParser(MainHierarchicalParser):
             SM(r"\s*(?P<x_lammps_dummy_text>include)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>jump)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>label)", ),
-            SM(r"\s*(?P<x_lammps_dummy_text>log)", forwardMatch=True,
+            SM(r"\s*(?P<x_lammps_dummy_text>log)", forwardMatch=True, repeats=True,
                adHoc=lambda parser: self.adHoc_log(parser)),
             SM(r"\s*(?P<x_lammps_dummy_text>next)", ),
             SM(r"\s*(?P<x_lammps_dummy_text>print)", ),
@@ -1453,18 +1453,23 @@ class LammpsMainParser(MainHierarchicalParser):
                 styles_dict = { index1 : [index2, cut] }
             list_of_styles.update(styles_dict)
 
+        modify_dict =[]
         for line in pm_filter:       # reading pair_modify specs
             line_split = line.split()
 
             modify_dict = { line_split[0] : [ line_split[1:] ] }
 
+        special_dict = []
         for line in sb_filter:       # reading special_bonds specs
             line_split = line.split()
 
             special_dict = { line_split[0] : [ line_split[1:] ] }
 
-        list_of_styles.update(modify_dict)
-        list_of_styles.update(special_dict)
+        if modify_dict:
+            list_of_styles.update(modify_dict)
+
+        if special_dict:
+            list_of_styles.update(special_dict)
 
         return list_of_styles
 
@@ -1944,7 +1949,9 @@ class LammpsMainParser(MainHierarchicalParser):
         langevin_gamma = 0
 
         # ensemble_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'fix*')]
-        ensemble_filter = self.fix
+
+        # ensemble_filter = self.fix
+        ensemble_filter = [fix for fix in self.fix if "$" not in fix]
 
         for line in ensemble_filter:
             line_split = line.split()
@@ -1995,7 +2002,9 @@ class LammpsMainParser(MainHierarchicalParser):
 
 
         # ts_filter = [x for x in storeInput if fnmatch.fnmatch(x, 'timestep*')]
-        ts_filter = self.timestep
+        # ts_filter = self.timestep
+        ts_filter = [timestep for timestep in self.timestep if "$" not in timestep]
+
 
         for line in ts_filter:
             line_split = line.split()

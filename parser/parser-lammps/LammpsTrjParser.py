@@ -109,6 +109,7 @@ class LammpsTrjParserContext(object):
         self.atomPositionWrappedBool = []
         self.imageFlagIndex = []
         self.imageFlagIndexBool = []
+        self.atomVelocity = []
 
         pass
 
