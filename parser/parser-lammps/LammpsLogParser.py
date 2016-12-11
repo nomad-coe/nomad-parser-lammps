@@ -371,7 +371,7 @@ class LammpsMainParser(MainHierarchicalParser):
             outF=self.parser_context.super_backend.fileOut,
             cachingLevelForMetaName=self.caching_level_for_metaname,
             superContext=self,
-            onClose=self.onClose,
+            # onClose=self.onClose,
             default_units=self.parser_context.default_units,
             metainfo_units=self.parser_context.metainfo_units,
             superBackend=self.parser_context.super_backend,
