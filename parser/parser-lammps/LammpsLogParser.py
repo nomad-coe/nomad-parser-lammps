@@ -762,7 +762,7 @@ class LammpsMainParser(MainHierarchicalParser):
                     for j in moleculeTypeInfo[i][1]:
                         atom_in_molecule_name.append([ self.dataSuperContext.mass_xyz[j-1], j ] ) # Here atom_in_molecule_name is atomic number plus an integer index
 
-                    p.addArrayValues('atom_in_molecule_name', np.asarray(atom_in_molecule_name))
+                    # p.addArrayValues('atom_in_molecule_name', np.asarray(atom_in_molecule_name))
 
                     atom_in_molecule_charge = []
                     for j in moleculeTypeInfo[i][1]:
