@@ -16,7 +16,7 @@
 package eu.nomad_lab.parsers
 
 import org.specs2.mutable.Specification
-
+/*
 object LammpsParserSpec extends Specification {
   "LammpsParserTest" >> {
     "test with json-events" >> {
@@ -114,4 +114,4 @@ object LammpsParserSpec8 extends Specification {
       ParserRun.parse(LammpsParser, "parsers/lammps/test/examples/methane_MD_traj/log.methane_nvt_traj_xyz_thermo_style_custom", "json") must_== ParseResult.ParseSuccess
     }
   }
-}
+}*/
