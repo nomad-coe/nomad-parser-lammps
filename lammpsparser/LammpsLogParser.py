@@ -1,18 +1,16 @@
 # Copyright 2015-2018 Massimo Riello, Adam Fekete, Fawzi Mohamed, Ankit Kariryaa
-# 
+#
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
-import setup_paths
 
 import logging
 import os
@@ -23,8 +21,8 @@ import operator
 import numpy as np
 
 
-from LammpsCommon import get_metaInfo
-from LammpsCommon import converter
+from .LammpsCommon import get_metaInfo
+from .LammpsCommon import converter
 from nomadcore.baseclasses import MainHierarchicalParser
 from nomadcore.caching_backend import CachingLevel
 from nomadcore.simple_parser import SimpleMatcher as SM
@@ -32,11 +30,10 @@ from nomadcore.simple_parser import mainFunction
 from nomadcore.simple_parser import AncillaryParser
 from nomadcore.simple_parser import PushbackLineFile
 
-from nomadcore.simple_parser import JsonParseEventsWriterBackend as backend
 from nomadcore.local_meta_info import InfoKindEnv, InfoKindEl
 
-import LammpsDataParser
-import LammpsTrjParser
+from . import LammpsDataParser
+from . import LammpsTrjParser
 
 nformat = {
     'float': r"[-+]?\d*\.\d+",
@@ -104,7 +101,7 @@ class LammpsMainParser(MainHierarchicalParser):
     def __init__(self, file_path, parser_context):
         """Initialize an output parser.
         """
-        super(LammpsMainParser, self).__init__(file_path, parser_context)
+        super(LammpsMainParser, self).__init__(parser_context)
 
         # manually adjust caching of metadata
         self.caching_level_for_metaname = self.get_cachingLevelForMetaName()
@@ -373,7 +370,7 @@ class LammpsMainParser(MainHierarchicalParser):
 
         ]
 
-    def parse(self):
+    def parse(self, mainfile):
         """Starts the parsing. By default uses the SimpleParser scheme, if you
         want to use something else or customize the process just override this
         method in the subclass.
@@ -382,7 +379,7 @@ class LammpsMainParser(MainHierarchicalParser):
             mainFileDescription=self.root_matcher,
             metaInfoEnv=self.parser_context.metainfo_env,
             parserInfo=self.parser_context.parser_info,
-            outF=self.parser_context.super_backend.fileOut,
+            # outF=self.parser_context.super_backend.fileOut,
             cachingLevelForMetaName=self.caching_level_for_metaname,
             superContext=self,
             # onClose=self.onClose,
@@ -390,7 +387,7 @@ class LammpsMainParser(MainHierarchicalParser):
             metainfo_units=self.parser_context.metainfo_units,
             superBackend=self.parser_context.super_backend,
             metaInfoToKeep=self.parser_context.metainfo_to_keep,
-            mainFile=self.parser_context.main_file
+            mainFile=mainfile
         )
         pass
 
