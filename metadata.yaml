@@ -1,0 +1,6 @@
+codeLabel: LAMMPS
+codeLabelStyle: All in capitals
+codeUrl: https://lammps.sandia.gov/
+parserDirName: dependencies/parsers/lammps/
+parserGitUrl: https://gitlab.mpcdf.mpg.de/nomad-lab/parser-lammps
+tableOfFiles: ''
