@@ -46,6 +46,9 @@ class Parser:
     def results(self):
         if self._results is None:
             self.parse()
+        if self._results is None:
+            self._results = {}
+
         return self._results
 
     def parse(self):
@@ -74,6 +77,12 @@ class DataParser(Parser):
             section for section in self._sections if section.endswith('Coeffs')]
 
     def parse(self):
+        if self.mainfile is None:
+            return
+
+        if not os.path.isfile(self.mainfile):
+            return
+
         if self._quantities is None:
             self._quantities = []
             for header in self._headers:
@@ -134,6 +143,12 @@ class TrajParser(Parser):
         self._chemical_symbols = None
 
     def parse(self):
+        if self.mainfile is None:
+            return
+
+        if not os.path.isfile(self.mainfile):
+            return
+
         if self._quantities is None:
             def get_pbc_cell(val):
                 val = val.split()
@@ -425,6 +440,12 @@ class LogParser(Parser):
         return self._thermo_data is not None
 
     def parse(self):
+        if self.mainfile is None:
+            return
+
+        if not os.path.isfile(self.mainfile):
+            return
+
         if self._quantities is None:
             def str_op(val):
                 val = val.split('#')[0]
@@ -585,7 +606,10 @@ class LammpsOutput:
             sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
             sec_system.simulation_cell = self._converter.Distance(pbc_cell[i][1])
             sec_system.atom_positions = self.traj_parser.get_positions(i)
-            sec_system.atom_labels = self.traj_parser.get_atom_labels(i)
+            atom_labels = self.traj_parser.get_atom_labels(i)
+            if atom_labels is None:
+                atom_labels = ['X'] * n_atoms[i]
+            sec_system.atom_labels = atom_labels
 
             velocities = self.traj_parser.get_velocities(i)
             if velocities is not None:
@@ -651,11 +675,13 @@ class LammpsOutput:
         self.parse_thermodynamic_data()
 
         # create workflow
-        if sec_run.section_sampling_method[0].sampling_method == 'molecular_dynamics':
+        if sec_run.section_sampling_method[0].sampling_method:
             sec_workflow = self.archive.m_create(Workflow)
-            sec_workflow.workflow_type = 'molecular dynamics'
-            sec_md = sec_workflow.m_create(MolecularDynamics)
+            sec_workflow.workflow_type = sec_run.section_sampling_method[0].sampling_method
 
-            sec_md.finished_normally = self.log_parser.finished_normally()
-            sec_md.with_trajectory = self.traj_parser.with_trajectory()
-            sec_md.with_thermodynamics = self.log_parser.with_thermodynamics()
+            if sec_workflow.workflow_type == 'molecular_dynamics':
+                sec_md = sec_workflow.m_create(MolecularDynamics)
+
+                sec_md.finished_normally = self.log_parser.finished_normally()
+                sec_md.with_trajectory = self.traj_parser.with_trajectory()
+                sec_md.with_thermodynamics = self.log_parser.with_thermodynamics()
