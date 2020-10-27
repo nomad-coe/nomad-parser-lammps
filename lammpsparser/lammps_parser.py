@@ -4,6 +4,9 @@ import logging
 from ase import data as asedata
 import pint
 
+from .metainfo import m_env
+from nomad.parsing.parser import FairdiParser
+
 from nomad.parsing.text_parser import Quantity, UnstructuredTextFileParser
 from nomad.datamodel.metainfo.public import section_run, section_sampling_method,\
     section_system, section_single_configuration_calculation, section_energy_contribution,\
@@ -83,7 +86,7 @@ def get_unit(units_type, property_type=None, dimension=3):
 
 
 class DataParser(UnstructuredTextFileParser):
-    def __init__(self, mainfile, logger):
+    def __init__(self):
         self._headers = [
             'atoms', 'bonds', 'angles', 'dihedrals', 'impropers', 'atom types', 'bond types',
             'angle types', 'dihedral types', 'improper types', 'extra bond per atom',
@@ -101,7 +104,7 @@ class DataParser(UnstructuredTextFileParser):
             'BondBond13 Coeffs', 'AngleAngle Coeffs']
         self._interactions = [
             section for section in self._sections if section.endswith('Coeffs')]
-        super().__init__(mainfile, logger=logger)
+        super().__init__(None)
 
     def init_quantities(self):
         self._quantities = []
@@ -151,13 +154,13 @@ class DataParser(UnstructuredTextFileParser):
 
 
 class TrajParser(UnstructuredTextFileParser):
-    def __init__(self, mainfile, logger):
+    def __init__(self):
         self._masses = None
         self._reference_masses = dict(
             masses=np.array(asedata.atomic_masses), symbols=asedata.chemical_symbols)
         self._chemical_symbols = None
         self._units = None
-        super().__init__(mainfile, logger=logger)
+        super().__init__(None)
 
     def init_quantities(self):
 
@@ -289,7 +292,7 @@ class TrajParser(UnstructuredTextFileParser):
 
 
 class LogParser(UnstructuredTextFileParser):
-    def __init__(self, mainfile, logger):
+    def __init__(self):
         self._commands = [
             'angle_coeff', 'angle_style', 'atom_modify', 'atom_style', 'balance',
             'bond_coeff', 'bond_style', 'bond_write', 'boundary', 'change_box', 'clear',
@@ -314,7 +317,7 @@ class LogParser(UnstructuredTextFileParser):
             'atom', 'pair', 'bond', 'angle', 'dihedral', 'improper', 'kspace']
         self._thermo_data = None
         self._units = None
-        super().__init__(mainfile, logger=logger)
+        super().__init__(None)
 
     def init_quantities(self):
         def str_op(val):
@@ -509,14 +512,16 @@ class LogParser(UnstructuredTextFileParser):
         return self._thermo_data is not None
 
 
-class LammpsOutput:
-    def __init__(self, filepath, archive, logger=None):
-        self.filepath = filepath
-        self.archive = archive
-        self.logger = logger if logger is not None else logging
-        self.log_parser = LogParser(filepath, self.logger)
-        self.traj_parser = TrajParser(None, self.logger)
-        self.data_parser = DataParser(None, self.logger)
+class LammpsParser(FairdiParser):
+    def __init__(self):
+        super().__init__(
+            name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
+            domain='dft', mainfile_contents_re=r'^LAMMPS')
+
+        self._metainfo_env = m_env
+        self.log_parser = LogParser()
+        self.traj_parser = TrajParser()
+        self.data_parser = DataParser()
 
     def parse_thermodynamic_data(self):
         thermo_data = self.log_parser.get_thermodynamic_data()
@@ -705,7 +710,19 @@ class LammpsOutput:
                     val = ' '.join([str(v) for v in val])
                 setattr(sec_control_parameters, key, str(val))
 
-    def parse(self):
+    def _init_parsers(self):
+        self.log_parser.mainfile = self.filepath
+        self.log_parser.logger = self.logger
+        self.traj_parser.logger = self.logger
+        self.data_parser.logger = self.logger
+
+    def parse(self, filepath, archive, logger):
+        self.filepath = filepath
+        self.archive = archive
+        self.logger = logger if logger is not None else logging
+
+        self._init_parsers()
+
         sec_run = self.archive.m_create(section_run)
 
         # parse basic
