@@ -7,7 +7,7 @@ import pint
 from .metainfo import m_env
 from nomad.parsing.parser import FairdiParser
 
-from nomad.parsing.text_parser import Quantity, UnstructuredTextFileParser
+from nomad.parsing.file_parser import Quantity, UnstructuredTextFileParser
 from nomad.datamodel.metainfo.public import section_run, section_sampling_method,\
     section_system, section_single_configuration_calculation, section_energy_contribution,\
     Workflow, MolecularDynamics
