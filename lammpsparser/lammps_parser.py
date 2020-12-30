@@ -7,10 +7,9 @@ import pint
 from .metainfo import m_env
 from nomad.parsing.parser import FairdiParser
 
-from nomad.parsing.file_parser import Quantity, UnstructuredTextFileParser
-from nomad.datamodel.metainfo.public import section_run, section_sampling_method,\
-    section_system, section_single_configuration_calculation, section_energy_contribution,\
-    Workflow, MolecularDynamics
+from nomad.parsing.file_parser import Quantity, TextParser
+from nomad.datamodel.metainfo.common_dft import Run, SamplingMethod, System,\
+    SingleConfigurationCalculation, EnergyContribution, Workflow, MolecularDynamics
 from nomad.datamodel.metainfo.common import section_topology, section_interaction
 from .metainfo.lammps import x_lammps_section_input_output_files, x_lammps_section_control_parameters
 
@@ -85,7 +84,7 @@ def get_unit(units_type, property_type=None, dimension=3):
         return units
 
 
-class DataParser(UnstructuredTextFileParser):
+class DataParser(TextParser):
     def __init__(self):
         self._headers = [
             'atoms', 'bonds', 'angles', 'dihedrals', 'impropers', 'atom types', 'bond types',
@@ -109,8 +108,8 @@ class DataParser(UnstructuredTextFileParser):
     def init_quantities(self):
         self._quantities = []
         for header in self._headers:
-            self._quantities.append(
-                Quantity(header, r'\s*([\+\-eE\d\. ]+)\s*%s\s*\n' % header, comment='#'))
+            self._quantities.append(Quantity(
+                header, r'\s*([\+\-eE\d\. ]+)\s*%s\s*\n' % header, comment='#', repeats=True))
 
         def get_section_value(val):
             val = val.split('\n')
@@ -137,7 +136,7 @@ class DataParser(UnstructuredTextFileParser):
             self._quantities.append(
                 Quantity(
                     section, r'\s*%s\s*(#*\s*[\s\S]*?\n)\n*([\deE\-\+\.\s]+)\n' % section,
-                    str_operation=get_section_value))
+                    str_operation=get_section_value, repeats=True))
 
     def get_interactions(self):
         styles_coeffs = []
@@ -153,7 +152,7 @@ class DataParser(UnstructuredTextFileParser):
         return styles_coeffs
 
 
-class TrajParser(UnstructuredTextFileParser):
+class TrajParser(TextParser):
     def __init__(self):
         self._masses = None
         self._reference_masses = dict(
@@ -183,15 +182,17 @@ class TrajParser(UnstructuredTextFileParser):
 
         self._quantities = [
             Quantity(
-                'time_step', r'\s*ITEM:\s*TIMESTEP\s*\n\s*(\d+)\s*\n', comment='#'),
+                'time_step', r'\s*ITEM:\s*TIMESTEP\s*\n\s*(\d+)\s*\n', comment='#',
+                repeats=True),
             Quantity(
-                'n_atoms', r'\s*ITEM:\s*NUMBER OF ATOMS\s*\n\s*(\d+)\s*\n', comment='#'),
+                'n_atoms', r'\s*ITEM:\s*NUMBER OF ATOMS\s*\n\s*(\d+)\s*\n', comment='#',
+                repeats=True),
             Quantity(
                 'pbc_cell', r'\s*ITEM: BOX BOUNDS\s*([\s\w]+)([\+\-\d\.eE\s]+)\n',
-                str_operation=get_pbc_cell, comment='#'),
+                str_operation=get_pbc_cell, comment='#', repeats=True),
             Quantity(
                 'atoms_info', r's*ITEM:\s*ATOMS\s*([ \w]+\n)*?([\+\-eE\d\.\n ]+)\n*I*',
-                str_operation=get_atoms_info, comment='#')
+                str_operation=get_atoms_info, comment='#', repeats=True)
         ]
 
     def with_trajectory(self):
@@ -291,7 +292,7 @@ class TrajParser(UnstructuredTextFileParser):
         return pint.Quantity(forces, self._units.get('force', None))
 
 
-class LogParser(UnstructuredTextFileParser):
+class LogParser(TextParser):
     def __init__(self):
         self._commands = [
             'angle_coeff', 'angle_style', 'atom_modify', 'atom_style', 'balance',
@@ -329,25 +330,18 @@ class LogParser(UnstructuredTextFileParser):
         self._quantities = [
             Quantity(
                 name, r'\n\s*%s\s+([\w\. \/\#\-]+)(\&\n[\w\. \/\#\-]*)*' % name,
-                str_operation=str_op, comment='#') for name in self._commands]
+                str_operation=str_op, comment='#', repeats=True) for name in self._commands]
 
-        self._quantities.append(
-            Quantity('program_version', r'\s*LAMMPS\s*\(([\w ]+)\)\n', dtype=str)
+        self._quantities.append(Quantity(
+            'program_version', r'\s*LAMMPS\s*\(([\w ]+)\)\n', dtype=str, repeats=False,
+            flatten=False)
         )
 
-        self._quantities.append(
-            Quantity('finished', r'\s*Dangerous builds\s*=\s*(\d+)')
+        self._quantities.append(Quantity(
+            'finished', r'\s*Dangerous builds\s*=\s*(\d+)', repeats=False)
         )
 
-    @property
-    def units(self):
-        if self._file_handler is None or self._units is None:
-            units_type = self.get('units', ['lj'])[0]
-            self._units = get_unit(units_type)
-        return self._units
-
-    def get_thermodynamic_data(self):
-        def str_operation(val):
+        def str_to_thermo(val):
             res = {}
             if val.count('Step') > 1:
                 val = val.replace('-', '').replace('=', '').replace('(sec)', '').split()
@@ -369,14 +363,23 @@ class LogParser(UnstructuredTextFileParser):
 
             return res
 
-        pattern = r'\s*\-*(\s*Step\s*[\-\s\w\.\=\(\)]*[ \-\.\d\n]+)Loop'
+        self._quantities.append(Quantity(
+            'thermo_data', r'\s*\-*(\s*Step\s*[\-\s\w\.\=\(\)]*[ \-\.\d\n]+)Loop',
+            str_operation=str_to_thermo, repeats=False, convert=False)
+        )
 
-        parser = UnstructuredTextFileParser(
-            self.mainfile, [Quantity('thermo_data', pattern, str_operation=str_operation)])
+    @property
+    def units(self):
+        if self._file_handler is None or self._units is None:
+            units_type = self.get('units', ['lj'])[0]
+            self._units = get_unit(units_type)
+        return self._units
 
-        thermo_data = parser['thermo_data']
+    def get_thermodynamic_data(self):
+        self._thermo_data = self.get('thermo_data')
 
-        self._thermo_data = list(thermo_data)[0] if thermo_data is not None else thermo_data
+        if self._thermo_data is None:
+            return
 
         for key, val in self._thermo_data.items():
             low_key = key.lower()
@@ -421,10 +424,6 @@ class LogParser(UnstructuredTextFileParser):
     def get_pbc(self):
         pbc = self.get('boundary', ['p', 'p', 'p'])
         return [v == 'p' for v in pbc]
-
-    def get_program_version(self):
-        version = self.get('program_version', [''])[0]
-        return ' '.join(version)
 
     def get_sampling_method(self):
         fix_style = self.get('fix', [[''] * 3])[0][2]
@@ -505,12 +504,6 @@ class LogParser(UnstructuredTextFileParser):
 
         return styles_coeffs
 
-    def finished_normally(self):
-        return self.get('finished') is not None
-
-    def with_thermodynamics(self):
-        return self._thermo_data is not None
-
 
 class LammpsParser(FairdiParser):
     def __init__(self):
@@ -553,14 +546,14 @@ class LammpsParser(FairdiParser):
 
         for n in range(n_evaluations):
             if create_scc:
-                sec_scc = sec_run.m_create(section_single_configuration_calculation)
+                sec_scc = sec_run.m_create(SingleConfigurationCalculation)
             else:
                 sec_scc = sec_sccs[n]
 
             for key, val in thermo_data.items():
                 key = key.lower()
                 if key in energy_keys_mapping:
-                    sec_energy = sec_scc.m_create(section_energy_contribution)
+                    sec_energy = sec_scc.m_create(EnergyContribution)
                     sec_energy.energy_contibution_kind = energy_keys_mapping[key]
                     sec_energy.energy_contribution_value = val[n]
 
@@ -586,7 +579,7 @@ class LammpsParser(FairdiParser):
 
     def parse_sampling_method(self):
         sec_run = self.archive.section_run[-1]
-        sec_sampling_method = sec_run.m_create(section_sampling_method)
+        sec_sampling_method = sec_run.m_create(SamplingMethod)
 
         run_style = self.log_parser.get('run_style', ['verlet'])[0]
         run = self.log_parser.get('run', [0])[0]
@@ -641,7 +634,7 @@ class LammpsParser(FairdiParser):
         self.traj_parser._units = self.log_parser.units
 
         for i in range(len(pbc_cell)):
-            sec_system = sec_run.m_create(section_system)
+            sec_system = sec_run.m_create(System)
             sec_system.number_of_atoms = n_atoms[i]
             sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
             sec_system.simulation_cell = pbc_cell[i][1] * distance_unit
@@ -658,7 +651,7 @@ class LammpsParser(FairdiParser):
             forces = self.traj_parser.get_forces(i)
             if forces is not None:
                 if create_scc:
-                    sec_scc = sec_run.m_create(section_single_configuration_calculation)
+                    sec_scc = sec_run.m_create(SingleConfigurationCalculation)
                 else:
                     sec_scc = sec_sccs[i]
 
@@ -723,11 +716,11 @@ class LammpsParser(FairdiParser):
 
         self._init_parsers()
 
-        sec_run = self.archive.m_create(section_run)
+        sec_run = self.archive.m_create(Run)
 
         # parse basic
         sec_run.program_name = 'LAMMPS'
-        sec_run.program_version = self.log_parser.get_program_version()
+        sec_run.program_version = self.log_parser.get('program_version', '')
 
         # parse method-related
         self.parse_sampling_method()
@@ -760,6 +753,6 @@ class LammpsParser(FairdiParser):
             if sec_workflow.workflow_type == 'molecular_dynamics':
                 sec_md = sec_workflow.m_create(MolecularDynamics)
 
-                sec_md.finished_normally = self.log_parser.finished_normally()
+                sec_md.finished_normally = self.log_parser.get('finished') is not None
                 sec_md.with_trajectory = self.traj_parser.with_trajectory()
-                sec_md.with_thermodynamics = self.log_parser.with_thermodynamics()
+                sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None
