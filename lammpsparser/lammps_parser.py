@@ -396,7 +396,8 @@ class LogParser(TextParser):
         dump = self.get('dump')
         if dump is None:
             self.logger.warn(
-                'Trajectory not specified in %s, will scan directory' % self.maindir)
+                'Trajectory not specified in directory, will scan.',
+                data=dict(directory=self.maindir))
             traj_files = os.listdir(self.maindir)
             traj_files = [f for f in traj_files if f.endswith('trj')]
 
@@ -412,7 +413,8 @@ class LogParser(TextParser):
         read_data = self.get('read_data')
         if read_data is None:
             self.logger.warn(
-                'Data file not specified in %s, will scan directory' % self.maindir)
+                'Data file not specified in directory, will scan.',
+                data=dict(directory=self.maindir))
             data_files = os.listdir(self.maindir)
             data_files = [f for f in data_files if f.endswith('data') or f.startswith('data')]
 
@@ -477,7 +479,7 @@ class LogParser(TextParser):
                 pass
 
         else:
-            self.logger.warn('Fix style %s not supported' % fix_style)
+            self.logger.warn('Fix style not supported', data=dict(style=fix_style))
 
         return res
 
@@ -537,9 +539,9 @@ class LammpsParser(FairdiParser):
         if sec_sccs:
             if len(sec_sccs) != n_evaluations:
                 self.logger.warn(
-                    '''Mismatch in number of calculations %d and number of property
-                    evaluations %d!, will create new sections''' % (
-                        len(sec_sccs), n_evaluations))
+                    '''Mismatch in number of calculations and number of property
+                    evaluations!, will create new sections''',
+                    data=dict(n_calculations=len(sec_sccs), n_evaluations=n_evaluations))
 
             else:
                 create_scc = False
@@ -575,7 +577,8 @@ class LammpsParser(FairdiParser):
                 else:
                     if n == 0:
                         self.logger.warn(
-                            'Unsupported property %s in thermodynamic data' % key)
+                            'Unsupported property in thermodynamic data',
+                            data=dict(property=key))
 
     def parse_sampling_method(self):
         sec_run = self.archive.section_run[-1]
@@ -623,9 +626,9 @@ class LammpsParser(FairdiParser):
         if sec_sccs:
             if len(sec_sccs) != len(pbc_cell):
                 self.logger.warn(
-                    '''Mismatch in number of calculations %d and number of property
-                    evaluations %d!, will create new sections''' % (
-                        len(sec_sccs), len(pbc_cell)))
+                    '''Mismatch in number of calculations and number of structures,
+                    will create new sections''',
+                    data=dict(n_calculations=len(sec_sccs), n_structures=len(pbc_cell)))
 
             else:
                 create_scc = False
