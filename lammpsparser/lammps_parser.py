@@ -507,13 +507,8 @@ class LogParser(TextParser):
         return styles_coeffs
 
 
-class LammpsParser(FairdiParser):
+class LammpsParserInterface:
     def __init__(self):
-        super().__init__(
-            name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
-            domain='dft', mainfile_contents_re=r'^LAMMPS')
-
-        self._metainfo_env = m_env
         self.log_parser = LogParser()
         self.traj_parser = TrajParser()
         self.data_parser = DataParser()
@@ -621,6 +616,9 @@ class LammpsParser(FairdiParser):
         pbc_cell = self.traj_parser.get('pbc_cell', [])
         n_atoms = self.traj_parser.get('n_atoms', [])
 
+        if len(n_atoms) == 0:
+            return
+
         create_scc = True
         sec_sccs = sec_run.section_single_configuration_calculation
         if sec_sccs:
@@ -662,6 +660,9 @@ class LammpsParser(FairdiParser):
 
     def parse_topology(self):
         sec_run = self.archive.section_run[-1]
+
+        if self.traj_parser.mainfile is None or self.data_parser.mainfile is None:
+            return
 
         masses = self.data_parser.get('Masses', None)
 
@@ -706,18 +707,23 @@ class LammpsParser(FairdiParser):
                     val = ' '.join([str(v) for v in val])
                 setattr(sec_control_parameters, key, str(val))
 
-    def _init_parsers(self):
+    def init_parser(self):
         self.log_parser.mainfile = self.filepath
         self.log_parser.logger = self.logger
         self.traj_parser.logger = self.logger
         self.data_parser.logger = self.logger
+
+    def reuse_parser(self, parser):
+        self.log_parser.quantities = parser.log_parser.quantities
+        self.traj_parser.quantities = parser.traj_parser.quantities
+        self.data_parser.quantities = parser.data_parser.quantities
 
     def parse(self, filepath, archive, logger):
         self.filepath = filepath
         self.archive = archive
         self.logger = logger if logger is not None else logging
 
-        self._init_parsers()
+        self.init_parser()
 
         sec_run = self.archive.m_create(Run)
 
@@ -759,3 +765,23 @@ class LammpsParser(FairdiParser):
                 sec_md.finished_normally = self.log_parser.get('finished') is not None
                 sec_md.with_trajectory = self.traj_parser.with_trajectory()
                 sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None
+
+
+class LammpsParser(FairdiParser):
+    def __init__(self):
+        super().__init__(
+            name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
+            domain='dft', mainfile_contents_re=r'^LAMMPS')
+
+        self._metainfo_env = m_env
+        self.parser = None
+
+    def parse(self, filepath, archive, logger):
+        parser = LammpsParserInterface()
+
+        if self.parser is not None:
+            parser.reuse_parser(self.parser)
+        else:
+            self.parser = parser
+
+        parser.parse(filepath, archive, logger)
