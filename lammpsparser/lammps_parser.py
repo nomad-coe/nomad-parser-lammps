@@ -507,8 +507,13 @@ class LogParser(TextParser):
         return styles_coeffs
 
 
-class LammpsParserInterface:
+class LammpsParser(FairdiParser):
     def __init__(self):
+        super().__init__(
+            name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
+            domain='dft', mainfile_contents_re=r'^LAMMPS')
+
+        self._metainfo_env = m_env
         self.log_parser = LogParser()
         self.traj_parser = TrajParser()
         self.data_parser = DataParser()
@@ -765,23 +770,3 @@ class LammpsParserInterface:
                 sec_md.finished_normally = self.log_parser.get('finished') is not None
                 sec_md.with_trajectory = self.traj_parser.with_trajectory()
                 sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None
-
-
-class LammpsParser(FairdiParser):
-    def __init__(self):
-        super().__init__(
-            name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
-            domain='dft', mainfile_contents_re=r'^LAMMPS')
-
-        self._metainfo_env = m_env
-        self.parser = None
-
-    def parse(self, filepath, archive, logger):
-        parser = LammpsParserInterface()
-
-        if self.parser is not None:
-            parser.reuse_parser(self.parser)
-        else:
-            self.parser = parser
-
-        parser.parse(filepath, archive, logger)
