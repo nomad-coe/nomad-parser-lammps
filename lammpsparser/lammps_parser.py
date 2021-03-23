@@ -21,6 +21,11 @@ import os
 import logging
 from ase import data as asedata
 import pint
+try:
+    import MDAnalysis
+except Exception:
+    logging.warn('Required module MDAnalysis not found.')
+    MDAnalysis = False
 
 from .metainfo import m_env
 from nomad.parsing.parser import FairdiParser
@@ -176,7 +181,6 @@ class TrajParser(TextParser):
         self._reference_masses = dict(
             masses=np.array(asedata.atomic_masses), symbols=asedata.chemical_symbols)
         self._chemical_symbols = None
-        self._units = None
         super().__init__(None)
 
     def init_quantities(self):
@@ -209,7 +213,7 @@ class TrajParser(TextParser):
                 'pbc_cell', r'\s*ITEM: BOX BOUNDS\s*([\s\w]+)([\+\-\d\.eE\s]+)\n',
                 str_operation=get_pbc_cell, comment='#', repeats=True),
             Quantity(
-                'atoms_info', r's*ITEM:\s*ATOMS\s*([ \w]+\n)*?([\+\-eE\d\.\n ]+)\n*I*',
+                'atoms_info', r's*ITEM:\s*ATOMS\s*([ \w]+\n)*?([\+\-eE\d\.\n ]+)',
                 str_operation=get_atoms_info, comment='#', repeats=True)
         ]
 
@@ -258,26 +262,24 @@ class TrajParser(TextParser):
         atoms_info = atoms_info[idx]
 
         cell = self.get('pbc_cell')
-        if cell is None:
-            return
-
-        cell = cell[idx][1]
-
+        cell = None if cell is None else cell[idx][1]
         if 'xs' in atoms_info and 'ys' in atoms_info and 'zs' in atoms_info:
+            if cell is None:
+                return
             positions = np.array([atoms_info['xs'], atoms_info['ys'], atoms_info['zs']]).T
-
             positions = positions * np.linalg.norm(cell, axis=1) + np.amin(cell, axis=1)
 
         else:
             positions = np.array([atoms_info['x'], atoms_info['y'], atoms_info['z']]).T
-
             if 'ix' in atoms_info and 'iy' in atoms_info and 'iz' in atoms_info:
+                if cell is None:
+                    return
                 positions_img = np.array([
                     atoms_info['ix'], atoms_info['iy'], atoms_info['iz']]).T
 
                 positions += positions_img * np.linalg.norm(cell, axis=1)
 
-        return pint.Quantity(positions, self._units.get('distance', None))
+        return positions
 
     def get_velocities(self, idx):
         atoms_info = self.get('atoms_info')
@@ -290,9 +292,7 @@ class TrajParser(TextParser):
         if 'vx' not in atoms_info or 'vy' not in atoms_info or 'vz' not in atoms_info:
             return
 
-        velocities = np.array([atoms_info['vx'], atoms_info['vy'], atoms_info['vz']]).T
-
-        return pint.Quantity(velocities, self._units.get('velocity', None))
+        return np.array([atoms_info['vx'], atoms_info['vy'], atoms_info['vz']]).T
 
     def get_forces(self, idx):
         atoms_info = self.get('atoms_info')
@@ -305,9 +305,78 @@ class TrajParser(TextParser):
         if 'fx' not in atoms_info or 'fy' not in atoms_info or 'fz' not in atoms_info:
             return
 
-        forces = np.array([atoms_info['fx'], atoms_info['fy'], atoms_info['fz']]).T
+        return np.array([atoms_info['fx'], atoms_info['fy'], atoms_info['fz']]).T
 
-        return pint.Quantity(forces, self._units.get('force', None))
+
+class XYZTrajParser(TrajParser):
+    def __init__(self):
+        super().__init__()
+
+    def init_quantities(self):
+
+        def get_atoms_info(val_in):
+            val = [v.split() for v in val_in.strip().split('\n')]
+            val = np.transpose(np.array([v for v in val if len(v) == 4], dtype=float))
+            return dict(type=val[0], x=val[1], y=val[2], z=val[3])
+
+        self.quantities = [
+            Quantity(
+                'atoms_info', r'\d+\n([\d\s\-\.Ee]+)(?:\d+\n|\Z)',
+                str_operation=get_atoms_info, comment='#', repeats=True)
+        ]
+
+
+class MDAnalysisTrajParser(TrajParser):
+    def __init__(self):
+        super().__init__()
+        self._datafile = None
+
+    @property
+    def universe(self):
+        if not MDAnalysis:
+            return
+
+        if self._file_handler is None:
+            # we need to load datafile to provide atoms info
+            self._file_handler = MDAnalysis.Universe(
+                self.datafile, self.mainfile, topology_format='DATA', format='LAMMPS')
+
+        return self._file_handler
+
+    @property
+    def datafile(self):
+        if self._datafile is None:
+            return
+        return os.path.abspath(self._datafile)
+
+    @datafile.setter
+    def datafile(self, val):
+        self._file_handler = None
+        self._datafile = val
+
+    def parse(self, key):
+        val = None
+        if key == 'pbc_cell':
+            val = [([True, True, True], t.triclinic_dimensions) for t in self.universe.trajectory]
+        elif key == 'atoms_info':
+            types = np.array(self.universe.atoms.types, dtype=int)
+            val = []
+            for trajectory in self.universe.trajectory:
+                info = dict()
+                positions = np.transpose(trajectory.positions)
+                info.update(dict(type=types, x=positions[0], y=positions[1], z=positions[2]))
+                if trajectory.has_velocities:
+                    velocities = np.transpose(trajectory.velocities)
+                    info.update(dict(vx=velocities[0], vy=velocities[1], vz=velocities[2]))
+                if trajectory.has_forces:
+                    forces = np.transpose(trajectory.forces)
+                    info.update(dict(fx=forces[0], fy=forces[1], fz=forces[2]))
+                val.append(info)
+        elif key == 'time_step':
+            val = [int(traj.time / traj.dt) for traj in self.universe.trajectory]
+        elif key == 'n_atoms':
+            val = [len(traj) for traj in self.universe.trajectory]
+        self._results[key] = val
 
 
 class LogParser(TextParser):
@@ -334,7 +403,6 @@ class LogParser(TextParser):
             'write_data', 'write_dump', 'write_restart']
         self._interactions = [
             'atom', 'pair', 'bond', 'angle', 'dihedral', 'improper', 'kspace']
-        self._thermo_data = None
         self._units = None
         super().__init__(None)
 
@@ -388,27 +456,27 @@ class LogParser(TextParser):
 
     @property
     def units(self):
-        if self._file_handler is None or self._units is None:
+        if self._units is None:
             units_type = self.get('units', ['lj'])[0]
             self._units = get_unit(units_type)
         return self._units
 
     def get_thermodynamic_data(self):
-        self._thermo_data = self.get('thermo_data')
+        thermo_data = self.get('thermo_data')
 
-        if self._thermo_data is None:
+        if thermo_data is None:
             return
 
-        for key, val in self._thermo_data.items():
+        for key, val in thermo_data.items():
             low_key = key.lower()
             if low_key.startswith('e_') or low_key.endswith('eng'):
-                self._thermo_data[key] = val * self.units['energy']
+                thermo_data[key] = val * self.units['energy']
             elif low_key == 'press':
-                self._thermo_data[key] = val * self.units['pressure']
+                thermo_data[key] = val * self.units['pressure']
             elif low_key == 'temp':
-                self._thermo_data[key] = val * self.units['temperature']
+                thermo_data[key] = val * self.units['temperature']
 
-        return self._thermo_data
+        return thermo_data
 
     def get_traj_files(self):
         dump = self.get('dump')
@@ -416,9 +484,13 @@ class LogParser(TextParser):
             self.logger.warn(
                 'Trajectory not specified in directory, will scan.',
                 data=dict(directory=self.maindir))
+            # TODO improve matching of traj file
             traj_files = os.listdir(self.maindir)
             traj_files = [f for f in traj_files if f.endswith('trj')]
-
+            # further eliminate
+            if len(traj_files) > 1:
+                prefix = os.path.basename(self.mainfile).strip('log.')
+                traj_files = [f for f in traj_files if prefix in f]
         else:
             traj_files = []
             if type(dump[0]) in [str, int]:
@@ -433,8 +505,13 @@ class LogParser(TextParser):
             self.logger.warn(
                 'Data file not specified in directory, will scan.',
                 data=dict(directory=self.maindir))
+            # TODO improve matching of data file
+            prefix = os.path.basename(self.mainfile).strip('log.')
             data_files = os.listdir(self.maindir)
             data_files = [f for f in data_files if f.endswith('data') or f.startswith('data')]
+            if len(data_files) > 1:
+                prefix = os.path.basename(self.mainfile).strip('log.')
+                data_files = [f for f in data_files if prefix in f]
 
         else:
             data_files = read_data
@@ -513,7 +590,7 @@ class LogParser(TextParser):
 
             for i in range(len(styles)):
                 if interaction == 'kspace':
-                    coeff = [float(c) for c in styles[i][1:]]
+                    coeff = [[float(c) for c in styles[i][1:]]]
                     style = styles[i][0]
 
                 else:
@@ -533,38 +610,39 @@ class LammpsParser(FairdiParser):
 
         self._metainfo_env = m_env
         self.log_parser = LogParser()
-        self.traj_parser = TrajParser()
+        self._traj_parser = TrajParser()
+        self._xyztraj_parser = XYZTrajParser()
+        self._mdanalysistraj_parser = MDAnalysisTrajParser()
         self.data_parser = DataParser()
-
-    def parse_thermodynamic_data(self):
-        thermo_data = self.log_parser.get_thermodynamic_data()
-        if not thermo_data:
-            return
-        n_evaluations = len(thermo_data['Step'])
-
-        energy_keys_mapping = {
+        self.aux_log_parser = LogParser()
+        self._energy_mapping = {
             'e_pair': 'pair', 'e_bond': 'bond', 'e_angle': 'angle', 'e_dihed': 'dihedral',
             'e_impro': 'improper', 'e_coul': 'coulomb', 'e_vdwl': 'van der Waals',
             'e_mol': 'molecular', 'e_long': 'kspace long range',
-            'e_tail': 'van der Waals long range', 'kineng': 'kinetic', 'poteng': 'potential',
-        }
+            'e_tail': 'van der Waals long range', 'kineng': 'kinetic', 'poteng': 'potential'}
+
+    def parse_thermodynamic_data(self):
+        thermo_data = self.log_parser.get_thermodynamic_data()
+        if thermo_data is None:
+            thermo_data = self.aux_log_parser.get_thermodynamic_data()
+        if not thermo_data:
+            return
 
         sec_run = self.archive.section_run[-1]
-
         sec_sccs = sec_run.section_single_configuration_calculation
 
+        n_thermo_data = len(thermo_data.get('Step', []))
         create_scc = True
         if sec_sccs:
-            if len(sec_sccs) != n_evaluations:
+            if len(sec_sccs) != len(thermo_data):
                 self.logger.warn(
                     '''Mismatch in number of calculations and number of property
                     evaluations!, will create new sections''',
-                    data=dict(n_calculations=len(sec_sccs), n_evaluations=n_evaluations))
+                    data=dict(n_calculations=len(sec_sccs), n_evaluations=n_thermo_data))
 
             else:
                 create_scc = False
-
-        for n in range(n_evaluations):
+        for n in range(n_thermo_data):
             if create_scc:
                 sec_scc = sec_run.m_create(SingleConfigurationCalculation)
             else:
@@ -572,31 +650,21 @@ class LammpsParser(FairdiParser):
 
             for key, val in thermo_data.items():
                 key = key.lower()
-                if key in energy_keys_mapping:
+                if key in self._energy_mapping:
                     sec_energy = sec_scc.m_create(EnergyContribution)
-                    sec_energy.energy_contibution_kind = energy_keys_mapping[key]
+                    sec_energy.energy_contribution_kind = self._energy_mapping[key]
                     sec_energy.energy_contribution_value = val[n]
-
                 elif key == 'toteng':
                     sec_scc.energy_method_current = val[n]
-
+                    sec_scc.energy_total = val[n]
                 elif key == 'press':
                     sec_scc.pressure = val[n]
-
                 elif key == 'temp':
                     sec_scc.temperature = val[n]
-
                 elif key == 'step':
                     sec_scc.time_step = int(val[n])
-
                 elif key == 'cpu':
                     sec_scc.time_calculation = float(val[n])
-
-                else:
-                    if n == 0:
-                        self.logger.warn(
-                            'Unsupported property in thermodynamic data',
-                            data=dict(property=key))
 
     def parse_sampling_method(self):
         sec_run = self.archive.section_run[-1]
@@ -636,33 +704,19 @@ class LammpsParser(FairdiParser):
     def parse_system(self):
         sec_run = self.archive.section_run[-1]
 
+        atoms_info = self.traj_parser.get('atoms_info', [])
         pbc_cell = self.traj_parser.get('pbc_cell', [])
-        n_atoms = self.traj_parser.get('n_atoms', [])
-
-        if len(n_atoms) == 0:
-            return
-
-        create_scc = True
-        sec_sccs = sec_run.section_single_configuration_calculation
-        if sec_sccs:
-            if len(sec_sccs) != len(pbc_cell):
-                self.logger.warn(
-                    '''Mismatch in number of calculations and number of structures,
-                    will create new sections''',
-                    data=dict(n_calculations=len(sec_sccs), n_structures=len(pbc_cell)))
-
-            else:
-                create_scc = False
-
-        distance_unit = self.log_parser.units.get('distance', None)
-        self.traj_parser._units = self.log_parser.units
-
-        for i in range(len(pbc_cell)):
+        n_atoms = self.traj_parser.get('n_atoms', [
+            len(self.traj_parser.get_positions(n)) for n in range(len(atoms_info))])
+        units = self.log_parser.units
+        for i in range(len(atoms_info)):
             sec_system = sec_run.m_create(System)
             sec_system.number_of_atoms = n_atoms[i]
-            sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
-            sec_system.simulation_cell = pbc_cell[i][1] * distance_unit
-            sec_system.atom_positions = self.traj_parser.get_positions(i)
+            if pbc_cell:
+                sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
+                sec_system.lattice_vectors = pbc_cell[i][1] * units.get('distance')
+                sec_system.simulation_cell = pbc_cell[i][1] * units.get('distance')
+            sec_system.atom_positions = self.traj_parser.get_positions(i) * units.get('distance')
             atom_labels = self.traj_parser.get_atom_labels(i)
             if atom_labels is None:
                 atom_labels = ['X'] * n_atoms[i]
@@ -670,16 +724,12 @@ class LammpsParser(FairdiParser):
 
             velocities = self.traj_parser.get_velocities(i)
             if velocities is not None:
-                sec_system.atom_velocities = velocities
+                sec_system.atom_velocities = velocities * units.get('velocity')
 
             forces = self.traj_parser.get_forces(i)
             if forces is not None:
-                if create_scc:
-                    sec_scc = sec_run.m_create(SingleConfigurationCalculation)
-                else:
-                    sec_scc = sec_sccs[i]
-
-                sec_scc.atom_forces = forces
+                sec_scc = sec_run.m_create(SingleConfigurationCalculation)
+                sec_scc.atom_forces = forces * units.get('force')
 
     def parse_topology(self):
         sec_run = self.archive.section_run[-1]
@@ -733,8 +783,14 @@ class LammpsParser(FairdiParser):
     def init_parser(self):
         self.log_parser.mainfile = self.filepath
         self.log_parser.logger = self.logger
-        self.traj_parser.logger = self.logger
+        self._traj_parser.logger = self.logger
+        self._mdanalysistraj_parser.logger = self.logger
+        self._xyztraj_parser.logger = self.logger
         self.data_parser.logger = self.logger
+        # auxilliary log parser for thermo data
+        self.aux_log_parser.logger = self.logger
+        self.log_parser._units = None
+        self._traj_parser._chemical_symbols = None
 
     def reuse_parser(self, parser):
         self.log_parser.quantities = parser.log_parser.quantities
@@ -757,19 +813,40 @@ class LammpsParser(FairdiParser):
         # parse method-related
         self.parse_sampling_method()
 
-        # parse all data files associated with calculation, normally only one
-        # specified in log file, otherwise will scan directory
+        # parse data file associated with calculation
         data_files = self.log_parser.get_data_files()
-        for data_file in data_files:
-            self.data_parser.mainfile = data_file
-            self.parse_topology()
+        if len(data_files) > 1:
+            self.logger.warn('Multiple data files are specified')
+        if data_files:
+            self.data_parser.mainfile = data_files[0]
 
-        # parse all trajectorty files associated with calculation, normally only one
-        # specified in log file, otherwise will scan directory
+        # parse trajectorty file associated with calculation
         traj_files = self.log_parser.get_traj_files()
-        for traj_file in traj_files:
-            self.traj_parser.mainfile = traj_file
-            self.parse_system()
+        if len(traj_files) > 1:
+            self.logger.warn('Multiple traj files are specified')
+        if traj_files:
+            file_type = self.log_parser.get('dump', [[1, 'all', 'trj']])[0][2]
+            if file_type == 'dcd':
+                self.traj_parser = self._mdanalysistraj_parser
+                if data_files:
+                    self.traj_parser.datafile = data_files[0]
+            elif file_type == 'xyz':
+                self.traj_parser = self._xyztraj_parser
+            else:
+                self.traj_parser = self._traj_parser
+            # TODO provide support for other file types
+            self.traj_parser.mainfile = traj_files[0]
+
+        # parse data from auxiliary log file
+        if self.log_parser.get('log') is not None:
+            self.aux_log_parser.mainfile = os.path.join(
+                self.log_parser.maindir, self.log_parser.get('log')[0])
+            # we assign units here which is read from log parser
+            self.aux_log_parser._units = self.log_parser.units
+
+        self.parse_topology()
+
+        self.parse_system()
 
         # parse thermodynamic data from log file
         self.parse_thermodynamic_data()
@@ -787,4 +864,5 @@ class LammpsParser(FairdiParser):
 
                 sec_md.finished_normally = self.log_parser.get('finished') is not None
                 sec_md.with_trajectory = self.traj_parser.with_trajectory()
-                sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None
+                sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None or\
+                    self.aux_log_parser.get('thermo_data') is not None
