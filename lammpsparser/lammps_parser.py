@@ -93,6 +93,10 @@ def get_unit(units_type, property_type=None, dimension=3):
             dipole='elementary_charge*nm', electric_field='V/nm', density='ag/nm^%d' % dimension)
 
     else:
+        # units = dict(
+        #     mass=1, distance=1, time=1, energy=1, velocity=1, force=1,
+        #     torque=1, temperature=1, pressure=1, dynamic_viscosity=1, charge=1,
+        #     dipole=1, electric_field=1, density=1)
         units = dict()
 
     if property_type:
@@ -315,13 +319,19 @@ class XYZTrajParser(TrajParser):
     def init_quantities(self):
 
         def get_atoms_info(val_in):
-            val = [v.split() for v in val_in.strip().split('\n')]
+            val = [v.split('#')[0].split() for v in val_in.strip().split('\n')]
+            symbols = []
+            for v in val:
+                if v[0].isalpha():
+                    if v[0] not in symbols:
+                        symbols.append(v[0])
+                    v[0] = symbols.index(v[0]) + 1
             val = np.transpose(np.array([v for v in val if len(v) == 4], dtype=float))
             return dict(type=val[0], x=val[1], y=val[2], z=val[3])
 
         self.quantities = [
             Quantity(
-                'atoms_info', r'\d+\n([\d\s\-\.Ee]+)(?:\d+\n|\Z)',
+                'atoms_info', r'((?:\d+|[A-Z][a-z]?) [\s\S]+?)(?:\s\d+\n|\Z)',
                 str_operation=get_atoms_info, comment='#', repeats=True)
         ]
 
@@ -466,15 +476,14 @@ class LogParser(TextParser):
 
         if thermo_data is None:
             return
-
         for key, val in thermo_data.items():
             low_key = key.lower()
             if low_key.startswith('e_') or low_key.endswith('eng'):
-                thermo_data[key] = val * self.units['energy']
+                thermo_data[key] = val * self.units.get('energy', 1)
             elif low_key == 'press':
-                thermo_data[key] = val * self.units['pressure']
+                thermo_data[key] = val * self.units.get('pressure', 1)
             elif low_key == 'temp':
-                thermo_data[key] = val * self.units['temperature']
+                thermo_data[key] = val * self.units.get('temperature', 1)
 
         return thermo_data
 
@@ -486,10 +495,10 @@ class LogParser(TextParser):
                 data=dict(directory=self.maindir))
             # TODO improve matching of traj file
             traj_files = os.listdir(self.maindir)
-            traj_files = [f for f in traj_files if f.endswith('trj')]
+            traj_files = [f for f in traj_files if f.endswith('trj') or f.endswith('xyz')]
             # further eliminate
             if len(traj_files) > 1:
-                prefix = os.path.basename(self.mainfile).strip('log.')
+                prefix = os.path.basename(self.mainfile).rsplit('.', 1)[0]
                 traj_files = [f for f in traj_files if prefix in f]
         else:
             traj_files = []
@@ -501,16 +510,15 @@ class LogParser(TextParser):
 
     def get_data_files(self):
         read_data = self.get('read_data')
-        if read_data is None:
+        if read_data is None or 'CPU' in read_data:
             self.logger.warn(
                 'Data file not specified in directory, will scan.',
                 data=dict(directory=self.maindir))
             # TODO improve matching of data file
-            prefix = os.path.basename(self.mainfile).strip('log.')
             data_files = os.listdir(self.maindir)
             data_files = [f for f in data_files if f.endswith('data') or f.startswith('data')]
             if len(data_files) > 1:
-                prefix = os.path.basename(self.mainfile).strip('log.')
+                prefix = os.path.basename(self.mainfile).rsplit('.', 1)[0]
                 data_files = [f for f in data_files if prefix in f]
 
         else:
@@ -538,9 +546,9 @@ class LogParser(TextParser):
         except IndexError:
             return {}
 
-        temp_unit = self.units['temperature']
-        press_unit = self.units['pressure']
-        time_unit = self.units['time']
+        temp_unit = self.units.get('temperature', 1)
+        press_unit = self.units.get('pressure', 1)
+        time_unit = self.units.get('time', 1)
 
         res = dict()
         if fix_style.lower() == 'nvt':
@@ -673,8 +681,7 @@ class LammpsParser(FairdiParser):
         run_style = self.log_parser.get('run_style', ['verlet'])[0]
         run = self.log_parser.get('run', [0])[0]
 
-        units = self.log_parser.get('units', ['lj'])[0]
-        time_unit = get_unit(units, 'time')
+        time_unit = self.log_parser.units.get('time', None)
         timestep = self.log_parser.get('timestep', [0], unit=time_unit)[0]
         sampling_method, ensemble_type = self.log_parser.get_sampling_method()
 
@@ -714,9 +721,11 @@ class LammpsParser(FairdiParser):
             sec_system.number_of_atoms = n_atoms[i]
             if pbc_cell:
                 sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
-                sec_system.lattice_vectors = pbc_cell[i][1] * units.get('distance')
-                sec_system.simulation_cell = pbc_cell[i][1] * units.get('distance')
-            sec_system.atom_positions = self.traj_parser.get_positions(i) * units.get('distance')
+                sec_system.lattice_vectors = pbc_cell[i][1] * units.get('distance', 1)
+                sec_system.simulation_cell = pbc_cell[i][1] * units.get('distance', 1)
+            else:
+                sec_system.configuration_periodic_dimensions = [False] * 3
+            sec_system.atom_positions = self.traj_parser.get_positions(i) * units.get('distance', 1)
             atom_labels = self.traj_parser.get_atom_labels(i)
             if atom_labels is None:
                 atom_labels = ['X'] * n_atoms[i]
@@ -729,7 +738,7 @@ class LammpsParser(FairdiParser):
             forces = self.traj_parser.get_forces(i)
             if forces is not None:
                 sec_scc = sec_run.m_create(SingleConfigurationCalculation)
-                sec_scc.atom_forces = forces * units.get('force')
+                sec_scc.atom_forces = forces * units.get('force', 1)
 
     def parse_topology(self):
         sec_run = self.archive.section_run[-1]
@@ -824,8 +833,9 @@ class LammpsParser(FairdiParser):
         traj_files = self.log_parser.get_traj_files()
         if len(traj_files) > 1:
             self.logger.warn('Multiple traj files are specified')
+        self.traj_parser = self._traj_parser
         if traj_files:
-            file_type = self.log_parser.get('dump', [[1, 'all', 'trj']])[0][2]
+            file_type = self.log_parser.get('dump', [[1, 'all', traj_files[0][-3:]]])[0][2]
             if file_type == 'dcd':
                 self.traj_parser = self._mdanalysistraj_parser
                 if data_files:
@@ -833,8 +843,8 @@ class LammpsParser(FairdiParser):
             elif file_type == 'xyz':
                 self.traj_parser = self._xyztraj_parser
             else:
-                self.traj_parser = self._traj_parser
-            # TODO provide support for other file types
+                pass
+                # TODO provide support for other file types
             self.traj_parser.mainfile = traj_files[0]
 
         # parse data from auxiliary log file
