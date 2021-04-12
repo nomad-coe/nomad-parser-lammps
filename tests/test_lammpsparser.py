@@ -49,21 +49,21 @@ def test_nvt(parser):
 
     sec_system = sec_run.section_system
     assert len(sec_system) == 201
-    assert pytest.approx(sec_system[5].lattice_vectors[1][1].magnitude, 2.24235e-09)
+    assert sec_system[5].lattice_vectors[1][1].magnitude == pytest.approx(2.24235e-09)
     assert False not in sec_system[0].configuration_periodic_dimensions
     assert sec_system[80].atom_labels[91:96] == ['H', 'H', 'H', 'C', 'C']
 
     sec_scc = sec_run.section_single_configuration_calculation
     assert len(sec_scc) == 201
-    assert pytest.approx(sec_scc[21].energy_method_current.magnitude, 8.86689197e-18)
+    assert sec_scc[21].energy_method_current.magnitude == pytest.approx(8.86689197e-18)
     assert sec_scc[180].time_calculation.magnitude == 218.5357
-    assert pytest.approx(sec_scc[56].pressure.magnitude, -77642135.5)
+    assert sec_scc[56].pressure.magnitude == pytest.approx(-77642135.4975)
     assert sec_scc[103].temperature.magnitude == 291.4591
     assert sec_scc[11].time_step == 4400
     assert len(sec_scc[1].section_energy_contribution) == 9
     assert sec_scc[112].section_energy_contribution[8].energy_contribution_kind == 'kspace long range'
-    assert pytest.approx(sec_scc[96].section_energy_contribution[2].energy_contribution_value.magnitude, 1.19666271e-18)
-    assert pytest.approx(sec_scc[47].section_energy_contribution[4].energy_contribution_value.magnitude, 1.42166035e-18)
+    assert sec_scc[96].section_energy_contribution[2].energy_contribution_value.magnitude == pytest.approx(1.19666271e-18)
+    assert sec_scc[47].section_energy_contribution[4].energy_contribution_value.magnitude == pytest.approx(1.42166035e-18)
 
     assert sec_run.x_lammps_section_control_parameters[0].x_lammps_inout_control_atomstyle == 'full'
 
@@ -74,7 +74,7 @@ def test_thermo_format(parser):
 
     sec_sccs = archive.section_run[0].section_single_configuration_calculation
     assert len(sec_sccs) == 301
-    assert pytest.approx(sec_sccs[98].energy_total.magnitude, 1.45322428e-17)
+    assert sec_sccs[98].energy_total.magnitude == pytest.approx(1.45322428e-17)
 
     assert len(archive.section_run[0].section_system) == 4
 
@@ -85,7 +85,7 @@ def test_traj_xyz(parser):
 
     sec_systems = archive.section_run[0].section_system
     assert len(sec_systems) == 201
-    assert pytest.approx(sec_systems[13].atom_positions[7][0].magnitude, -8.00436e-10)
+    assert sec_systems[13].atom_positions[7][0].magnitude == pytest.approx(-8.00436e-10)
 
 
 def test_traj_dcd(parser):

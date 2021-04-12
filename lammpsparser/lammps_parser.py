@@ -440,7 +440,7 @@ class LogParser(TextParser):
         def str_to_thermo(val):
             res = {}
             if val.count('Step') > 1:
-                val = val.replace('-', '').replace('=', '').replace('(sec)', '').split()
+                val = val.replace('--', '').replace('=', '').replace('(sec)', '').split()
                 val = [v.strip() for v in val]
 
                 for i in range(len(val)):
