@@ -20,7 +20,6 @@ import numpy as np
 import os
 import logging
 from ase import data as asedata
-import pint
 try:
     import MDAnalysis
 except Exception:
@@ -28,6 +27,7 @@ except Exception:
     MDAnalysis = False
 
 from .metainfo import m_env
+from nomad.units import ureg
 from nomad.parsing.parser import FairdiParser
 
 from nomad.parsing.file_parser import Quantity, TextParser
@@ -43,54 +43,54 @@ def get_unit(units_type, property_type=None, dimension=3):
     units_type = units_type.lower()
     if units_type == 'real':
         units = dict(
-            mass=pint.Quantity(1 / mole, 'g'), distance='angstrom', time='fs',
-            energy=pint.Quantity(1 / mole, 'kcal'), velocity='angstrom/fs',
-            force=pint.Quantity(1 / mole, 'kcal/angstrom'), torque=pint.Quantity(1 / mole, 'kcal'),
-            temperature='K', pressure='atm', dynamic_viscosity='poise', charge='elementary_charge',
-            dipole='elementary_charge*angstrom', electric_field='V/angstrom',
-            density='g/cm^%d' % dimension)
+            mass=ureg.g / mole, distance=ureg.angstrom, time=ureg.fs,
+            energy=ureg.kcal / mole, velocity=ureg.angstrom / ureg.fs,
+            force=ureg.kcal / ureg.angstrom / mole, torque=ureg.kcal / mole,
+            temperature=ureg.K, pressure=ureg.atm, dynamic_viscosity=ureg.poise, charge=ureg.elementary_charge,
+            dipole=ureg.elementary_charge * ureg.angstrom, electric_field=ureg.V / ureg.angstrom,
+            density=ureg.g / ureg.cm ** dimension)
 
     elif units_type == 'metal':
         units = dict(
-            mass=pint.Quantity(1 / mole, 'g'), distance='angstrom', time='ps',
-            energy='eV', velocity='angstrom/ps', force='eV/angstrom', torque='eV',
-            temperature='K', pressure='bar', dynamic_viscosity='poise', charge='elementary_charge',
-            dipole='elementary_charge*angstrom', electric_field='V/angstrom',
-            density='g/cm^%d' % dimension)
+            mass=ureg.g / mole, distance=ureg.angstrom, time=ureg.ps,
+            energy=ureg.eV, velocity=ureg.angstrom / ureg.ps, force=ureg.eV / ureg.angstrom, torque=ureg.eV,
+            temperature=ureg.K, pressure=ureg.bar, dynamic_viscosity=ureg.poise, charge=ureg.elementary_charge,
+            dipole=ureg.elementary_charge * ureg.angstrom, electric_field=ureg.V / ureg.angstrom,
+            density=ureg.g / ureg.cm ** dimension)
 
     elif units_type == 'si':
         units = dict(
-            mass='kg', distance='m', time='s', energy='J', velocity='m/s', force='N',
-            torque='N*m', temperature='K', pressure='Pa', dynamic_viscosity='Pa*s',
-            charge='C', dipole='C*m', electric_field='V/m', density='kg/m^%d' % dimension)
+            mass=ureg.kg, distance=ureg.m, time=ureg.s, energy=ureg.J, velocity=ureg.m / ureg.s, force=ureg.N,
+            torque=ureg.N * ureg.m, temperature=ureg.K, pressure=ureg.Pa, dynamic_viscosity=ureg.Pa * ureg.s,
+            charge=ureg.C, dipole=ureg.C * ureg.m, electric_field=ureg.V / ureg.m, density=ureg.kg / ureg.m ** dimension)
 
     elif units_type == 'cgs':
         units = dict(
-            mass='g', distance='cm', time='s', energy='erg', velocity='cm/s', force='dyne',
-            torque='dyne*cm', temperature='K', pressure='dyne/cm^2', dynamic_viscosity='poise',
-            charge='esu', dipole='esu*cm', electric_field='dyne/esu',
-            density='g/cm^%d' % dimension)
+            mass=ureg.g, distance=ureg.cm, time=ureg.s, energy=ureg.erg, velocity=ureg.cm / ureg.s, force=ureg.dyne,
+            torque=ureg.dyne * ureg.cm, temperature=ureg.K, pressure=ureg.dyne / ureg. cm ** 2, dynamic_viscosity=ureg.poise,
+            charge=ureg.esu, dipole=ureg.esu * ureg.cm, electric_field=ureg.dyne / ureg.esu,
+            density=ureg.g / ureg.cm ** dimension)
 
     elif units_type == 'electron':
         units = dict(
-            mass='amu', distance='bohr', time='fs', energy='hartree',
-            velocity='bohr/atomic_unit_of_time', force='hartree/bohr', temperature='K',
-            pressure='Pa', charge='elementary_charge', dipole='debye', electric_field='V/cm')
+            mass=ureg.amu, distance=ureg.bohr, time=ureg.fs, energy=ureg.hartree,
+            velocity=ureg.bohr / ureg.atomic_unit_of_time, force=ureg.hartree / ureg.bohr, temperature=ureg.K,
+            pressure=ureg.Pa, charge=ureg.elementary_charge, dipole=ureg.debye, electric_field=ureg.V / ureg.cm)
 
     elif units_type == 'micro':
         units = dict(
-            mass='pg', distance='microm', time='micros', energy='pg*microm^2/micros^2',
-            velocity='microm/micros', force='pg*microm/micros^2', torque='pg*microm^2/micros^2',
-            temperature='K', pressure='pg/(microm*micros^2)', dynamic_viscosity='pg/(microm*micros)',
-            charge='pC', dipole='pC*microm', electric_field='V/microm',
-            density='pg/microm^%d' % dimension)
+            mass=ureg.pg, distance=ureg.microm, time=ureg.micros, energy=ureg.pg * ureg.microm ** 2 / ureg.micros ** 2,
+            velocity=ureg.microm / ureg.micros, force=ureg.pg * ureg.microm / ureg.micros ** 2, torque=ureg.pg * ureg.microm ** 2 / ureg.micros ** 2,
+            temperature=ureg.K, pressure=ureg.pg / (ureg.microm * ureg.micros ** 2), dynamic_viscosity=ureg.pg / (ureg.microm * ureg.micros),
+            charge=ureg.pC, dipole=ureg.pC * ureg.microm, electric_field=ureg.V / ureg.microm,
+            density=ureg.pg / ureg.microm ** dimension)
 
     elif units_type == 'nano':
         units = dict(
-            mass='ag', distance='nm', time='ns', energy='ag*nm^2/ns^2', velocity='nm/ns',
-            force='ag*nm/ns^2', torque='ag*nm^2/ns^2', temperature='K', pressure='ag/(nm*ns^2)',
-            dynamic_viscosity='ag/(nm*ns)', charge='elementary_charge',
-            dipole='elementary_charge*nm', electric_field='V/nm', density='ag/nm^%d' % dimension)
+            mass=ureg.ag, distance=ureg.nm, time=ureg.ns, energy=ureg.ag * ureg.nm ** 2 / ureg.ns ** 2, velocity=ureg.nm / ureg.ns,
+            force=ureg.ag * ureg.nm / ureg.ns ** 2, torque=ureg.ag * ureg.nm ** 2 / ureg.ns ** 2, temperature=ureg.K, pressure=ureg.ag / (ureg.nm * ureg.ns ** 2),
+            dynamic_viscosity=ureg.ag / (ureg.nm * ureg.ns), charge=ureg.elementary_charge,
+            dipole=ureg.elementary_charge * ureg.nm, electric_field=ureg.V / ureg.nm, density=ureg.ag / ureg.nm ** dimension)
 
     else:
         # units = dict(
@@ -100,14 +100,8 @@ def get_unit(units_type, property_type=None, dimension=3):
         units = dict()
 
     if property_type:
-        unit = units.get(property_type, None)
-        if isinstance(unit, str):
-            unit = pint.Quantity(1, unit)
-        return unit
+        return units.get(property_type, None)
     else:
-        for key, val in units.items():
-            if isinstance(val, str):
-                units[key] = pint.Quantity(1, val)
         return units
 
 
