@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from tokenize import Single
 import numpy as np
 import os
 import logging
@@ -32,7 +33,7 @@ from nomad.parsing.parser import FairdiParser
 
 from nomad.parsing.file_parser import Quantity, TextParser
 from nomad.datamodel.metainfo.common_dft import Run, SamplingMethod, System,\
-    SingleConfigurationCalculation, EnergyContribution, Workflow, MolecularDynamics
+    SingleConfigurationCalculation, Energy, Forces, Workflow, MolecularDynamics
 from nomad.datamodel.metainfo.common import section_topology, section_interaction
 from .metainfo.lammps import x_lammps_section_input_output_files, x_lammps_section_control_parameters
 
@@ -653,12 +654,15 @@ class LammpsParser(FairdiParser):
             for key, val in thermo_data.items():
                 key = key.lower()
                 if key in self._energy_mapping:
-                    sec_energy = sec_scc.m_create(EnergyContribution)
-                    sec_energy.energy_contribution_kind = self._energy_mapping[key]
-                    sec_energy.energy_contribution_value = val[n]
+                    sec_energy = sec_scc.m_create(
+                        Energy, SingleConfigurationCalculation.energy_contributions)
+                    sec_energy.kind = self._energy_mapping[key]
+                    sec_energy.value = val[n]
                 elif key == 'toteng':
-                    sec_scc.energy_method_current = val[n]
-                    sec_scc.energy_total = val[n]
+                    sec_scc.m_add_sub_section(
+                        SingleConfigurationCalculation.energy_current, Energy(value=val[n]))
+                    sec_scc.m_add_sub_section(
+                        SingleConfigurationCalculation.energy_total, Energy(value=val[n]))
                 elif key == 'press':
                     sec_scc.pressure = val[n]
                 elif key == 'temp':
@@ -732,7 +736,9 @@ class LammpsParser(FairdiParser):
             forces = self.traj_parser.get_forces(i)
             if forces is not None:
                 sec_scc = sec_run.m_create(SingleConfigurationCalculation)
-                sec_scc.atom_forces = forces * units.get('force', 1)
+                sec_scc.m_add_sub_section(
+                    SingleConfigurationCalculation.forces_total, Forces(
+                        value=forces * units.get('force', 1)))
 
     def parse_topology(self):
         sec_run = self.archive.section_run[-1]

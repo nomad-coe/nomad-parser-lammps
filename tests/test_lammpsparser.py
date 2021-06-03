@@ -59,15 +59,15 @@ def test_nvt(parser):
 
     sec_scc = sec_run.section_single_configuration_calculation
     assert len(sec_scc) == 201
-    assert sec_scc[21].energy_method_current.magnitude == approx(8.86689197e-18)
+    assert sec_scc[21].energy_current.value.magnitude == approx(8.86689197e-18)
     assert sec_scc[180].time_calculation.magnitude == 218.5357
     assert sec_scc[56].pressure.magnitude == approx(-77642135.4975)
     assert sec_scc[103].temperature.magnitude == 291.4591
     assert sec_scc[11].time_step == 4400
-    assert len(sec_scc[1].section_energy_contribution) == 9
-    assert sec_scc[112].section_energy_contribution[8].energy_contribution_kind == 'kspace long range'
-    assert sec_scc[96].section_energy_contribution[2].energy_contribution_value.magnitude == approx(1.19666271e-18)
-    assert sec_scc[47].section_energy_contribution[4].energy_contribution_value.magnitude == approx(1.42166035e-18)
+    assert len(sec_scc[1].energy_contributions) == 9
+    assert sec_scc[112].energy_contributions[8].kind == 'kspace long range'
+    assert sec_scc[96].energy_contributions[2].value.magnitude == approx(1.19666271e-18)
+    assert sec_scc[47].energy_contributions[4].value.magnitude == approx(1.42166035e-18)
 
     assert sec_run.x_lammps_section_control_parameters[0].x_lammps_inout_control_atomstyle == 'full'
 
@@ -78,7 +78,7 @@ def test_thermo_format(parser):
 
     sec_sccs = archive.section_run[0].section_single_configuration_calculation
     assert len(sec_sccs) == 301
-    assert sec_sccs[98].energy_total.magnitude == approx(1.45322428e-17)
+    assert sec_sccs[98].energy_total.value.magnitude == approx(1.45322428e-17)
 
     assert len(archive.section_run[0].section_system) == 4
 
