@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from tokenize import Single
 import numpy as np
 import os
 import logging
@@ -33,7 +32,7 @@ from nomad.parsing.parser import FairdiParser
 
 from nomad.parsing.file_parser import Quantity, TextParser
 from nomad.datamodel.metainfo.common_dft import Run, SamplingMethod, System,\
-    SingleConfigurationCalculation, Energy, Forces, Workflow, MolecularDynamics
+    SingleConfigurationCalculation, Energy, Forces, Thermodynamics, Workflow, MolecularDynamics
 from nomad.datamodel.metainfo.common import section_topology, section_interaction
 from .metainfo.lammps import x_lammps_section_input_output_files, x_lammps_section_control_parameters
 
@@ -650,7 +649,7 @@ class LammpsParser(FairdiParser):
                 sec_scc = sec_run.m_create(SingleConfigurationCalculation)
             else:
                 sec_scc = sec_sccs[n]
-
+            sec_thermo = sec_scc.m_create(Thermodynamics)
             for key, val in thermo_data.items():
                 key = key.lower()
                 if key in self._energy_mapping:
@@ -664,9 +663,9 @@ class LammpsParser(FairdiParser):
                     sec_scc.m_add_sub_section(
                         SingleConfigurationCalculation.energy_total, Energy(value=val[n]))
                 elif key == 'press':
-                    sec_scc.pressure = val[n]
+                    sec_thermo.pressure = val[n]
                 elif key == 'temp':
-                    sec_scc.temperature = val[n]
+                    sec_thermo.temperature = val[n]
                 elif key == 'step':
                     sec_scc.time_step = int(val[n])
                 elif key == 'cpu':
