@@ -26,14 +26,21 @@ except Exception:
     logging.warn('Required module MDAnalysis not found.')
     MDAnalysis = False
 
-from .metainfo import m_env
 from nomad.units import ureg
 from nomad.parsing.parser import FairdiParser
 
 from nomad.parsing.file_parser import Quantity, TextParser
-from nomad.datamodel.metainfo.common_dft import Run, SamplingMethod, System,\
-    SingleConfigurationCalculation, Energy, Forces, Thermodynamics, Workflow, MolecularDynamics
-from nomad.datamodel.metainfo.common import section_topology, section_interaction
+from nomad.datamodel.metainfo.run.run import Run, Program
+from nomad.datamodel.metainfo.run.method import (
+    ForceField, Method, Interaction, Model
+)
+from nomad.datamodel.metainfo.run.system import (
+    System, Atoms
+)
+from nomad.datamodel.metainfo.run.calculation import (
+    Calculation, Energy, EnergyEntry, Forces, ForcesEntry, Thermodynamics
+)
+from nomad.datamodel.metainfo.workflow import Workflow, MolecularDynamics
 from .metainfo.lammps import x_lammps_section_input_output_files, x_lammps_section_control_parameters
 
 
@@ -610,7 +617,6 @@ class LammpsParser(FairdiParser):
             name='parsers/lammps', code_name='LAMMPS', code_homepage='https://lammps.sandia.gov/',
             domain='dft', mainfile_contents_re=r'^LAMMPS')
 
-        self._metainfo_env = m_env
         self.log_parser = LogParser()
         self._traj_parser = TrajParser()
         self._xyztraj_parser = XYZTrajParser()
@@ -630,8 +636,8 @@ class LammpsParser(FairdiParser):
         if not thermo_data:
             return
 
-        sec_run = self.archive.section_run[-1]
-        sec_sccs = sec_run.section_single_configuration_calculation
+        sec_run = self.archive.run[-1]
+        sec_sccs = sec_run.calculation
 
         n_thermo_data = len(thermo_data.get('Step', []))
         create_scc = True
@@ -646,34 +652,32 @@ class LammpsParser(FairdiParser):
                 create_scc = False
         for n in range(n_thermo_data):
             if create_scc:
-                sec_scc = sec_run.m_create(SingleConfigurationCalculation)
+                sec_scc = sec_run.m_create(Calculation)
             else:
                 sec_scc = sec_sccs[n]
+
+            sec_energy = sec_scc.m_create(Energy)
             sec_thermo = sec_scc.m_create(Thermodynamics)
             for key, val in thermo_data.items():
                 key = key.lower()
                 if key in self._energy_mapping:
-                    sec_energy = sec_scc.m_create(
-                        Energy, SingleConfigurationCalculation.energy_contributions)
-                    sec_energy.kind = self._energy_mapping[key]
-                    sec_energy.value = val[n]
+                    sec_energy.contributions.append(
+                        EnergyEntry(kind=self._energy_mapping[key], value=val[n]))
                 elif key == 'toteng':
-                    sec_scc.m_add_sub_section(
-                        SingleConfigurationCalculation.energy_current, Energy(value=val[n]))
-                    sec_scc.m_add_sub_section(
-                        SingleConfigurationCalculation.energy_total, Energy(value=val[n]))
+                    sec_energy.current = EnergyEntry(value=val[n])
+                    sec_energy.total = EnergyEntry(value=val[n])
                 elif key == 'press':
                     sec_thermo.pressure = val[n]
                 elif key == 'temp':
                     sec_thermo.temperature = val[n]
                 elif key == 'step':
-                    sec_scc.time_step = int(val[n])
+                    sec_thermo.time_step = int(val[n])
                 elif key == 'cpu':
                     sec_scc.time_calculation = float(val[n])
 
-    def parse_sampling_method(self):
-        sec_run = self.archive.section_run[-1]
-        sec_sampling_method = sec_run.m_create(SamplingMethod)
+    def parse_workflow(self):
+        sec_workflow = self.archive.m_create(Workflow)
+        sec_md = sec_workflow.m_create(MolecularDynamics)
 
         run_style = self.log_parser.get('run_style', ['verlet'])[0]
         run = self.log_parser.get('run', [0])[0]
@@ -682,31 +686,36 @@ class LammpsParser(FairdiParser):
         timestep = self.log_parser.get('timestep', [0], unit=time_unit)[0]
         sampling_method, ensemble_type = self.log_parser.get_sampling_method()
 
-        sec_sampling_method.x_lammps_integrator_type = run_style
-        sec_sampling_method.x_lammps_number_of_steps_requested = run
-        sec_sampling_method.x_lammps_integrator_dt = timestep
-        sec_sampling_method.sampling_method = sampling_method
-        sec_sampling_method.ensemble_type = ensemble_type
+        sec_workflow.type = sampling_method
+        sec_md.x_lammps_integrator_type = run_style
+        sec_md.x_lammps_number_of_steps_requested = run
+        sec_md.x_lammps_integrator_dt = timestep
+        sec_md.ensemble_type = ensemble_type
 
         thermo_settings = self.log_parser.get_thermostat_settings()
         target_T = thermo_settings.get('target_T', None)
         if target_T is not None:
-            sec_sampling_method.x_lammps_thermostat_target_temperature = target_T
+            sec_md.x_lammps_thermostat_target_temperature = target_T
         thermostat_tau = thermo_settings.get('thermostat_tau', None)
         if thermostat_tau is not None:
-            sec_sampling_method.x_lammps_thermostat_tau = thermostat_tau
+            sec_md.x_lammps_thermostat_tau = thermostat_tau
         target_P = thermo_settings.get('target_P', None)
         if target_P is not None:
-            sec_sampling_method.x_lammps_barostat_target_pressure = target_P
+            sec_md.x_lammps_barostat_target_pressure = target_P
         barostat_tau = thermo_settings.get('barostat_P', None)
         if barostat_tau is not None:
-            sec_sampling_method.x_lammps_barostat_tau = barostat_tau
+            sec_md.x_lammps_barostat_tau = barostat_tau
         langevin_gamma = thermo_settings.get('langevin_gamma', None)
         if langevin_gamma is not None:
-            sec_sampling_method.x_lammps_langevin_gamma = langevin_gamma
+            sec_md.x_lammps_langevin_gamma = langevin_gamma
+
+        sec_md.finished_normally = self.log_parser.get('finished') is not None
+        sec_md.with_trajectory = self.traj_parser.with_trajectory()
+        sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None or\
+            self.aux_log_parser.get('thermo_data') is not None
 
     def parse_system(self):
-        sec_run = self.archive.section_run[-1]
+        sec_run = self.archive.run[-1]
 
         atoms_info = self.traj_parser.get('atoms_info', [])
         pbc_cell = self.traj_parser.get('pbc_cell', [])
@@ -715,32 +724,30 @@ class LammpsParser(FairdiParser):
         units = self.log_parser.units
         for i in range(len(atoms_info)):
             sec_system = sec_run.m_create(System)
-            sec_system.number_of_atoms = n_atoms[i]
+            sec_atoms = sec_system.m_create(Atoms)
+            sec_atoms.n_atoms = n_atoms[i]
             if pbc_cell:
-                sec_system.configuration_periodic_dimensions = pbc_cell[i][0]
-                sec_system.lattice_vectors = pbc_cell[i][1] * units.get('distance', 1)
-                sec_system.simulation_cell = pbc_cell[i][1] * units.get('distance', 1)
+                sec_atoms.periodic = pbc_cell[i][0]
+                sec_atoms.lattice_vectors = pbc_cell[i][1] * units.get('distance', 1)
             else:
-                sec_system.configuration_periodic_dimensions = [False] * 3
-            sec_system.atom_positions = self.traj_parser.get_positions(i) * units.get('distance', 1)
+                sec_atoms.periodic = [False] * 3
+            sec_system.atoms.positions = self.traj_parser.get_positions(i) * units.get('distance', 1)
             atom_labels = self.traj_parser.get_atom_labels(i)
             if atom_labels is None:
                 atom_labels = ['X'] * n_atoms[i]
-            sec_system.atom_labels = atom_labels
+            sec_system.atoms.labels = atom_labels
 
             velocities = self.traj_parser.get_velocities(i)
             if velocities is not None:
-                sec_system.atom_velocities = velocities * units.get('velocity')
+                sec_system.atoms.velocities = velocities * units.get('velocity')
 
             forces = self.traj_parser.get_forces(i)
             if forces is not None:
-                sec_scc = sec_run.m_create(SingleConfigurationCalculation)
-                sec_scc.m_add_sub_section(
-                    SingleConfigurationCalculation.forces_total, Forces(
-                        value=forces * units.get('force', 1)))
+                sec_scc = sec_run.m_create(Calculation)
+                sec_scc.forces = Forces(total=ForcesEntry(value=forces * units.get('force', 1)))
 
-    def parse_topology(self):
-        sec_run = self.archive.section_run[-1]
+    def parse_method(self):
+        sec_run = self.archive.run[-1]
 
         if self.traj_parser.mainfile is None or self.data_parser.mainfile is None:
             return
@@ -749,8 +756,9 @@ class LammpsParser(FairdiParser):
 
         self.traj_parser.masses = masses
 
-        sec_topology = sec_run.m_create(section_topology)
-        sec_topology.number_of_topology_atoms = self.data_parser.get('atoms', [None])[0]
+        sec_method = sec_run.m_create(Method)
+        sec_force_field = sec_method.m_create(ForceField)
+        sec_model = sec_force_field.m_create(Model)
 
         interactions = self.log_parser.get_interactions()
         if not interactions:
@@ -759,12 +767,12 @@ class LammpsParser(FairdiParser):
         for interaction in interactions:
             if not interaction[0] or not interaction[1]:
                 continue
-            sec_interaction = sec_topology.m_create(section_interaction)
-            sec_interaction.interaction_kind = str(interaction[0])
-            sec_interaction.interaction_parameters = [list(a) for a in interaction[1]]
+            sec_interaction = sec_model.m_create(Interaction)
+            sec_interaction.type = str(interaction[0])
+            sec_interaction.parameters = [list(a) for a in interaction[1]]
 
     def parse_input(self):
-        sec_run = self.archive.section_run[-1]
+        sec_run = self.archive.run[-1]
         sec_input_output_files = sec_run.m_create(x_lammps_section_input_output_files)
 
         if self.data_parser.mainfile is not None:
@@ -815,11 +823,8 @@ class LammpsParser(FairdiParser):
         sec_run = self.archive.m_create(Run)
 
         # parse basic
-        sec_run.program_name = 'LAMMPS'
-        sec_run.program_version = self.log_parser.get('program_version', '')
-
-        # parse method-related
-        self.parse_sampling_method()
+        sec_run.program = Program(
+            name='LAMMPS', version=self.log_parser.get('program_version', ''))
 
         # parse data file associated with calculation
         data_files = self.log_parser.get_data_files()
@@ -853,7 +858,7 @@ class LammpsParser(FairdiParser):
             # we assign units here which is read from log parser
             self.aux_log_parser._units = self.log_parser.units
 
-        self.parse_topology()
+        self.parse_method()
 
         self.parse_system()
 
@@ -863,15 +868,5 @@ class LammpsParser(FairdiParser):
         # include input controls from log file
         self.parse_input()
 
-        # create workflow
-        if sec_run.section_sampling_method[0].sampling_method:
-            sec_workflow = self.archive.m_create(Workflow)
-            sec_workflow.workflow_type = sec_run.section_sampling_method[0].sampling_method
+        self.parse_workflow()
 
-            if sec_workflow.workflow_type == 'molecular_dynamics':
-                sec_md = sec_workflow.m_create(MolecularDynamics)
-
-                sec_md.finished_normally = self.log_parser.get('finished') is not None
-                sec_md.with_trajectory = self.traj_parser.with_trajectory()
-                sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None or\
-                    self.aux_log_parser.get('thermo_data') is not None
