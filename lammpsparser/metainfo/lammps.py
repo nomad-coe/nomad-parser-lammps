@@ -26,6 +26,9 @@ from nomad.datamodel.metainfo import run
 from nomad.datamodel.metainfo import workflow
 
 
+m_package = Package()
+
+
 class System(run.system.System):
 
     m_def = Section(validate=False, extends_base_section=True)
