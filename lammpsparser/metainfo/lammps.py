@@ -22,14 +22,14 @@ from nomad.metainfo import (  # pylint: disable=unused-import
     MSection, MCategory, Category, Package, Quantity, Section, SubSection, SectionProxy,
     Reference
 )
-from nomad.datamodel.metainfo import run
+from nomad.datamodel.metainfo import simulation
 from nomad.datamodel.metainfo import workflow
 
 
 m_package = Package()
 
 
-class System(run.system.System):
+class System(simulation.system.System):
 
     m_def = Section(validate=False, extends_base_section=True)
 
@@ -188,12 +188,12 @@ class MolecularDynamics(workflow.MolecularDynamics):
         ''')
 
 
-class Interaction(run.method.Interaction):
+class Interaction(simulation.method.Interaction):
 
     m_def = Section(validate=False, extends_base_section=True)
 
     x_lammps_interaction_atom_to_atom_type_ref = Quantity(
-        type=run.method.AtomParameters,
+        type=simulation.method.AtomParameters,
         shape=['number_of_atoms_per_interaction'],
         description='''
         Reference to the atom type of each interaction atoms.
@@ -207,7 +207,7 @@ class Interaction(run.method.Interaction):
         ''')
 
     x_lammps_pair_interaction_atom_type_ref = Quantity(
-        type=run.method.AtomParameters,
+        type=simulation.method.AtomParameters,
         shape=['x_lammps_number_of_defined_pair_interactions', 'number_of_atoms_per_interaction'],
         description='''
         Reference to the atom type for pair interactions.
@@ -221,7 +221,7 @@ class Interaction(run.method.Interaction):
         ''')
 
     x_lammps_molecule_interaction_atom_to_atom_type_ref = Quantity(
-        type=run.method.AtomParameters,
+        type=simulation.method.AtomParameters,
         shape=['number_of_atoms_per_interaction'],
         description='''
         Reference to the atom type of each molecule interaction atoms.
@@ -242,7 +242,7 @@ class Interaction(run.method.Interaction):
         ''')
 
     x_lammps_pair_molecule_interaction_to_atom_type_ref = Quantity(
-        type=run.method.AtomParameters,
+        type=simulation.method.AtomParameters,
         shape=['x_lammps_number_of_defined_pair_interactions', 'number_of_atoms_per_interaction'],
         description='''
         Reference to the atom type for pair interactions within a molecule.
@@ -1121,7 +1121,7 @@ class x_lammps_section_control_parameters(MSection):
         ''')
 
 
-class Run(run.run.Run):
+class Run(simulation.run.Run):
 
     m_def = Section(validate=False, extends_base_section=True)
 
@@ -1134,7 +1134,7 @@ class Run(run.run.Run):
         repeats=True)
 
 
-class Constraint(run.system.Constraint):
+class Constraint(simulation.system.Constraint):
 
     m_def = Section(validate=False, extends_base_section=True)
 

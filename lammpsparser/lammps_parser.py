@@ -30,14 +30,14 @@ from nomad.units import ureg
 from nomad.parsing.parser import FairdiParser
 
 from nomad.parsing.file_parser import Quantity, TextParser
-from nomad.datamodel.metainfo.run.run import Run, Program
-from nomad.datamodel.metainfo.run.method import (
+from nomad.datamodel.metainfo.simulation.run import Run, Program
+from nomad.datamodel.metainfo.simulation.method import (
     ForceField, Method, Interaction, Model
 )
-from nomad.datamodel.metainfo.run.system import (
+from nomad.datamodel.metainfo.simulation.system import (
     System, Atoms
 )
-from nomad.datamodel.metainfo.run.calculation import (
+from nomad.datamodel.metainfo.simulation.calculation import (
     Calculation, Energy, EnergyEntry, Forces, ForcesEntry, Thermodynamics
 )
 from nomad.datamodel.metainfo.workflow import Workflow, MolecularDynamics
@@ -869,4 +869,3 @@ class LammpsParser(FairdiParser):
         self.parse_input()
 
         self.parse_workflow()
-
