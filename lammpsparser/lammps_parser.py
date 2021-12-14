@@ -255,7 +255,11 @@ class TrajParser(TextParser):
         if self._chemical_symbols is None:
             return
 
-        atom_labels = [self._chemical_symbols[atype] for atype in atoms_type]
+        try:
+            atom_labels = [self._chemical_symbols[atype] for atype in atoms_type]
+        except Exception:
+            self.logger.error('Error resolving atom labels.')
+            return
 
         return atom_labels
 
@@ -491,9 +495,7 @@ class LogParser(TextParser):
     def get_traj_files(self):
         dump = self.get('dump')
         if dump is None:
-            self.logger.warn(
-                'Trajectory not specified in directory, will scan.',
-                data=dict(directory=self.maindir))
+            self.logger.warn('Trajectory not specified in directory, will scan.')
             # TODO improve matching of traj file
             traj_files = os.listdir(self.maindir)
             traj_files = [f for f in traj_files if f.endswith('trj') or f.endswith('xyz')]
@@ -512,9 +514,7 @@ class LogParser(TextParser):
     def get_data_files(self):
         read_data = self.get('read_data')
         if read_data is None or 'CPU' in read_data:
-            self.logger.warn(
-                'Data file not specified in directory, will scan.',
-                data=dict(directory=self.maindir))
+            self.logger.warn('Data file not specified in directory, will scan.')
             # TODO improve matching of data file
             data_files = os.listdir(self.maindir)
             data_files = [f for f in data_files if f.endswith('data') or f.startswith('data')]
@@ -690,6 +690,7 @@ class LammpsParser(FairdiParser):
         sec_md.x_lammps_integrator_type = run_style
         sec_md.x_lammps_number_of_steps_requested = run
         sec_md.x_lammps_integrator_dt = timestep
+        sec_md.timestep = timestep
         sec_md.ensemble_type = ensemble_type
 
         thermo_settings = self.log_parser.get_thermostat_settings()
@@ -709,7 +710,7 @@ class LammpsParser(FairdiParser):
         if langevin_gamma is not None:
             sec_md.x_lammps_langevin_gamma = langevin_gamma
 
-        sec_md.finished_normally = self.log_parser.get('finished') is not None
+        sec_md.finished_normwith_trajectoryly = self.log_parser.get('finished') is not None
         sec_md.with_trajectory = self.traj_parser.with_trajectory()
         sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None or\
             self.aux_log_parser.get('thermo_data') is not None
