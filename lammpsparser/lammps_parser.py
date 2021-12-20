@@ -173,7 +173,7 @@ class DataParser(TextParser):
             if coeffs is None:
                 continue
             if isinstance(coeffs, tuple):
-                coeffs = [coeffs]
+                coeffs = list(coeffs)
 
             styles_coeffs += coeffs
 
@@ -332,6 +332,8 @@ class XYZTrajParser(TrajParser):
                         symbols.append(v[0])
                     v[0] = symbols.index(v[0]) + 1
             val = np.transpose(np.array([v for v in val if len(v) == 4], dtype=float))
+            # val[0] is the atomic number
+            val[0] = [list(set(val[0])).index(v) + 1 for v in val[0]]
             return dict(type=val[0], x=val[1], y=val[2], z=val[3])
 
         self.quantities = [
@@ -766,7 +768,7 @@ class LammpsParser(FairdiParser):
             interactions = self.data_parser.get_interactions()
 
         for interaction in interactions:
-            if not interaction[0] or not interaction[1]:
+            if not interaction[0] or interaction[1] is None or np.size(interaction[1]) == 0:
                 continue
             sec_interaction = sec_model.m_create(Interaction)
             sec_interaction.type = str(interaction[0])
