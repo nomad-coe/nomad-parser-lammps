@@ -278,7 +278,16 @@ class TrajParser(TextParser):
             positions = np.array([atoms_info['xs'], atoms_info['ys'], atoms_info['zs']]).T
             positions = positions * np.linalg.norm(cell, axis=1) + np.amin(cell, axis=1)
 
-        else:
+        elif 'xu' in atoms_info and 'yu' in atoms_info and 'zu' in atoms_info:
+            positions = np.array([atoms_info['xu'], atoms_info['yu'], atoms_info['zu']]).T
+
+        elif 'xsu' in atoms_info and 'ysu' in atoms_info and 'zsu' in atoms_info:
+            if cell is None:
+                return
+            positions = np.array([atoms_info['xsu'], atoms_info['ysu'], atoms_info['zsu']]).T
+            positions = positions * np.linalg.norm(cell, axis=1) + np.amin(cell, axis=1)
+
+        elif 'x' in atoms_info and 'y' in atoms_info and 'z' in atoms_info:
             positions = np.array([atoms_info['x'], atoms_info['y'], atoms_info['z']]).T
             if 'ix' in atoms_info and 'iy' in atoms_info and 'iz' in atoms_info:
                 if cell is None:
@@ -287,6 +296,8 @@ class TrajParser(TextParser):
                     atoms_info['ix'], atoms_info['iy'], atoms_info['iz']]).T
 
                 positions += positions_img * np.linalg.norm(cell, axis=1)
+        else:
+            positions = None
 
         return positions
 
@@ -630,6 +641,24 @@ class LammpsParser(FairdiParser):
             'e_impro': 'improper', 'e_coul': 'coulomb', 'e_vdwl': 'van der Waals',
             'e_mol': 'molecular', 'e_long': 'kspace long range',
             'e_tail': 'van der Waals long range', 'kineng': 'kinetic', 'poteng': 'potential'}
+        self._frame_rate = None
+        # max cumulative number of atoms for all parsed trajectories to calculate sampling rate
+        self._cum_max_atoms = 1000000
+
+    @property
+    def frame_rate(self):
+        if self._frame_rate is None:
+            n_frames = len(self.traj_parser.eval('get', 'atoms_info', []))
+            positions = [self.traj_parser.eval('get_positions', n) for n in range(n_frames)]
+            n_atoms = self.traj_parser.eval('get', 'n_atoms', [len(position) for position in positions])
+            n_atoms = max(n_atoms) if n_atoms else 0
+
+            if n_atoms == 0 or n_frames == 0:
+                self._frame_rate = 1
+            else:
+                cum_atoms = n_atoms * n_frames
+                self._frame_rate = 1 if cum_atoms <= self._cum_max_atoms else cum_atoms // self._cum_max_atoms
+        return self._frame_rate
 
     def parse_thermodynamic_data(self):
         thermo_data = self.log_parser.get_thermodynamic_data()
@@ -641,22 +670,26 @@ class LammpsParser(FairdiParser):
         sec_run = self.archive.run[-1]
         sec_sccs = sec_run.calculation
 
-        n_thermo_data = len(thermo_data.get('Step', []))
+        n_thermo = len(thermo_data.get('Step', []))
+        n_steps = len([n for n in range(n_thermo) if n % self.frame_rate == 0])
         create_scc = True
         if sec_sccs:
-            if len(sec_sccs) != len(thermo_data):
+            if len(sec_sccs) != n_steps:
                 self.logger.warn(
                     '''Mismatch in number of calculations and number of property
                     evaluations!, will create new sections''',
-                    data=dict(n_calculations=len(sec_sccs), n_evaluations=n_thermo_data))
+                    data=dict(n_calculations=len(sec_sccs), n_evaluations=n_steps))
 
             else:
                 create_scc = False
-        for n in range(n_thermo_data):
+        for n in range(n_thermo):
+            if (n % self.frame_rate) > 0:
+                continue
+
             if create_scc:
                 sec_scc = sec_run.m_create(Calculation)
             else:
-                sec_scc = sec_sccs[n]
+                sec_scc = sec_sccs[n // self.frame_rate]
 
             sec_energy = sec_scc.m_create(Energy)
             sec_thermo = sec_scc.m_create(Thermodynamics)
@@ -713,19 +746,22 @@ class LammpsParser(FairdiParser):
             sec_md.x_lammps_langevin_gamma = langevin_gamma
 
         sec_md.finished_normally = self.log_parser.get('finished') is not None
-        sec_md.with_trajectory = self.traj_parser.with_trajectory()
+        sec_md.with_trajectory = self.traj_parser.eval('with_trajectory')
         sec_md.with_thermodynamics = self.log_parser.get('thermo_data') is not None or\
             self.aux_log_parser.get('thermo_data') is not None
 
     def parse_system(self):
         sec_run = self.archive.run[-1]
 
-        atoms_info = self.traj_parser.get('atoms_info', [])
-        pbc_cell = self.traj_parser.get('pbc_cell', [])
-        n_atoms = self.traj_parser.get('n_atoms', [
-            len(self.traj_parser.get_positions(n)) for n in range(len(atoms_info))])
+        atoms_info = self.traj_parser.eval('get', 'atoms_info', [])
+        pbc_cell = self.traj_parser.eval('get', 'pbc_cell', [])
+        positions = [self.traj_parser.eval('get_positions', n) for n in range(len(atoms_info))]
+        n_atoms = self.traj_parser.eval('get', 'n_atoms', [len(position) for position in positions])
         units = self.log_parser.units
         for i in range(len(atoms_info)):
+            if (i % self.frame_rate) > 0:
+                continue
+
             sec_system = sec_run.m_create(System)
             sec_atoms = sec_system.m_create(Atoms)
             sec_atoms.n_atoms = n_atoms[i]
@@ -734,17 +770,17 @@ class LammpsParser(FairdiParser):
                 sec_atoms.lattice_vectors = pbc_cell[i][1] * units.get('distance', 1)
             else:
                 sec_atoms.periodic = [False] * 3
-            sec_system.atoms.positions = self.traj_parser.get_positions(i) * units.get('distance', 1)
-            atom_labels = self.traj_parser.get_atom_labels(i)
+            sec_system.atoms.positions = self.traj_parser.eval('get_positions', i) * units.get('distance', 1)
+            atom_labels = self.traj_parser.eval('get_atom_labels', i)
             if atom_labels is None:
                 atom_labels = ['X'] * n_atoms[i]
             sec_system.atoms.labels = atom_labels
 
-            velocities = self.traj_parser.get_velocities(i)
+            velocities = self.traj_parser.eval('get_velocities', i)
             if velocities is not None:
-                sec_system.atoms.velocities = velocities * units.get('velocity')
+                sec_system.atoms.velocities = velocities * units.get('velocity', 1)
 
-            forces = self.traj_parser.get_forces(i)
+            forces = self.traj_parser.eval('get_forces', i)
             if forces is not None:
                 sec_scc = sec_run.m_create(Calculation)
                 sec_scc.forces = Forces(total=ForcesEntry(value=forces * units.get('force', 1)))
@@ -752,12 +788,12 @@ class LammpsParser(FairdiParser):
     def parse_method(self):
         sec_run = self.archive.run[-1]
 
-        if self.traj_parser.mainfile is None or self.data_parser.mainfile is None:
+        if self.traj_parser[0].mainfile is None or self.data_parser.mainfile is None:
             return
 
         masses = self.data_parser.get('Masses', None)
 
-        self.traj_parser.masses = masses
+        self.traj_parser[0].masses = masses
 
         sec_method = sec_run.m_create(Method)
         sec_force_field = sec_method.m_create(ForceField)
@@ -782,9 +818,9 @@ class LammpsParser(FairdiParser):
             sec_input_output_files.x_lammps_inout_file_data = os.path.basename(
                 self.data_parser.mainfile)
 
-        if self.traj_parser.mainfile is not None:
+        if self.traj_parser[0].mainfile is not None:
             sec_input_output_files.x_lammps_inout_file_trajectory = os.path.basename(
-                self.traj_parser.mainfile)
+                self.traj_parser[0].mainfile)
 
         sec_control_parameters = sec_run.m_create(x_lammps_section_control_parameters)
         keys = self.log_parser._commands
@@ -810,11 +846,7 @@ class LammpsParser(FairdiParser):
         self.aux_log_parser.logger = self.logger
         self.log_parser._units = None
         self._traj_parser._chemical_symbols = None
-
-    def reuse_parser(self, parser):
-        self.log_parser.quantities = parser.log_parser.quantities
-        self.traj_parser.quantities = parser.traj_parser.quantities
-        self.data_parser.quantities = parser.data_parser.quantities
+        self._frame_rate = None
 
     def parse(self, filepath, archive, logger):
         self.filepath = filepath
@@ -836,23 +868,42 @@ class LammpsParser(FairdiParser):
         if data_files:
             self.data_parser.mainfile = data_files[0]
 
+        class MultipleTrajParser:
+            def __init__(self, parsers):
+                self._parsers = parsers
+
+            def __getitem__(self, index):
+                if self._parsers:
+                    return self._parsers[index]
+
+            def eval(self, key, *args):
+                for parser in self._parsers:
+                    val = getattr(parser, key)(*args)
+                    if val is not None:
+                        return val
+
         # parse trajectorty file associated with calculation
         traj_files = self.log_parser.get_traj_files()
         if len(traj_files) > 1:
             self.logger.warn('Multiple traj files are specified')
-        self.traj_parser = self._traj_parser
-        if traj_files:
-            file_type = self.log_parser.get('dump', [[1, 'all', traj_files[0][-3:]]])[0][2]
+
+        parsers = []
+        for n, traj_file in enumerate(traj_files):
+            traj_parser = TrajParser()
+            file_type = self.log_parser.get('dump', [[1, 'all', traj_file[-3:]]] * (n + 1))[n][2]
             if file_type == 'dcd':
-                self.traj_parser = self._mdanalysistraj_parser
+                traj_parser = MDAnalysisTrajParser()
                 if data_files:
-                    self.traj_parser.datafile = data_files[0]
+                    traj_parser.datafile = data_files[0]
             elif file_type == 'xyz':
-                self.traj_parser = self._xyztraj_parser
+                traj_parser = XYZTrajParser()
             else:
                 pass
                 # TODO provide support for other file types
-            self.traj_parser.mainfile = traj_files[0]
+            traj_parser.mainfile = traj_file
+            parsers.append(traj_parser)
+
+        self.traj_parser = MultipleTrajParser(parsers)
 
         # parse data from auxiliary log file
         if self.log_parser.get('log') is not None:

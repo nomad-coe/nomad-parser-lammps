@@ -99,3 +99,23 @@ def test_traj_dcd(parser):
     sec_systems = archive.run[0].system
     assert np.shape(sec_systems[56].atoms.positions) == (320, 3)
     assert len(sec_systems[107].atoms.labels) == 320
+
+
+def test_unwrapped_pos(parser):
+    archive = EntryArchive()
+    parser.parse('tests/data/1_xyz_files/log.lammps', archive, None)
+
+    assert len(archive.run[0].calculation) == 101
+    sec_systems = archive.run[0].system
+    assert sec_systems[1].atoms.positions[452][2].magnitude == approx(5.99898)
+    assert sec_systems[2].atoms.velocities[457][-2].magnitude == approx(-0.928553)
+
+
+def test_multiple_dump(parser):
+    archive = EntryArchive()
+    parser.parse('tests/data/2_xyz_files/log.lammps', archive, None)
+
+    sec_systems = archive.run[0].system
+    assert len(sec_systems) == 101
+    assert sec_systems[2].atoms.positions[468][0].magnitude == approx(3.00831)
+    assert sec_systems[-1].atoms.velocities[72][1].magnitude == approx(-4.61496)
