@@ -726,7 +726,7 @@ class LammpsParser(FairdiParser):
         sec_md.x_lammps_number_of_steps_requested = run
         sec_md.x_lammps_integrator_dt = timestep
         sec_md.timestep = timestep
-        sec_md.ensemble_type = ensemble_type
+        sec_md.ensemble_type = ensemble_type.upper()
 
         thermo_settings = self.log_parser.get_thermostat_settings()
         target_T = thermo_settings.get('target_T', None)
