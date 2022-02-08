@@ -808,7 +808,7 @@ class LammpsParser(FairdiParser):
                 continue
             sec_interaction = sec_model.m_create(Interaction)
             sec_interaction.type = str(interaction[0])
-            sec_interaction.parameters = [list(a) for a in interaction[1]]
+            sec_interaction.parameters = [[float(ai) for ai in a] for a in interaction[1]]
 
     def parse_input(self):
         sec_run = self.archive.run[-1]

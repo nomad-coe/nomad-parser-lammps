@@ -43,7 +43,7 @@ def test_nvt(parser):
     assert sec_workflow.type == 'molecular_dynamics'
     assert sec_workflow.molecular_dynamics.x_lammps_integrator_dt.magnitude == 2.5e-16
     assert sec_workflow.molecular_dynamics.x_lammps_thermostat_target_temperature.magnitude == 300.
-    assert sec_workflow.molecular_dynamics.ensemble_type == 'nvt'
+    assert sec_workflow.molecular_dynamics.ensemble_type == 'NVT'
 
     sec_method = sec_run.method[0]
     assert len(sec_method.force_field.model[0].contributions) == 4
