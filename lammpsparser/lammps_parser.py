@@ -660,7 +660,13 @@ class LammpsParser(FairdiParser):
                 self._frame_rate = 1 if cum_atoms <= self._cum_max_atoms else cum_atoms // self._cum_max_atoms
         return self._frame_rate
 
+    def get_time_step(self):
+        time_unit = self.log_parser.units.get('time', None)
+        time_step = self.log_parser.get('timestep', [0], unit=time_unit)[0]
+        return time_step
+
     def parse_thermodynamic_data(self):
+        time_step = self.get_time_step()
         thermo_data = self.log_parser.get_thermodynamic_data()
         if thermo_data is None:
             thermo_data = self.aux_log_parser.get_thermodynamic_data()
@@ -707,6 +713,7 @@ class LammpsParser(FairdiParser):
                     sec_thermo.temperature = val[n]
                 elif key == 'step':
                     sec_thermo.time_step = int(val[n])
+                    sec_thermo.time = sec_thermo.time_step * time_step
                 elif key == 'cpu':
                     sec_scc.time_calculation = float(val[n])
 
@@ -717,15 +724,14 @@ class LammpsParser(FairdiParser):
         run_style = self.log_parser.get('run_style', ['verlet'])[0]
         run = self.log_parser.get('run', [0])[0]
 
-        time_unit = self.log_parser.units.get('time', None)
-        timestep = self.log_parser.get('timestep', [0], unit=time_unit)[0]
+        time_step = self.get_time_step()
         sampling_method, ensemble_type = self.log_parser.get_sampling_method()
 
         sec_workflow.type = sampling_method
         sec_md.x_lammps_integrator_type = run_style
         sec_md.x_lammps_number_of_steps_requested = run
-        sec_md.x_lammps_integrator_dt = timestep
-        sec_md.timestep = timestep
+        sec_md.x_lammps_integrator_dt = time_step
+        sec_md.timestep = time_step
         sec_md.ensemble_type = ensemble_type.upper()
 
         thermo_settings = self.log_parser.get_thermostat_settings()
