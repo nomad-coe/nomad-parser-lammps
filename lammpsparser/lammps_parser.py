@@ -355,8 +355,14 @@ class MDAnalysisTrajParser(TrajParser):
 
         if self._file_handler is None:
             # we need to load datafile to provide atoms info
+            if self.mainfile.endswith('xyz'):
+                mainfile_format = 'XYZ'
+            elif self.mainfile.endswith('dcd'):
+                mainfile_format = 'DCD'
+            else:
+                mainfile_format = 'LAMMPSDUMP'
             self._file_handler = MDAnalysis.Universe(
-                self.datafile, self.mainfile, topology_format='DATA', format='LAMMPSDUMP') # JFR: LAMMPS --> LAMMPSDUMP
+                self.datafile, self.mainfile, topology_format='DATA', format=mainfile_format) # JFR: LAMMPS --> LAMMPSDUMP
 
         return self._file_handler
 
@@ -393,13 +399,14 @@ class MDAnalysisTrajParser(TrajParser):
             val = [int(traj.time / traj.dt) for traj in self.universe.trajectory]
         elif key == 'n_atoms':
             val = [len(traj) for traj in self.universe.trajectory]
+        self._results[key] = val
 
     def get_atomgroups_info(self):
         atomgroups_info = dict()
         atomgroups_info['moltypes'] = self.get_moltypes()
         atomgroups_info['molnums'] = self.get_molnums()
         atomgroups_info['segids'] = getattr(self.universe.atoms, 'segids', None)
-        atomgroups_info['segindices'] = getattr(self.universe.atoms, 'segids', None)
+        atomgroups_info['segindices'] = getattr(self.universe.atoms, 'segindices', None)
         atomgroups_info['resnames'] = self.get_resnames()
         atomgroups_info['resids'] = getattr(self.universe.atoms, 'resids', None)
         atomgroups_info['elements'] = self.get_elements()
@@ -830,92 +837,91 @@ class LammpsParser(FairdiParser):
                 sec_scc = sec_run.m_create(Calculation)
                 sec_scc.forces = Forces(total=ForcesEntry(value=forces * units.get('force', 1)))
 
-            # JFR - Adding stuff for section AtomGroups here - static for now
-            self._mdanalysistraj_parser.datafile = self.data_parser.mainfile
-            self._mdanalysistraj_parser.mainfile = self.traj_parser.mainfile
-            atomgroups_info = self._mdanalysistraj_parser.get_atomgroups_info() 
-            # Adding the system as the top level of the hierarchy, this maybe isn't necessary, but I want the formula in terms of molecule types
-            sec_atomgroups = sec_system.m_create(AtomGroups)
-            # sec_system.atom_indices = np.arange(len(atomgroups_info['molnums'])) # unnecessary
-            sec_atomgroups.n_atoms = len(atomgroups_info['molnums'])
-            sec_atomgroups.label = 'system'
-            sec_atomgroups.type = 'molecule group'
-            sec_atomgroups.is_molecule = False
-            # get the formula in terms of moltypes
-            moltypes = np.unique(atomgroups_info['moltypes'])
-            moltypes_count = {}
-            for moltype in moltypes:
-                atom_indices = np.where(atomgroups_info['moltypes'] == moltype)[0]
-                # get the molecule identifier for each atom (i.e., which molecule it belongs to)
-                mol_nums = atomgroups_info['molnums'][atom_indices]
-                # get the total number of molecules of this type
-                moltypes_count[moltype] = np.unique(mol_nums).shape[0]
-            formula = ''
-            for moltype in moltypes_count:
-                formula += str(moltype)+'('+str(moltypes_count[moltype])+')'
-            sec_atomgroups.composition_formula = formula
-            # Generate AtomGroups: molecules --> segments --> residues 
-            for mol_id in np.unique(atomgroups_info['molnums']): # loop over molecules
-                # create an AtomGroup for this molecule
-                sec_molecule = sec_atomgroups.m_create(AtomGroups)
-                # get the indices of the current molecule
-                sec_molecule.atom_indices = np.where(atomgroups_info['molnums'] == mol_id)[0]
-                sec_molecule.n_atoms = len(sec_molecule.atom_indices)
-                # get the moltype from the first particle in this molecule
-                sec_molecule.label = str(atomgroups_info['moltypes'][sec_molecule.atom_indices[0]]) # not sure why but this value is being automatically casted to int
-                # ctr_moltypes[sec_molecule.label] += 1
-                sec_molecule.type = 'molecule' # not sure what this is yet
-                sec_molecule.is_molecule = True
-                # get the set of unique resids for this molecule
+        # parse atomgroups (system --> molecules --> segments --> residues)
+        self._mdanalysistraj_parser.datafile = self.data_parser.mainfile
+        self._mdanalysistraj_parser.mainfile = self.traj_parser.mainfile
+        atomgroups_info = self._mdanalysistraj_parser.get_atomgroups_info() 
+        # Only add atomgroups for initial system for now
+        sec_atomgroups = sec_run.system[0].m_create(AtomGroups)
+        sec_atomgroups.n_atoms = len(atomgroups_info['molnums'])
+        sec_atomgroups.label = 'system'
+        sec_atomgroups.type = 'molecule group'
+        sec_atomgroups.is_molecule = False
+        moltypes = np.unique(atomgroups_info['moltypes'])
+        moltypes_count = {}
+        for moltype in moltypes:
+            atom_indices = np.where(atomgroups_info['moltypes'] == moltype)[0]
+            # mol_nums is the molecule identifier for each atom 
+            mol_nums = atomgroups_info['molnums'][atom_indices]
+            moltypes_count[moltype] = np.unique(mol_nums).shape[0]
+        formula = ''
+        for moltype in moltypes_count:
+            formula += str(moltype)+'('+str(moltypes_count[moltype])+')'
+        sec_atomgroups.composition_formula = formula
+        for mol_id in np.unique(atomgroups_info['molnums']): 
+            sec_molecule = sec_atomgroups.m_create(AtomGroups)
+            sec_molecule.atom_indices = np.where(atomgroups_info['molnums'] == mol_id)[0]
+            sec_molecule.n_atoms = len(sec_molecule.atom_indices)
+            # use first particle to get the moltype 
+            # not sure why but this value is being automatically casted to int, cast back to str
+            sec_molecule.label = str(atomgroups_info['moltypes'][sec_molecule.atom_indices[0]]) 
+            sec_molecule.type = 'molecule' 
+            sec_molecule.is_molecule = True
+
+            mol_segids = np.unique(atomgroups_info['segindices'][sec_molecule.atom_indices])
+            n_seg = mol_segids.shape[0] 
+            if n_seg > 1:
+                self._add_children(sec_molecule, atomgroups_info, mol_segids, 
+                                    'segindices', 'segids', 'segment', is_molecule=False)
+            else:
                 mol_resids = np.unique(atomgroups_info['resids'][sec_molecule.atom_indices])
                 n_res = mol_resids.shape[0] 
                 if n_res > 1: 
-                    # resnames = np.unique(atomgroups_info['resnames'][sec_molecule.atom_indices])
-                    # ctr_resnames = {resname: 0 for resname in resnames}
-                    for res_id in mol_resids: # loop over residues in this molecule
-                        # create an AtomGroup for this residue
-                        sec_residue = sec_molecule.m_create(AtomGroups)
-                        # get the (global) indices of the current residue
-                        sec_residue.atom_indices = np.where(atomgroups_info['resids'] == res_id)[0]
-                        sec_residue.n_atoms = len(sec_residue.atom_indices)
-                        # get the resname from the first particle in this residue
-                        resnames = atomgroups_info['resnames'][sec_residue.atom_indices]
-                        sec_residue.label = resnames[0]
-                        # ctr_resnames[sec_residue.label] += 1
-                        sec_residue.type = 'monomer'
-                        sec_residue.is_molecule = False
-                        elements = atomgroups_info['elements'][sec_residue.atom_indices]
-                        sec_residue.composition_formula = self._get_composition(elements)
-
-                    # get the resnames for all atoms in this molecule
-                    resnames = atomgroups_info['resnames'][sec_molecule.atom_indices]
-                    # get the corresponding residue identifiers
-                    resids = atomgroups_info['resids'][sec_molecule.atom_indices]
-                    # filter for the first instance of each residue, as to not overcount
-                    # get the counts - number of atoms per residue
-                    __, resids_count = np.unique(resids, return_counts=True)
-                    # get the index of the first atom of each residue
-                    resids_firstatom = np.cumsum(resids_count)[:-1]
-                    # add the 0th index manually
-                    resids_firstatom = np.insert(resids_firstatom,0,0)
-                    resnames_firstatom = resnames[resids_firstatom]
-                    # sec_molecule.composition_counts = ctr_resnames
-                    sec_molecule.composition_formula = self._get_composition(resnames_firstatom)
+                    self._add_children(sec_molecule, atomgroups_info, mol_resids, 
+                                    'resids', 'resnames', 'monomer', is_molecule=False)
                 else:                
-                    # sec_molecule.composition_counts = ctr_resnames
                     elements = atomgroups_info['elements'][sec_molecule.atom_indices]
                     sec_molecule.composition_formula = self._get_composition(elements)
-                
+
+    def _add_children(self, sec_parent, atomgroups_info, child_ids, child_id_key, 
+                      child_name_key, child_type, is_molecule=False):
+        for child_id in child_ids: 
+            sec_child = sec_parent.m_create(AtomGroups)
+            sec_child.atom_indices = np.where(atomgroups_info[child_id_key] == child_id)[0]
+            sec_child.n_atoms = len(sec_child.atom_indices)
+            child_names = atomgroups_info[child_name_key][sec_child.atom_indices]
+            sec_child.label = child_names[0]
+            sec_child.type = child_type
+            sec_child.is_molecule = False
+            if child_name_key == 'resnames':
+                elements = atomgroups_info['elements'][sec_child.atom_indices]
+                sec_child.composition_formula = self._get_composition(elements)
+            elif child_name_key == 'segids': 
+                mol_resids = np.unique(atomgroups_info['resids'][sec_child.atom_indices])
+                n_res = mol_resids.shape[0] 
+                if n_res > 1: 
+                    self._add_children(sec_child, atomgroups_info, mol_resids, 
+                                       'resids', 'resnames', 'monomer', is_molecule)
+                else:                
+                    elements = atomgroups_info['elements'][sec_child.atom_indices]
+                    sec_child.composition_formula = self._get_composition(elements)
+
+        names = atomgroups_info[child_name_key][sec_parent.atom_indices]
+        ids = atomgroups_info[child_id_key][sec_parent.atom_indices]
+        # filter for the first instance of each residue, as to not overcount
+        __, ids_count = np.unique(ids, return_counts=True)
+        # get the index of the first atom of each residue
+        ids_firstatom = np.cumsum(ids_count)[:-1]
+        # add the 0th index manually
+        ids_firstatom = np.insert(ids_firstatom,0,0)
+        names_firstatom = names[ids_firstatom]
+        sec_parent.composition_formula = self._get_composition(names_firstatom)
 
     def _get_composition(self, children_names):
-        # get the list of unique atoms in this res and also the counts for each
         children_count_tup = np.unique(children_names, return_counts=True)
-        # concatenate to construct a molecular formula
         formula = ''
-        # counts = {}
         for name, count in zip(*children_count_tup):
             formula += str(name)+'('+str(count)+')'
-            # counts[name] = count
         return formula
 
     def parse_method(self):
